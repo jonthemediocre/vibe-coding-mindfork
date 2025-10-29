@@ -1,0 +1,34 @@
+const path = require("path");
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, "../..");
+
+// Use the correct expo metro-config
+const { getDefaultConfig } = require("expo/metro-config");
+const config = getDefaultConfig(projectRoot);
+
+// Monorepo configuration - enhanced for better stability
+config.watchFolders = [workspaceRoot];
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, "node_modules"),
+  path.resolve(workspaceRoot, "node_modules"),
+];
+config.resolver.disableHierarchicalLookup = false;
+
+// Platform extensions for shared packages
+config.resolver.platforms = ["native", "android", "ios", "web"];
+
+// Add additional resolver settings for monorepo and local aliases
+config.resolver.alias = {
+  // Ensure consistent resolution of shared dependencies
+  "react-native": path.resolve(workspaceRoot, "node_modules", "react-native"),
+  // Local module aliases for absolute imports
+  "@": path.resolve(projectRoot, "src"),
+  src: path.resolve(projectRoot, "src"),
+  components: path.resolve(projectRoot, "src", "components"),
+  "@mindfork/agent": path.resolve(workspaceRoot, "apps", "shared", "agent"),
+};
+
+// Transformer settings for better performance
+config.transformer.minifierPath = require.resolve("metro-minify-terser");
+
+module.exports = config;

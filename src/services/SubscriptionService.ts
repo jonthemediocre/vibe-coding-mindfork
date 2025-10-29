@@ -133,8 +133,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     ],
     price: { monthly: 9.99, yearly: 99.99 },
     stripe_price_ids: {
-      monthly: ENV.EXPO_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID || '',
-      yearly: ENV.EXPO_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID || '',
+      monthly: ENV.STRIPE_PREMIUM_MONTHLY_PRICE_ID || '',
+      yearly: ENV.STRIPE_PREMIUM_YEARLY_PRICE_ID || '',
     },
     color: '#FFA8D2',
   },

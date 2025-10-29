@@ -1,12 +1,58 @@
 # Mindfork - AI-Powered Health & Wellness Platform
 
-**Mindfork** is a comprehensive React Native mobile application for health and wellness featuring AI coaches, meal planning, fasting tracking, food logging, and subscription management.
+**Mindfork** is a comprehensive React Native mobile application for health and wellness featuring AI coaches with custom-trained personalities, dynamic goal-based interfaces, meal planning, fasting tracking, and personalized nutrition guidance.
 
 ## 🎉 Project Status
 
 ✅ **The Mindfork codebase has been successfully migrated to this Vibecode workspace!**
 
-The app includes:
+## ⭐ **AMAZING FEATURES YOU ASKED ABOUT**
+
+### 🤖 AI Coaches with Custom Personalities & LoRA Training
+**YES! This app has 6 unique AI coaches with beautifully designed characters:**
+
+- 🦉 **Synapse** - Gentle & Supportive (Wise owl + almonds)
+- 🦜 **Vetra** - Energetic & Motivational (Vibrant parakeet + berries)
+- 🐢 **Verdant** - Calm & Zen (Peaceful turtle + leafy greens)
+- 🐰 **Veloura** - Disciplined & Structured (Determined rabbit + carrots)
+- 🔥 **Aetheris** - Mystical & Inspiring (Phoenix + ginger root)
+- 🐬 **Decibel** - Cheerful & Playful (Joyful dolphin + salmon)
+
+**Each coach has:**
+- ✅ Custom PNG artwork (located in `assets/coaches/`)
+- ✅ Unique personality traits and specialties
+- ✅ Different coaching styles (analytical, motivational, zen, structured, etc.)
+- ✅ Personality-specific vocabulary and response patterns
+- ✅ LoRA/fine-tuning capabilities (see `docs/ENHANCE_COACH_PERSONALITIES.md`)
+
+### 🎯 Dynamic Interface Based on Goals & Onboarding
+**YES! The dashboard completely adapts based on user goals:**
+
+**Onboarding Flow:**
+1. Welcome screen
+2. Basic information (name, age, gender)
+3. Body metrics (height, weight)
+4. Primary goal selection
+5. Activity level
+6. Diet preferences
+
+**Dynamic Dashboard Configurations:**
+
+- **Lose Weight** → Shows calories, deficit tracking, fasting timer
+- **Gain Muscle** → Emphasizes protein, calories, workout tracking
+- **Maintain** → Focuses on balance, consistency metrics
+- **Get Healthy** → Overall wellness, variety, fiber tracking
+
+**Each goal gets:**
+- Different primary/secondary metrics
+- Personalized coaching messages
+- Custom action buttons
+- Goal-specific progress visualization
+- Tailored motivational messages
+
+The entire UI reconfigures based on what you selected during onboarding!
+
+**Features Included:**
 - ✅ AI Health Coaches with personalized guidance
 - ✅ Food tracking and photo recognition
 - ✅ Intermittent fasting timer
