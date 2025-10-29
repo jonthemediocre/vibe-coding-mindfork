@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete MindFork Account | Cordalux</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 40px auto; padding: 40px 20px; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #1a1a1a; margin-bottom: 24px; font-size: 32px; }
+        h2 { color: #2a2a2a; margin: 32px 0 16px; font-size: 24px; }
+        p { margin-bottom: 16px; color: #555; }
+        ul { margin: 16px 0 16px 24px; color: #555; }
+        li { margin-bottom: 8px; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 16px; margin: 24px 0; border-radius: 4px; }
+        .warning strong { color: #856404; }
+        .button { display: inline-block; background: #dc3545; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 24px 0; transition: background 0.3s; }
+        .button:hover { background: #c82333; }
+        .secondary-button { background: #6c757d; margin-left: 12px; }
+        .secondary-button:hover { background: #5a6268; }
+        .info { background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 16px; margin: 24px 0; border-radius: 4px; }
+        .footer { text-align: center; margin-top: 40px; color: #999; font-size: 14px; }
+        .form-group { margin: 24px 0; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        textarea { min-height: 100px; resize: vertical; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Delete Your MindFork Account</h1>
+
+            <p>We're sorry to see you go. This page allows you to request the deletion of your MindFork account and all associated data.</p>
+
+            <div class="warning">
+                <strong>⚠️ Important:</strong> Account deletion is permanent and cannot be undone. All your data will be permanently deleted within 30 days.
+            </div>
+
+            <h2>What Will Be Deleted</h2>
+            <ul>
+                <li><strong>Profile Information:</strong> Name, email, and account settings</li>
+                <li><strong>Health Data:</strong> All nutrition logs, food entries, and fasting sessions</li>
+                <li><strong>Goals & Plans:</strong> Meal plans, goals, and progress tracking</li>
+                <li><strong>AI Conversations:</strong> All interactions with AI coaches</li>
+                <li><strong>Achievements:</strong> Badges, streaks, and milestone data</li>
+            </ul>
+
+            <h2>Data Retention</h2>
+            <p>After you submit your deletion request:</p>
+            <ul>
+                <li>Your account will be deactivated immediately</li>
+                <li>All personal data will be permanently deleted within 30 days</li>
+                <li>Anonymous analytics data may be retained for legal compliance</li>
+                <li>Financial transaction records retained for 7 years (tax/legal requirements)</li>
+            </ul>
+
+            <div class="info">
+                <strong>💡 Alternative:</strong> If you just want to delete some of your data without closing your account, visit our <a href="./data-deletion.html">Partial Data Deletion</a> page.
+            </div>
+
+            <h2>Request Account Deletion</h2>
+            <p>To delete your account, please send us an email with your request:</p>
+
+            <form action="mailto:support@cordalux.ai?subject=MindFork Account Deletion Request" method="post" enctype="text/plain">
+                <div class="form-group">
+                    <label for="email">Your Email (registered with MindFork):</label>
+                    <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="reason">Reason for leaving (optional):</label>
+                    <textarea id="reason" name="reason" placeholder="Help us improve by sharing why you're leaving..."></textarea>
+                </div>
+
+                <a href="mailto:support@cordalux.ai?subject=MindFork%20Account%20Deletion%20Request&body=I%20request%20the%20deletion%20of%20my%20MindFork%20account%20and%20all%20associated%20data.%0A%0AEmail%20Address%3A%20%0AReason%20(optional)%3A%20" class="button">
+                    Submit Deletion Request
+                </a>
+                <a href="https://mindfork.app" class="button secondary-button">Cancel</a>
+            </form>
+
+            <h2>Response Timeline</h2>
+            <p>You will receive confirmation within 48 hours. Your account will be fully deleted within 30 days as required by GDPR and CCPA regulations.</p>
+
+            <div class="info">
+                <strong>Questions?</strong> Contact us at <a href="mailto:support@cordalux.ai">support@cordalux.ai</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Cordalux. MindFork is a product of Cordalux.</p>
+            <p><a href="https://cordalux.ai">Cordalux</a> | <a href="https://cordalux.ai/privacy">Privacy Policy</a> | <a href="https://cordalux.ai/terms">Terms of Service</a></p>
+        </div>
+    </div>
+</body>
+</html>

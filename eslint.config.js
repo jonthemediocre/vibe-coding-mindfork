@@ -17,6 +17,9 @@ module.exports = defineConfig([
       "**/*.test.ts",
       "**/*.test.tsx",
       "src/agent/**",
+      "supabase/**",
+      "docs/**",
+      ".supabase-backend/**",
     ],
     settings: {
       "import/resolver": {

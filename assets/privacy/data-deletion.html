@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete MindFork Data | Cordalux</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 40px auto; padding: 40px 20px; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #1a1a1a; margin-bottom: 24px; font-size: 32px; }
+        h2 { color: #2a2a2a; margin: 32px 0 16px; font-size: 24px; }
+        p { margin-bottom: 16px; color: #555; }
+        .info { background: #d1ecf1; border-left: 4px solid #17a2b8; padding: 16px; margin: 24px 0; border-radius: 4px; }
+        .data-option { background: #f8f9fa; padding: 20px; margin: 16px 0; border-radius: 8px; border: 2px solid #e9ecef; }
+        .data-option h3 { color: #333; margin-bottom: 8px; }
+        .data-option p { margin-bottom: 8px; color: #666; font-size: 14px; }
+        .checkbox { margin: 8px 0; }
+        .checkbox label { display: flex; align-items: center; cursor: pointer; }
+        .checkbox input { margin-right: 12px; width: 20px; height: 20px; cursor: pointer; }
+        .button { display: inline-block; background: #007bff; color: white; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 24px 0; transition: background 0.3s; }
+        .button:hover { background: #0056b3; }
+        .secondary-button { background: #6c757d; margin-left: 12px; }
+        .secondary-button:hover { background: #5a6268; }
+        .footer { text-align: center; margin-top: 40px; color: #999; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Delete Specific MindFork Data</h1>
+
+            <p>You can delete specific types of data from your MindFork account while keeping your account active. This gives you control over what information is stored.</p>
+
+            <div class="info">
+                <strong>🔒 Your Privacy Matters:</strong> We respect your right to control your data. Select the data you want to delete below and submit your request.
+            </div>
+
+            <h2>Choose Data to Delete</h2>
+
+            <div class="data-option">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="food_logs" value="food_logs">
+                        <div>
+                            <h3>Food & Nutrition Logs</h3>
+                            <p>All food entries, meal logs, and nutrition tracking data</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="data-option">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="fasting_logs" value="fasting_logs">
+                        <div>
+                            <h3>Fasting Sessions</h3>
+                            <p>All fasting timer history and session records</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="data-option">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="meal_plans" value="meal_plans">
+                        <div>
+                            <h3>Meal Plans</h3>
+                            <p>Saved meal plans and planned meals</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="data-option">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="ai_conversations" value="ai_conversations">
+                        <div>
+                            <h3>AI Coach Conversations</h3>
+                            <p>All chat history with AI coaches</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="data-option">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="goals" value="goals">
+                        <div>
+                            <h3>Goals & Progress</h3>
+                            <p>Health goals, achievements, and progress tracking</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="data-option">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="photos" value="photos">
+                        <div>
+                            <h3>Photos & Images</h3>
+                            <p>All uploaded food photos and profile pictures</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <h2>Submit Your Request</h2>
+            <p>To delete the selected data types, please email us with your selections:</p>
+
+            <a href="mailto:support@cordalux.ai?subject=MindFork%20Partial%20Data%20Deletion%20Request&body=I%20request%20the%20deletion%20of%20the%20following%20data%20from%20my%20MindFork%20account%3A%0A%0AEmail%20Address%3A%20%0A%0AData%20to%20Delete%3A%0A%E2%98%90%20Food%20%26%20Nutrition%20Logs%0A%E2%98%90%20Fasting%20Sessions%0A%E2%98%90%20Meal%20Plans%0A%E2%98%90%20AI%20Coach%20Conversations%0A%E2%98%90%20Goals%20%26%20Progress%0A%E2%98%90%20Photos%20%26%20Images%0A%0AAdditional%20Notes%3A%20" class="button">
+                Submit Data Deletion Request
+            </a>
+            <a href="./" class="button secondary-button">Cancel</a>
+
+            <div class="info" style="margin-top: 32px;">
+                <strong>⏱️ Processing Time:</strong> Your request will be processed within 7 days. You'll receive confirmation via email once the data has been deleted.
+            </div>
+
+            <h2>Want to Delete Your Entire Account?</h2>
+            <p>If you want to permanently delete your MindFork account and all data, visit our <a href="./delete-account.html">Account Deletion</a> page instead.</p>
+
+            <div class="info">
+                <strong>Questions?</strong> Contact us at <a href="mailto:support@cordalux.ai">support@cordalux.ai</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 Cordalux. MindFork is a product of Cordalux.</p>
+            <p><a href="https://cordalux.ai">Cordalux</a> | <a href="https://cordalux.ai/privacy">Privacy Policy</a> | <a href="https://cordalux.ai/terms">Terms of Service</a></p>
+        </div>
+    </div>
+</body>
+</html>
