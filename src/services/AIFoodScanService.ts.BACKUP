@@ -1,0 +1,363 @@
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { Platform } from 'react-native';
+import type { CreateFoodEntryInput } from '../types/models';
+import { ENV } from '../config/env';
+import { logger } from '../utils/logger';
+import { apiInterceptor } from '../utils/api-interceptor';
+import { showAlert } from '../utils/alerts';
+
+interface FoodAnalysisResult {
+  name: string;
+  serving: string;
+  calories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  fiber?: number;
+  confidence: number;
+}
+
+interface OpenAIVisionResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
+
+export class AIFoodScanService {
+  private static readonly OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || '';
+  private static readonly OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+
+  /**
+   * Request camera permission
+   */
+  static async requestCameraPermission(): Promise<boolean> {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (status !== 'granted') {
+      showAlert.permission(
+        'Camera',
+        'Please enable camera access in your device settings to scan food items.'
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Take photo with camera
+   */
+  static async takePhoto(): Promise<string | null> {
+    try {
+      const hasPermission = await this.requestCameraPermission();
+      if (!hasPermission) return null;
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (result.canceled) return null;
+
+      return result.assets[0].uri;
+    } catch (error) {
+      logger.error('Error taking photo:', error);
+      showAlert.error('Error', 'Failed to take photo. Please try again.');
+      return null;
+    }
+  }
+
+  /**
+   * Pick photo from gallery
+   */
+  static async pickPhoto(): Promise<string | null> {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== 'granted') {
+        showAlert.permission(
+          'Photos',
+          'Please enable photo library access to select food photos.'
+        );
+        return null;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (result.canceled) return null;
+
+      return result.assets[0].uri;
+    } catch (error) {
+      logger.error('Error picking photo:', error);
+      showAlert.error('Error', 'Failed to pick photo. Please try again.');
+      return null;
+    }
+  }
+
+  /**
+   * Convert image URI to base64
+   */
+  private static async imageUriToBase64(uri: string): Promise<string> {
+    try {
+      // For file:// URIs, read as base64
+      if (uri.startsWith('file://')) {
+        const base64 = await FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        return base64;
+      }
+
+      // For other URIs (data:, http:, etc.), extract or fetch
+      if (uri.startsWith('data:')) {
+        // Already base64 encoded
+        const base64 = uri.split(',')[1];
+        return base64;
+      }
+
+      // Fallback: read as base64
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      return base64;
+    } catch (error) {
+      logger.error('Error converting image to base64', error as Error);
+      throw new Error('Failed to process image');
+    }
+  }
+
+  /**
+   * Parse OpenAI response to extract nutrition data
+   */
+  private static parseNutritionFromAI(aiResponse: string): FoodAnalysisResult | null {
+    try {
+      // Try to parse as JSON first
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          return {
+            name: parsed.name || parsed.food_name || 'Unknown Food',
+            serving: parsed.serving || parsed.serving_size || '1 serving',
+            calories: Number(parsed.calories) || 0,
+            protein: parsed.protein ? Number(parsed.protein) : undefined,
+            carbs: parsed.carbs || parsed.carbohydrates ? Number(parsed.carbs || parsed.carbohydrates) : undefined,
+            fat: parsed.fat ? Number(parsed.fat) : undefined,
+            fiber: parsed.fiber ? Number(parsed.fiber) : undefined,
+            confidence: parsed.confidence || 0.85,
+          };
+        } catch (parseError) {
+          logger.warn('Failed to parse AI JSON response, falling back to text parsing', parseError);
+          // Fall through to text parsing fallback
+        }
+      }
+
+      // Fallback: Parse text format
+      const lines = aiResponse.split('\n');
+      const result: FoodAnalysisResult = {
+        name: 'Unknown Food',
+        serving: '1 serving',
+        calories: 0,
+        confidence: 0.75,
+      };
+
+      for (const line of lines) {
+        const lowerLine = line.toLowerCase();
+        if (lowerLine.includes('name:') || lowerLine.includes('food:')) {
+          result.name = line.split(':')[1]?.trim() || result.name;
+        } else if (lowerLine.includes('serving:') || lowerLine.includes('serving size:')) {
+          result.serving = line.split(':')[1]?.trim() || result.serving;
+        } else if (lowerLine.includes('calories:')) {
+          result.calories = Number(line.match(/\d+/)?.[0]) || 0;
+        } else if (lowerLine.includes('protein:')) {
+          result.protein = Number(line.match(/\d+/)?.[0]);
+        } else if (lowerLine.includes('carbs:') || lowerLine.includes('carbohydrates:')) {
+          result.carbs = Number(line.match(/\d+/)?.[0]);
+        } else if (lowerLine.includes('fat:')) {
+          result.fat = Number(line.match(/\d+/)?.[0]);
+        } else if (lowerLine.includes('fiber:')) {
+          result.fiber = Number(line.match(/\d+/)?.[0]);
+        }
+      }
+
+      return result.calories > 0 ? result : null;
+    } catch (error) {
+      logger.error('Error parsing AI response', error as Error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate nutritional estimate based on food name
+   */
+  private static generateNutritionalEstimate(imageName: string = 'food'): FoodAnalysisResult {
+    // Provide a reasonable default estimate
+    return {
+      name: 'Food Item',
+      serving: '1 serving (estimated)',
+      calories: 200,
+      protein: 10,
+      carbs: 25,
+      fat: 8,
+      fiber: 3,
+      confidence: 0.5, // Low confidence for estimates
+    };
+  }
+
+  /**
+   * Analyze food image using OpenAI Vision API
+   */
+  static async analyzeFoodImage(imageUri: string): Promise<FoodAnalysisResult | null> {
+    try {
+      // Check if API key is configured
+      if (!this.OPENAI_API_KEY || this.OPENAI_API_KEY === '') {
+        showAlert.error(
+          'AI Vision Not Configured',
+          'OpenAI API key is not configured. Using nutritional estimate instead.'
+        );
+        return this.generateNutritionalEstimate();
+      }
+
+      logger.info('Analyzing food image with OpenAI Vision...');
+
+      // Convert image to base64
+      const base64Image = await this.imageUriToBase64(imageUri);
+
+      // Call OpenAI Vision API with instrumentation
+      const response = await apiInterceptor.instrumentRequest(
+        '/openai/vision',
+        'POST',
+        async () => {
+          return fetch(this.OPENAI_API_URL, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${this.OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4-vision-preview',
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Analyze this food image and provide detailed nutrition information. Return ONLY a JSON object with these exact fields: name (string), serving (string with size), calories (number), protein (number in grams), carbs (number in grams), fat (number in grams), fiber (number in grams). Be as accurate as possible based on visible portions.',
+                    },
+                    {
+                      type: 'image_url',
+                      image_url: {
+                        url: `data:image/jpeg;base64,${base64Image}`,
+                      },
+                    },
+                  ],
+                },
+              ],
+              max_tokens: 500,
+              temperature: 0.3,
+            }),
+          });
+        },
+        { timeout: 30000 }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error('OpenAI API error:', new Error(errorText));
+
+        // Provide informative error message
+        if (response.status === 401) {
+          showAlert.error('API Error', 'Invalid API key. Please check your configuration.');
+        } else if (response.status === 429) {
+          showAlert.error('Rate Limit', 'API rate limit reached. Please try again later.');
+        } else {
+          showAlert.error('Analysis Error', 'Failed to analyze food. Using estimate instead.');
+        }
+
+        return this.generateNutritionalEstimate();
+      }
+
+      const data: OpenAIVisionResponse = await response.json();
+      const aiContent = data.choices[0]?.message?.content;
+
+      if (!aiContent) {
+        logger.warn('No content in OpenAI response');
+        return this.generateNutritionalEstimate();
+      }
+
+      logger.info('AI analysis complete', { aiContent });
+
+      // Parse the response
+      const nutritionData = this.parseNutritionFromAI(aiContent);
+
+      if (nutritionData && nutritionData.calories > 0) {
+        return nutritionData;
+      }
+
+      // Fallback to estimate if parsing failed
+      logger.warn('Failed to parse AI response, using estimate');
+      return this.generateNutritionalEstimate();
+
+    } catch (error) {
+      logger.error('Error analyzing food:', error);
+      showAlert.error(
+        'Analysis Error',
+        'Could not analyze the image. Please try manual entry or try again.'
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Full workflow: Take photo -> Analyze -> Return food entry
+   */
+  static async scanFood(): Promise<CreateFoodEntryInput | null> {
+    const photoUri = await this.takePhoto();
+    if (!photoUri) return null;
+
+    const analysis = await this.analyzeFoodImage(photoUri);
+    if (!analysis) return null;
+
+    return {
+      name: analysis.name,
+      serving: analysis.serving,
+      calories: analysis.calories,
+      protein: analysis.protein,
+      carbs: analysis.carbs,
+      fat: analysis.fat,
+      fiber: analysis.fiber,
+    };
+  }
+
+  /**
+   * Workflow: Pick from gallery -> Analyze -> Return food entry
+   */
+  static async scanFoodFromGallery(): Promise<CreateFoodEntryInput | null> {
+    const photoUri = await this.pickPhoto();
+    if (!photoUri) return null;
+
+    const analysis = await this.analyzeFoodImage(photoUri);
+    if (!analysis) return null;
+
+    return {
+      name: analysis.name,
+      serving: analysis.serving,
+      calories: analysis.calories,
+      protein: analysis.protein,
+      carbs: analysis.carbs,
+      fat: analysis.fat,
+      fiber: analysis.fiber,
+    };
+  }
+}

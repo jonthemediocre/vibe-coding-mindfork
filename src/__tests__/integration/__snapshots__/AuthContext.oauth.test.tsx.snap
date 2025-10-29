@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuthContext OAuth Integration Tests OAuth Redirect URL Configuration SNAPSHOT: should maintain OAuth configuration consistency: oauth-configuration 1`] = `
+{
+  "options": {
+    "redirectTo": "com.mindfork.app://auth/callback",
+    "skipBrowserRedirect": false,
+  },
+  "provider": "google",
+}
+`;

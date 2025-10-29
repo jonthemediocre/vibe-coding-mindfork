@@ -1,0 +1,15 @@
+# PROTECTED CODE - HUMAN APPROVAL REQUIRED
+
+This directory contains production-ready marketplace components.
+
+## Protected Files:
+- CoachCard.tsx - Integrated with PNG coach images, handles fallbacks properly
+
+## Modification Protocol:
+1. AI must prompt user with specific reason for modification
+2. AI must provide full context of what will change  
+3. AI must wait for explicit user approval before proceeding
+4. Preserve PNG image integration and fallback logic
+
+## Last Updated: 2025-01-27
+## Quality Status: Production Ready ✅

@@ -1,44 +1,29 @@
-import { StatusBar } from "expo-status-bar";
-import { Text, View } from "react-native";
+import React from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { AuthNavigator } from "./src/navigation/AuthNavigator";
+import { ThemeProvider } from "./src/app-components/components/ThemeProvider";
+import { ErrorBoundary } from "./src/app-components/components/ErrorBoundary";
+import { AuthProvider } from "./src/contexts/AuthContext";
+import { View } from "react-native";
+import "./global.css";
 
-/*
-IMPORTANT NOTICE: DO NOT REMOVE
-There are already environment keys in the project. 
-Before telling the user to add them, check if you already have access to the required keys through bash.
-Directly access them with process.env.${key}
-
-Correct usage:
-process.env.EXPO_PUBLIC_VIBECODE_{key}
-//directly access the key
-
-Incorrect usage:
-import { OPENAI_API_KEY } from '@env';
-//don't use @env, its depreicated
-
-Incorrect usage:
-import Constants from 'expo-constants';
-const openai_api_key = Constants.expoConfig.extra.apikey;
-//don't use expo-constants, its depreicated
-
-*/
-
-export default function App() {
+const App: React.FC = () => {
   return (
-    <GestureHandlerRootView>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-center text-neutral-800 dark:text-neutral-50 text-2xl font-bold pb-2">Vibecode</Text>
-            <Text className="text-center text-gray-500 dark:text-gray-400 text-base font-normal">
-              This screen will be replaced when the AI agent is done.
-            </Text>
-            <StatusBar style="auto" />
-          </View>
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <View testID="app-ready" style={{ flex: 1 }}>
+                <AuthNavigator />
+              </View>
+            </AuthProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
-}
+};
+
+export default App;

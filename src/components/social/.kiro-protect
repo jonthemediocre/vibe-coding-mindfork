@@ -1,0 +1,15 @@
+# PROTECTED CODE - HUMAN APPROVAL REQUIRED
+
+This directory contains production-ready social components.
+
+## Protected Files:
+- WisdomCardCreator.tsx - Updated to handle both PNG images and URL strings
+
+## Modification Protocol:
+1. AI must prompt user with specific reason for modification
+2. AI must provide full context of what will change
+3. AI must wait for explicit user approval before proceeding
+4. Preserve dual image handling logic (PNG + URL)
+
+## Last Updated: 2025-01-27
+## Quality Status: Production Ready ✅

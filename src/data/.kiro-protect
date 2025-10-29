@@ -1,0 +1,15 @@
+# PROTECTED CODE - HUMAN APPROVAL REQUIRED
+
+This directory contains production-ready, high-quality code that should not be modified without explicit human approval.
+
+## Protected Files:
+- coachProfiles.ts - Official coach data with PNG image integration
+
+## Modification Protocol:
+1. AI must prompt user with specific reason for modification
+2. AI must provide full context of what will change
+3. AI must wait for explicit user approval before proceeding
+4. Any modifications should be minimal and preserve existing functionality
+
+## Last Updated: 2025-01-27
+## Quality Status: Production Ready ✅

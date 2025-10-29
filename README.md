@@ -1,0 +1,270 @@
+# Mindfork - AI-Powered Health & Wellness Platform
+
+**Mindfork** is a comprehensive React Native mobile application for health and wellness featuring AI coaches, meal planning, fasting tracking, food logging, and subscription management.
+
+## 🎉 Project Status
+
+✅ **The Mindfork codebase has been successfully migrated to this Vibecode workspace!**
+
+The app includes:
+- ✅ AI Health Coaches with personalized guidance
+- ✅ Food tracking and photo recognition
+- ✅ Intermittent fasting timer
+- ✅ Meal planning system
+- ✅ Goals and progress tracking
+- ✅ Stripe subscription integration
+- ✅ Social features and marketplace
+- ✅ Comprehensive analytics dashboard
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+Dependencies are already installed! But if you need to reinstall:
+
+```bash
+bun install
+```
+
+### 2. Configure Environment Variables
+
+Copy the example environment file and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+**Required Environment Variables:**
+
+```env
+# Supabase (Backend)
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# OpenAI (AI Coaches & Food Scanning)
+EXPO_PUBLIC_OPENAI_API_KEY=sk-your-key
+
+# Stripe (Subscriptions - Optional for development)
+EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your-key
+EXPO_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID=price_xxx
+EXPO_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID=price_xxx
+```
+
+### 3. Start the Development Server
+
+The dev server runs automatically on port 8081. You can view the app on your Vibecode mobile app.
+
+```bash
+bun start
+```
+
+## 📱 Features Overview
+
+### AI Health Coaches
+- Multiple AI coach personalities (analytical, supportive, motivational)
+- Personalized nutrition advice
+- Context-aware recommendations based on user goals
+- Conversation history with intelligent context management
+
+### Food Tracking
+- Photo-based food recognition using OpenAI Vision
+- USDA FoodData Central integration
+- Barcode scanning
+- Manual food entry with comprehensive database
+- Favorites and recent foods
+- Nutrition analysis and macro tracking
+
+### Fasting Tracker
+- Intermittent fasting timer
+- Multiple fasting protocols (16:8, 18:6, 20:4, etc.)
+- Progress visualization
+- Fasting history and statistics
+- Achievements and milestones
+
+### Meal Planning
+- AI-powered meal recommendations
+- Dietary preference filtering
+- Weekly meal planning
+- Shopping list generation
+- Recipe suggestions
+
+### Goals & Analytics
+- Customizable health goals
+- Progress tracking
+- Visual analytics dashboard
+- Achievement system
+- Weekly summaries
+
+### Subscriptions
+- Free and Premium tiers
+- Stripe payment integration
+- Feature gating
+- Trial periods
+- Subscription management
+
+## 🏗️ Architecture
+
+### Tech Stack
+- **Framework**: Expo SDK 53 + React Native 0.79
+- **Navigation**: React Navigation 7 (Native Stack, Bottom Tabs)
+- **State Management**: Zustand with AsyncStorage persistence
+- **Styling**: NativeWind (TailwindCSS for React Native)
+- **Backend**: Supabase (PostgreSQL + Auth + Storage + Edge Functions)
+- **Payments**: Stripe
+- **AI**: OpenAI GPT-4 for coaches and food recognition
+- **Type Safety**: TypeScript
+
+### Project Structure
+
+```
+src/
+├── screens/              # All app screens
+│   ├── auth/            # Authentication screens
+│   ├── coach/           # AI coach interface
+│   ├── food/            # Food logging screens
+│   ├── fasting/         # Fasting tracker
+│   ├── goals/           # Goals management
+│   ├── meal-planning/   # Meal planning features
+│   ├── profile/         # User profile
+│   ├── subscription/    # Subscription management
+│   ├── analytics/       # Analytics dashboard
+│   └── social/          # Social features
+├── components/          # Reusable UI components
+├── navigation/          # Navigation setup
+├── contexts/            # React Context providers
+├── services/            # Business logic and API calls
+├── hooks/               # Custom React hooks
+├── types/               # TypeScript type definitions
+├── utils/               # Utility functions
+├── config/              # App configuration
+└── lib/                 # Third-party library configs
+```
+
+## ⚠️ Known Issues & Next Steps
+
+### Type Errors (Non-Blocking)
+There are some TypeScript errors related to:
+- Supabase generated types (needs database schema setup)
+- Some service method signatures
+- Missing Goal-related types
+
+**These won't prevent the app from running in development mode.**
+
+### To Fix Before Production:
+1. **Set up Supabase Database**: Run the migrations from the original repo
+2. **Generate Supabase Types**: Run `npx supabase gen types typescript`
+3. **Configure Stripe Products**: Create products in Stripe dashboard
+4. **Add Environment Variables**: Fill in all required env vars
+5. **Test Payment Flow**: Verify Stripe integration works
+6. **Fix Remaining Type Errors**: Address service-level type mismatches
+
+## 🔧 Development Commands
+
+```bash
+# Start development server
+bun start
+
+# Type checking
+bun typecheck
+
+# Linting
+bun lint
+
+# Run tests (when configured)
+bun test
+```
+
+## 📚 Key Services
+
+### Authentication (`src/contexts/AuthContext.tsx`)
+- Supabase auth integration
+- Session management
+- User profile handling
+
+### Food Service (`src/services/FoodService.ts`)
+- Food database queries
+- Nutrition calculations
+- Search and filtering
+
+### Coach Service (`src/services/coachService.ts`)
+- AI coach message handling
+- Personality-based responses
+- Context-aware prompts
+
+### Subscription Service (`src/services/SubscriptionService.ts`)
+- Stripe integration
+- Subscription status management
+- Feature access control
+
+### Fasting Service (`src/services/FastingService.ts`)
+- Fasting session management
+- Timer logic
+- Progress tracking
+
+## 🎨 Styling Guide
+
+The app uses **NativeWind** (TailwindCSS for React Native):
+
+```tsx
+// Good - Use className with NativeWind
+<View className="flex-1 bg-gray-100 p-4">
+  <Text className="text-2xl font-bold text-gray-900">
+    Hello World
+  </Text>
+</View>
+
+// For some components (LinearGradient, Camera), use inline styles
+<LinearGradient
+  colors={['#4c669f', '#3b5998']}
+  style={{ flex: 1 }}
+/>
+```
+
+## 🔐 Security & Privacy
+
+- **HIPAA Compliance**: App uses "wellness" terminology instead of medical terms
+- **Data Encryption**: All data encrypted at rest and in transit
+- **Secure Storage**: Sensitive data stored in Expo SecureStore
+- **Row Level Security**: Supabase RLS policies protect user data
+
+## 📖 Additional Documentation
+
+See the original Mindfork repository for:
+- Database schema and migrations (`/supabase` directory)
+- Deployment guides
+- Testing documentation
+- API documentation
+
+## 🐛 Troubleshooting
+
+### App won't start
+1. Check that all environment variables are set
+2. Try `bun install` again
+3. Clear cache: `expo start --clear`
+
+### Supabase errors
+1. Verify SUPABASE_URL and SUPABASE_ANON_KEY are correct
+2. Check that your Supabase project is active
+3. Ensure database tables exist
+
+### Type errors
+- Most type errors are non-blocking in development
+- Run `bun typecheck` to see all errors
+- Generate Supabase types when database is ready
+
+## 📞 Support
+
+For questions about the original Mindfork implementation, refer to the documentation in the cloned repository at `/tmp/mindfork-backup/`.
+
+## 🎯 Next Steps
+
+1. **Set up Supabase project** and run migrations
+2. **Configure environment variables** in `.env`
+3. **Test authentication flow**
+4. **Test AI coach** (requires OpenAI API key)
+5. **Set up Stripe** for subscriptions
+6. **Deploy to TestFlight/Google Play** when ready
+
+---
+
+**Note**: This app is ready for development and testing. Some features require proper backend setup (Supabase + Stripe) to work fully.

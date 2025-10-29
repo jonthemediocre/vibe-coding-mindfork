@@ -1,0 +1,702 @@
+/**
+ * MealPlanningService - Comprehensive meal planning and recipe management
+ *
+ * Features:
+ * - Weekly meal plan management (7-day calendar)
+ * - Recipe integration with Supabase recipes table
+ * - Meal templates (save and reuse meal combinations)
+ * - Shopping list generation from planned meals
+ * - Drag & drop meal assignment
+ * - Macro preview and tracking
+ */
+
+import { supabase } from '../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '../utils/logger';
+import type { ApiResponse } from '../types/models';
+
+// ===========================
+// Types
+// ===========================
+
+export interface Recipe {
+  id: string;
+  name: string;
+  description?: string;
+  cuisine_type?: string;
+  difficulty_level?: 'easy' | 'medium' | 'hard';
+  prep_time_minutes?: number;
+  cook_time_minutes?: number;
+  servings: number;
+  calories_per_serving?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  fiber_g?: number;
+  image_url?: string;
+  instructions?: Array<{ step: number; text: string }>;
+  ingredients?: RecipeIngredient[];
+  tags?: string[];
+  created_at: string;
+  created_by?: string;
+  is_public: boolean;
+}
+
+export interface RecipeIngredient {
+  id: string;
+  recipe_id: string;
+  ingredient_name: string;
+  quantity?: string;
+  unit?: string;
+  notes?: string;
+}
+
+export interface MealPlanEntry {
+  id: string;
+  user_id: string;
+  date: string; // ISO date string (YYYY-MM-DD)
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  food_entry_id?: string;
+  recipe_id?: string;
+  servings: number;
+  notes?: string;
+  created_at: string;
+}
+
+export interface MealTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  meals: {
+    meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    recipe_id?: string;
+    food_entry_id?: string;
+    servings: number;
+  }[];
+  created_at: string;
+}
+
+export interface ShoppingListItem {
+  ingredient_name: string;
+  total_quantity: string;
+  unit: string;
+  recipes: string[]; // Recipe names that use this ingredient
+  checked: boolean;
+}
+
+export interface DailyMacroSummary {
+  date: string;
+  planned_calories: number;
+  planned_protein: number;
+  planned_carbs: number;
+  planned_fat: number;
+  planned_fiber: number;
+  target_calories?: number;
+  target_protein?: number;
+  target_carbs?: number;
+  target_fat?: number;
+}
+
+export interface RecipeFilter {
+  search?: string;
+  cuisine_type?: string;
+  difficulty_level?: 'easy' | 'medium' | 'hard';
+  max_prep_time?: number;
+  max_calories?: number;
+  tags?: string[];
+  is_public?: boolean;
+}
+
+// ===========================
+// Service Implementation
+// ===========================
+
+export class MealPlanningService {
+
+  // ===========================
+  // Meal Plan CRUD
+  // ===========================
+
+  /**
+   * Get meal plan for a date range (typically 7 days)
+   */
+  static async getMealPlan(
+    userId: string,
+    startDate: string,
+    endDate: string
+  ): Promise<ApiResponse<MealPlanEntry[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true })
+        .order('meal_type', { ascending: true });
+
+      if (error) {
+        logger.error('Error fetching meal plan', error);
+        return { error: error.message };
+      }
+
+      return { data: data || [] };
+    } catch (err) {
+      logger.error('Error in getMealPlan', err as Error);
+      return { error: 'Failed to fetch meal plan' };
+    }
+  }
+
+  /**
+   * Add a meal to a specific slot (date + meal type)
+   */
+  static async addMealToSlot(
+    userId: string,
+    date: string,
+    mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack',
+    options: {
+      foodEntryId?: string;
+      recipeId?: string;
+      servings?: number;
+      notes?: string;
+    }
+  ): Promise<ApiResponse<MealPlanEntry>> {
+    try {
+      if (!options.foodEntryId && !options.recipeId) {
+        return { error: 'Must provide either foodEntryId or recipeId' };
+      }
+
+      const newMeal = {
+        user_id: userId,
+        date,
+        meal_type: mealType,
+        food_entry_id: options.foodEntryId || null,
+        recipe_id: options.recipeId || null,
+        servings: options.servings || 1,
+        notes: options.notes || null,
+        created_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .insert(newMeal)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Error adding meal to slot', error);
+        return { error: error.message };
+      }
+
+      return { data, message: 'Meal added successfully' };
+    } catch (err) {
+      logger.error('Error in addMealToSlot', err as Error);
+      return { error: 'Failed to add meal to plan' };
+    }
+  }
+
+  /**
+   * Remove a meal from the plan
+   */
+  static async removeMealFromSlot(
+    userId: string,
+    mealId: string
+  ): Promise<ApiResponse<void>> {
+    try {
+      const { error } = await supabase
+        .from('meal_plans')
+        .delete()
+        .eq('id', mealId)
+        .eq('user_id', userId);
+
+      if (error) {
+        logger.error('Error removing meal', error);
+        return { error: error.message };
+      }
+
+      return { message: 'Meal removed successfully' };
+    } catch (err) {
+      logger.error('Error in removeMealFromSlot', err as Error);
+      return { error: 'Failed to remove meal' };
+    }
+  }
+
+  /**
+   * Update meal servings or notes
+   */
+  static async updateMeal(
+    userId: string,
+    mealId: string,
+    updates: { servings?: number; notes?: string }
+  ): Promise<ApiResponse<MealPlanEntry>> {
+    try {
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .update(updates)
+        .eq('id', mealId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Error updating meal', error);
+        return { error: error.message };
+      }
+
+      return { data };
+    } catch (err) {
+      logger.error('Error in updateMeal', err as Error);
+      return { error: 'Failed to update meal' };
+    }
+  }
+
+  // ===========================
+  // Recipe Management
+  // ===========================
+
+  /**
+   * Search/filter recipes
+   */
+  static async getRecipes(
+    filters?: RecipeFilter,
+    limit: number = 50
+  ): Promise<ApiResponse<Recipe[]>> {
+    try {
+      let query = supabase
+        .from('recipes')
+        .select(`
+          *,
+          ingredients:recipe_ingredients(*),
+          tags:recipe_tags(tag)
+        `)
+        .eq('is_public', filters?.is_public ?? true)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      // Apply filters
+      if (filters?.search) {
+        query = query.textSearch('name', filters.search);
+      }
+
+      if (filters?.cuisine_type) {
+        query = query.eq('cuisine_type', filters.cuisine_type);
+      }
+
+      if (filters?.difficulty_level) {
+        query = query.eq('difficulty_level', filters.difficulty_level);
+      }
+
+      if (filters?.max_prep_time) {
+        query = query.lte('prep_time_minutes', filters.max_prep_time);
+      }
+
+      if (filters?.max_calories) {
+        query = query.lte('calories_per_serving', filters.max_calories);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        logger.error('Error fetching recipes', error);
+        return { error: error.message };
+      }
+
+      // Transform tags from array of objects to array of strings
+      const recipes = (data || []).map(recipe => ({
+        ...recipe,
+        tags: recipe.tags?.map((t: any) => t.tag) || [],
+      }));
+
+      return { data: recipes };
+    } catch (err) {
+      logger.error('Error in getRecipes', err as Error);
+      return { error: 'Failed to fetch recipes' };
+    }
+  }
+
+  /**
+   * Get a single recipe with full details
+   */
+  static async getRecipeById(recipeId: string): Promise<ApiResponse<Recipe>> {
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select(`
+          *,
+          ingredients:recipe_ingredients(*),
+          tags:recipe_tags(tag)
+        `)
+        .eq('id', recipeId)
+        .single();
+
+      if (error) {
+        logger.error('Error fetching recipe', error);
+        return { error: error.message };
+      }
+
+      // Transform tags
+      const recipe = {
+        ...data,
+        tags: data.tags?.map((t: any) => t.tag) || [],
+      };
+
+      return { data: recipe };
+    } catch (err) {
+      logger.error('Error in getRecipeById', err as Error);
+      return { error: 'Failed to fetch recipe details' };
+    }
+  }
+
+  // ===========================
+  // Meal Templates
+  // ===========================
+
+  /**
+   * Get user's saved meal templates
+   */
+  static async getMealTemplates(userId: string): Promise<ApiResponse<MealTemplate[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('meal_templates')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        logger.error('Error fetching meal templates', error);
+        return { error: error.message };
+      }
+
+      return { data: data || [] };
+    } catch (err) {
+      logger.error('Error in getMealTemplates', err as Error);
+      return { error: 'Failed to fetch meal templates' };
+    }
+  }
+
+  /**
+   * Save a new meal template
+   */
+  static async saveMealTemplate(
+    userId: string,
+    name: string,
+    meals: MealTemplate['meals'],
+    description?: string
+  ): Promise<ApiResponse<MealTemplate>> {
+    try {
+      const template = {
+        user_id: userId,
+        name,
+        description: description || null,
+        meals,
+        created_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('meal_templates')
+        .insert(template)
+        .select()
+        .single();
+
+      if (error) {
+        logger.error('Error saving meal template', error);
+        return { error: error.message };
+      }
+
+      return { data, message: 'Template saved successfully' };
+    } catch (err) {
+      logger.error('Error in saveMealTemplate', err as Error);
+      return { error: 'Failed to save meal template' };
+    }
+  }
+
+  /**
+   * Apply a template to a specific date
+   */
+  static async applyTemplate(
+    userId: string,
+    templateId: string,
+    targetDate: string
+  ): Promise<ApiResponse<MealPlanEntry[]>> {
+    try {
+      // Fetch template
+      const { data: template, error: templateError } = await supabase
+        .from('meal_templates')
+        .select('*')
+        .eq('id', templateId)
+        .eq('user_id', userId)
+        .single();
+
+      if (templateError || !template) {
+        return { error: 'Template not found' };
+      }
+
+      // Create meal plan entries from template
+      const mealPlans = template.meals.map((meal: any) => ({
+        user_id: userId,
+        date: targetDate,
+        meal_type: meal.meal_type,
+        food_entry_id: meal.food_entry_id || null,
+        recipe_id: meal.recipe_id || null,
+        servings: meal.servings || 1,
+        created_at: new Date().toISOString(),
+      }));
+
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .insert(mealPlans)
+        .select();
+
+      if (error) {
+        logger.error('Error applying template', error);
+        return { error: error.message };
+      }
+
+      return { data: data || [], message: 'Template applied successfully' };
+    } catch (err) {
+      logger.error('Error in applyTemplate', err as Error);
+      return { error: 'Failed to apply template' };
+    }
+  }
+
+  /**
+   * Delete a meal template
+   */
+  static async deleteTemplate(
+    userId: string,
+    templateId: string
+  ): Promise<ApiResponse<void>> {
+    try {
+      const { error } = await supabase
+        .from('meal_templates')
+        .delete()
+        .eq('id', templateId)
+        .eq('user_id', userId);
+
+      if (error) {
+        logger.error('Error deleting template', error);
+        return { error: error.message };
+      }
+
+      return { message: 'Template deleted successfully' };
+    } catch (err) {
+      logger.error('Error in deleteTemplate', err as Error);
+      return { error: 'Failed to delete template' };
+    }
+  }
+
+  // ===========================
+  // Shopping List Generation
+  // ===========================
+
+  /**
+   * Generate shopping list from meal plan
+   */
+  static async generateShoppingList(
+    userId: string,
+    startDate: string,
+    endDate: string
+  ): Promise<ApiResponse<ShoppingListItem[]>> {
+    try {
+      // Get meal plan for date range
+      const { data: mealPlan, error: planError } = await this.getMealPlan(
+        userId,
+        startDate,
+        endDate
+      );
+
+      if (planError || !mealPlan) {
+        return { error: 'Failed to fetch meal plan' };
+      }
+
+      // Extract unique recipe IDs
+      const recipeIds = [...new Set(
+        mealPlan
+          .filter(meal => meal.recipe_id)
+          .map(meal => meal.recipe_id!)
+      )];
+
+      if (recipeIds.length === 0) {
+        return { data: [] };
+      }
+
+      // Fetch recipe details with ingredients
+      const { data: recipes, error: recipesError } = await supabase
+        .from('recipes')
+        .select(`
+          id,
+          name,
+          ingredients:recipe_ingredients(*)
+        `)
+        .in('id', recipeIds);
+
+      if (recipesError) {
+        return { error: 'Failed to fetch recipe details' };
+      }
+
+      // Aggregate ingredients
+      const ingredientMap: Map<string, ShoppingListItem> = new Map();
+
+      mealPlan.forEach(meal => {
+        if (!meal.recipe_id) return;
+
+        const recipe = recipes?.find(r => r.id === meal.recipe_id);
+        if (!recipe) return;
+
+        recipe.ingredients?.forEach((ingredient: any) => {
+          const key = ingredient.ingredient_name.toLowerCase();
+          const existing = ingredientMap.get(key);
+
+          if (existing) {
+            // Add to existing (simplified aggregation)
+            existing.recipes.push(recipe.name);
+            // Note: Real quantity aggregation would need unit conversion
+          } else {
+            ingredientMap.set(key, {
+              ingredient_name: ingredient.ingredient_name,
+              total_quantity: ingredient.quantity || '1',
+              unit: ingredient.unit || '',
+              recipes: [recipe.name],
+              checked: false,
+            });
+          }
+        });
+      });
+
+      const shoppingList = Array.from(ingredientMap.values());
+
+      // Cache in AsyncStorage for offline access
+      await AsyncStorage.setItem(
+        `@mindfork:shopping_list:${userId}`,
+        JSON.stringify(shoppingList)
+      );
+
+      return { data: shoppingList };
+    } catch (err) {
+      logger.error('Error in generateShoppingList', err as Error);
+      return { error: 'Failed to generate shopping list' };
+    }
+  }
+
+  /**
+   * Get cached shopping list
+   */
+  static async getCachedShoppingList(userId: string): Promise<ShoppingListItem[]> {
+    try {
+      const cached = await AsyncStorage.getItem(`@mindfork:shopping_list:${userId}`);
+      return cached ? JSON.parse(cached) : [];
+    } catch (err) {
+      logger.error('Error getting cached shopping list', err as Error);
+      return [];
+    }
+  }
+
+  /**
+   * Update shopping list item check status
+   */
+  static async updateShoppingListItem(
+    userId: string,
+    ingredientName: string,
+    checked: boolean
+  ): Promise<void> {
+    try {
+      const list = await this.getCachedShoppingList(userId);
+      const updated = list.map(item =>
+        item.ingredient_name === ingredientName ? { ...item, checked } : item
+      );
+      await AsyncStorage.setItem(
+        `@mindfork:shopping_list:${userId}`,
+        JSON.stringify(updated)
+      );
+    } catch (err) {
+      logger.error('Error updating shopping list item', err as Error);
+    }
+  }
+
+  // ===========================
+  // Macro Summary
+  // ===========================
+
+  /**
+   * Calculate daily macro summary for a date
+   */
+  static async getDailyMacroSummary(
+    userId: string,
+    date: string,
+    userGoals?: {
+      daily_calorie_goal?: number;
+      daily_protein_goal?: number;
+      daily_carbs_goal?: number;
+      daily_fat_goal?: number;
+    }
+  ): Promise<ApiResponse<DailyMacroSummary>> {
+    try {
+      // Get meal plan for the day
+      const { data: mealPlan, error } = await this.getMealPlan(userId, date, date);
+
+      if (error || !mealPlan) {
+        return { error: 'Failed to fetch meal plan' };
+      }
+
+      let totalCalories = 0;
+      let totalProtein = 0;
+      let totalCarbs = 0;
+      let totalFat = 0;
+      let totalFiber = 0;
+
+      // Aggregate macros from recipes and food entries
+      for (const meal of mealPlan) {
+        if (meal.recipe_id) {
+          const { data: recipe } = await supabase
+            .from('recipes')
+            .select('calories_per_serving, protein_g, carbs_g, fat_g, fiber_g')
+            .eq('id', meal.recipe_id)
+            .single();
+
+          if (recipe) {
+            const servings = meal.servings || 1;
+            totalCalories += (recipe.calories_per_serving || 0) * servings;
+            totalProtein += (recipe.protein_g || 0) * servings;
+            totalCarbs += (recipe.carbs_g || 0) * servings;
+            totalFat += (recipe.fat_g || 0) * servings;
+            totalFiber += (recipe.fiber_g || 0) * servings;
+          }
+        } else if (meal.food_entry_id) {
+          const { data: foodEntry } = await supabase
+            .from('food_entries')
+            .select('calories, protein, carbs, fat, fiber')
+            .eq('id', meal.food_entry_id)
+            .single();
+
+          if (foodEntry) {
+            const servings = meal.servings || 1;
+            totalCalories += (foodEntry.calories || 0) * servings;
+            totalProtein += (foodEntry.protein || 0) * servings;
+            totalCarbs += (foodEntry.carbs || 0) * servings;
+            totalFat += (foodEntry.fat || 0) * servings;
+            totalFiber += (foodEntry.fiber || 0) * servings;
+          }
+        }
+      }
+
+      const summary: DailyMacroSummary = {
+        date,
+        planned_calories: Math.round(totalCalories),
+        planned_protein: Math.round(totalProtein),
+        planned_carbs: Math.round(totalCarbs),
+        planned_fat: Math.round(totalFat),
+        planned_fiber: Math.round(totalFiber),
+        target_calories: userGoals?.daily_calorie_goal,
+        target_protein: userGoals?.daily_protein_goal,
+        target_carbs: userGoals?.daily_carbs_goal,
+        target_fat: userGoals?.daily_fat_goal,
+      };
+
+      return { data: summary };
+    } catch (err) {
+      logger.error('Error in getDailyMacroSummary', err as Error);
+      return { error: 'Failed to calculate macro summary' };
+    }
+  }
+}

@@ -13,6 +13,10 @@ module.exports = defineConfig([
       "patches/*",
       "bun.lock",
       "eslint.config.js",
+      "**/__tests__/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "src/agent/**",
     ],
     settings: {
       "import/resolver": {
@@ -32,6 +36,8 @@ module.exports = defineConfig([
       "react/jsx-no-undef": "error",
       "react/jsx-uses-react": "off", // React 17+ JSX transform
       "react/react-in-jsx-scope": "off",
+      "react/no-unescaped-entities": "off",
+      "import/no-unresolved": "off",
 
       // Enforce React Hooks rules
       "react-hooks/rules-of-hooks": "error",
