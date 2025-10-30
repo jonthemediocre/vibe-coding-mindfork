@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { View, ActivityIndicator } from "react-native";
 import { TabNavigator } from "./TabNavigator";
 import { SignInScreen } from "../screens/auth/SignInScreen";
-import { OnboardingScreen } from "../screens/auth/OnboardingScreen";
+import { ConversationalOnboardingScreen } from "../screens/auth/ConversationalOnboardingScreen";
 import { useTheme } from "../app-components/components/ThemeProvider";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -80,9 +80,9 @@ export function AuthNavigator() {
             <Stack.Screen name="Auth" component={SignInScreen} />
           </>
         ) : needsOnboarding ? (
-          <Stack.Screen 
-            name="Onboarding" 
-            component={OnboardingScreen}
+          <Stack.Screen
+            name="Onboarding"
+            component={ConversationalOnboardingScreen}
             options={{ animationTypeForReplace: 'push' }}
           />
         ) : (

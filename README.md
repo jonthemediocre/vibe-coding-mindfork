@@ -29,6 +29,37 @@
 - ✅ Personality-specific vocabulary and response patterns
 - ✅ LoRA/fine-tuning capabilities (see `docs/ENHANCE_COACH_PERSONALITIES.md`)
 
+### 🎯 Conversational AI Onboarding (NEW!)
+**YES! The onboarding uses natural language AI instead of forms:**
+
+**How it works:**
+1. Users chat naturally with Synapse (the AI coach)
+2. AI extracts structured data from conversation (name, age, height, weight, goals)
+3. No tedious forms - just type like you're texting a friend!
+4. AI asks follow-up questions to fill in missing info
+5. Shows a live preview of collected data
+6. Automatically saves to backend when complete
+
+**Technical Implementation:**
+- `ConversationalOnboardingScreen.tsx` - Chat UI with message bubbles
+- `OnboardingAgentService.ts` - Natural language parser + AI integration
+- Supabase Edge Function: `onboarding-agent` - GPT-4o-mini for conversation
+- Dual extraction: Local regex parser + AI extraction for accuracy
+- Real-time data preview showing what's been collected
+
+**Example conversation:**
+```
+Synapse: Hey there! 👋 I'm Synapse. What should I call you?
+User: I'm Alex, 28
+Synapse: Nice to meet you, Alex! 28 is a great age to start focusing on health.
+        What brings you to MindFork today? Want to lose weight, build muscle,
+        or just get healthier overall?
+User: I want to lose about 20 lbs. I'm 5'10" and weigh 190
+Synapse: Got it! So you're 5'10", 190 lbs, and looking to drop 20 pounds.
+        That's totally doable! How active are you during the week?
+...
+```
+
 ### 🎯 Dynamic Interface Based on Goals & Onboarding
 **YES! The dashboard completely adapts based on user goals:**
 
