@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { View, StyleSheet, TextInput, Alert, Dimensions, Pressable } from "react-native";
+import { View, StyleSheet, TextInput, Alert, Dimensions, Pressable, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
@@ -57,30 +57,38 @@ export const SignInScreen: React.FC = () => {
         <ThemeToggle />
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Logo & Branding */}
-        <View style={styles.brandingContainer}>
-          <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
-            <Ionicons name="brain" size={56} color="#FFFFFF" />
+      {/* Content with ScrollView */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Logo & Branding */}
+          <View style={styles.brandingContainer}>
+            <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
+              <Ionicons name="brain" size={56} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.appName, {
+              color: colors.text,
+              textShadowColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+              textShadowOffset: { width: 0, height: 2 },
+              textShadowRadius: 8,
+            }]}>
+              MindFork
+            </Text>
+            <Text style={[styles.tagline, {
+              color: colors.textSecondary,
+              textShadowColor: isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+              textShadowOffset: { width: 0, height: 1 },
+              textShadowRadius: 6,
+            }]}>
+              Your AI-Powered Health Coach
+            </Text>
           </View>
-          <Text style={[styles.appName, {
-            color: colors.text,
-            textShadowColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
-            textShadowOffset: { width: 0, height: 2 },
-            textShadowRadius: 8,
-          }]}>
-            MindFork
-          </Text>
-          <Text style={[styles.tagline, {
-            color: colors.textSecondary,
-            textShadowColor: isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-            textShadowOffset: { width: 0, height: 1 },
-            textShadowRadius: 6,
-          }]}>
-            Your AI-Powered Health Coach
-          </Text>
-        </View>
 
         {/* Auth Card */}
         <Card elevation={3} padding="lg" style={styles.card}>
@@ -197,7 +205,8 @@ export const SignInScreen: React.FC = () => {
             />
           </Card>
         )}
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -243,10 +252,10 @@ const createStyles = (theme: any) =>
       right: 20,
       zIndex: 10,
     },
-    content: {
-      flex: 1,
+    scrollContent: {
+      flexGrow: 1,
       paddingHorizontal: 24,
-      paddingTop: 80,
+      paddingTop: 100,
       paddingBottom: 40,
     },
     brandingContainer: {
