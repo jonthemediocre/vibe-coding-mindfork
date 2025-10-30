@@ -314,9 +314,8 @@ export const ConversationalOnboardingScreen: React.FC<
                 value={inputText}
                 onChangeText={setInputText}
                 placeholder="Type your message..."
-                multiline
                 maxLength={500}
-                className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3 mr-2 max-h-24"
+                className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3 mr-2"
                 editable={!isCompleting}
                 onSubmitEditing={handleSend}
                 blurOnSubmit={false}
