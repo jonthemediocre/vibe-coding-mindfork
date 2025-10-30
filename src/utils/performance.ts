@@ -20,6 +20,7 @@ class PerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
   private readonly maxMetrics = 100;
   private screenRenderStart: Map<string, number> = new Map();
+  private memoryMonitorInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.setupMemoryMonitoring();
@@ -127,8 +128,13 @@ class PerformanceMonitor {
    * Setup periodic memory monitoring
    */
   private setupMemoryMonitoring() {
+    // Clear any existing interval first
+    if (this.memoryMonitorInterval) {
+      clearInterval(this.memoryMonitorInterval);
+    }
+
     // Monitor memory every 30 seconds
-    setInterval(async () => {
+    this.memoryMonitorInterval = setInterval(async () => {
       const memoryUsage = await this.getMemoryUsage();
       if (memoryUsage > 0) {
         this.recordMetric({
@@ -149,6 +155,17 @@ class PerformanceMonitor {
         }
       }
     }, 30000);
+  }
+
+  /**
+   * Stop memory monitoring and clean up resources
+   */
+  stopMemoryMonitoring() {
+    if (this.memoryMonitorInterval) {
+      clearInterval(this.memoryMonitorInterval);
+      this.memoryMonitorInterval = null;
+      logger.debug('Memory monitoring stopped');
+    }
   }
 
   /**
@@ -189,6 +206,15 @@ class PerformanceMonitor {
   clearMetrics() {
     this.metrics = [];
     this.screenRenderStart.clear();
+  }
+
+  /**
+   * Cleanup all resources (call when app is closing or monitor is no longer needed)
+   */
+  cleanup() {
+    this.stopMemoryMonitoring();
+    this.clearMetrics();
+    logger.debug('PerformanceMonitor cleaned up');
   }
 }
 

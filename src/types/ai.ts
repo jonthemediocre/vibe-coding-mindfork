@@ -7,6 +7,7 @@ export interface AIRequestOptions {
   temperature?: number;
   maxTokens?: number;
   model?: string;
+  timeout?: number; // Timeout in milliseconds
 }
 
 export interface AIResponse {

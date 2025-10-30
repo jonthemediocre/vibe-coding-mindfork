@@ -7,12 +7,17 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase, ensureSupabaseInitialized } from "@/lib/supabase";
 import { ENV } from "../config/env";
 import { logger } from "../utils/logger";
+import {
+  getSecureJSON,
+  setSecureJSON,
+  deleteSecureItem,
+  migrateFromAsyncStorage,
+} from "../utils/secureStorage";
 
 export interface User {
   id: string;
@@ -74,38 +79,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         await ensureSupabaseInitialized();
 
-        // Restore cached session if still valid
-        const cached = await AsyncStorage.getItem(STORAGE_KEY(ENV.APP_ENV));
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          if (parsed?.access_token) {
-            setSession(parsed);
-            setUser(mapUser(parsed.user) ?? null);
+        // Migrate from insecure AsyncStorage to SecureStore if needed
+        await migrateFromAsyncStorage(STORAGE_KEY(ENV.APP_ENV));
+
+        // Restore cached session from secure storage if still valid
+        const cached = await getSecureJSON<Session>(STORAGE_KEY(ENV.APP_ENV));
+        if (cached?.access_token) {
+          // Validate session hasn't expired
+          const expiresAt = cached.expires_at ? cached.expires_at * 1000 : 0;
+          const isExpired = expiresAt > 0 && Date.now() > expiresAt;
+
+          if (!isExpired) {
+            setSession(cached);
+            setUser(mapUser(cached.user) ?? null);
+            logger.debug("Restored session from secure storage", { userId: cached.user?.id });
+          } else {
+            logger.info("Cached session expired, clearing", { expiresAt: new Date(expiresAt) });
+            await deleteSecureItem(STORAGE_KEY(ENV.APP_ENV));
           }
         }
 
+        // Get fresh session from Supabase
         const { data, error } = await supabase.auth.getSession();
         if (error) {
           logger.warn("Supabase getSession error", { error: error.message });
-        } else {
+        } else if (active) {
           setSession(data.session);
           setUser(mapUser(data.session?.user) ?? null);
           if (data.session) {
-            await AsyncStorage.setItem(STORAGE_KEY(ENV.APP_ENV), JSON.stringify(data.session));
+            await setSecureJSON(STORAGE_KEY(ENV.APP_ENV), data.session);
+            logger.debug("Session stored securely", { userId: data.session.user?.id });
           }
         }
 
-        const listener = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        // Listen for auth state changes
+        const listener = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
           if (!active) return;
+
           setSession(nextSession);
           setUser(mapUser(nextSession?.user) ?? null);
+
           if (nextSession) {
-            AsyncStorage.setItem(STORAGE_KEY(ENV.APP_ENV), JSON.stringify(nextSession));
+            await setSecureJSON(STORAGE_KEY(ENV.APP_ENV), nextSession);
+            logger.debug("Session updated in secure storage", { userId: nextSession.user?.id });
           } else {
-            AsyncStorage.removeItem(STORAGE_KEY(ENV.APP_ENV));
+            await deleteSecureItem(STORAGE_KEY(ENV.APP_ENV));
+            logger.debug("Session removed from secure storage");
           }
         });
         subscription = listener.data.subscription;
+      } catch (error) {
+        logger.error("Auth bootstrap failed", error as Error);
       } finally {
         if (active) {
           setIsInitialized(true);
@@ -169,9 +193,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (signOutError) {
         throw signOutError;
       }
-      await AsyncStorage.removeItem(STORAGE_KEY(ENV.APP_ENV));
+      await deleteSecureItem(STORAGE_KEY(ENV.APP_ENV));
       setUser(null);
       setSession(null);
+      logger.info("User signed out successfully");
     } catch (err: any) {
       handleAuthError(err?.message ?? "Unable to sign out");
     } finally {
@@ -187,7 +212,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     logger.info("Bypassing authentication for development");
     setIsLoading(true);
-    
+
     try {
       // Create a mock user and session for development
       const mockUser: User = {
@@ -226,18 +251,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Clear any existing error
       setError(null);
-      
+
       // Set the state directly - this should trigger navigation
       setUser(mockUser);
       setSession(mockSession);
-      
-      // Cache the mock session
-      await AsyncStorage.setItem(STORAGE_KEY(ENV.APP_ENV), JSON.stringify(mockSession));
-      
-      logger.info("Development auth bypass successful", { 
+
+      // Cache the mock session securely
+      await setSecureJSON(STORAGE_KEY(ENV.APP_ENV), mockSession);
+
+      logger.info("Development auth bypass successful", {
         userId: mockUser.id,
         hasUser: !!mockUser,
-        hasSession: !!mockSession 
+        hasSession: !!mockSession
       });
     } catch (error) {
       logger.error("Failed to bypass auth", error as Error);
