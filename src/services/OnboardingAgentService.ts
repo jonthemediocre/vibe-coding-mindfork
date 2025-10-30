@@ -26,6 +26,7 @@ export interface OnboardingData {
   primaryGoal?: Goal;
   activityLevel?: ActivityLevel;
   dietType?: DietType;
+  usesFasting?: boolean;
 }
 
 export interface OnboardingMessage {
@@ -107,6 +108,14 @@ Your job is to have a natural, warm conversation to collect the following inform
 7. Primary goal - Store as "primaryGoal": lose_weight, gain_muscle, maintain, or get_healthy
 8. Activity level - Store as "activityLevel": sedentary, light, moderate, active, or very_active
 9. Diet preferences - Store as "dietType": mindfork (balanced), vegetarian, vegan, keto, paleo, or mediterranean
+   - IMPORTANT: Fasting is NOT a diet type - it's a separate optional feature
+   - When asking about diet, present it like: "What eating style works for you? Balanced, vegetarian, vegan, keto, paleo, or mediterranean?"
+   - DO NOT list fasting as a diet option
+   - After they choose their diet, ask: "Would you like to combine your [diet type] with intermittent fasting? You can track fasting windows alongside your meals."
+10. Fasting preference - Store as "usesFasting": true/false (optional, defaults to false)
+    - This is asked AFTER diet type
+    - Make it clear this is optional and can be added to any diet
+    - Example: "Some people like to do intermittent fasting alongside their diet. Would you be interested in tracking fasting windows?"
 
 CRITICAL FIELD NAMES - USE THESE EXACT NAMES:
 - fullName (not name)
@@ -118,6 +127,7 @@ CRITICAL FIELD NAMES - USE THESE EXACT NAMES:
 - primaryGoal (not goal)
 - activityLevel (not activity)
 - dietType (not dietPreferences or diet)
+- usesFasting (boolean, true/false, optional - defaults to false if not asked)
 
 Current data collected:
 ${JSON.stringify(currentData, null, 2)}
@@ -187,11 +197,17 @@ Examples of Semantic Understanding (NOT exhaustive - use your intelligence):
 - "everything", "no restrictions" → mindfork
 - "balanced", "normal", "regular" → mindfork
 - If they say "mindfork", that's the balanced diet option
+- NEVER suggest "fasting" as a diet type - it's a separate feature
+
+**Fasting Preference** (asked AFTER diet type):
+- "yes", "sure", "yeah", "interested", "want to try" → usesFasting: true
+- "no", "not interested", "skip", "no thanks" → usesFasting: false
+- If unclear, ask: "Would you like to track intermittent fasting alongside your meals?"
 
 **Completion Rules**:
-- Once you have ALL 9 fields (fullName, age, gender, heightFeet, heightInches, weightLbs, primaryGoal, activityLevel, dietType), immediately set isComplete to true
-- Do NOT ask follow-up questions about fasting, meal timing, or other preferences
-- Fasting is a separate feature they'll set up later in the app
+- After getting the 9 core fields (fullName, age, gender, heightFeet, heightInches, weightLbs, primaryGoal, activityLevel, dietType), ask about fasting
+- Fasting question: "Would you like to combine your [diet type] with intermittent fasting? You can track fasting windows alongside your meals. (Yes/No)"
+- Once you have the fasting preference (or they skip it), set isComplete to true
 - When complete, say something like: "Perfect! I've got everything I need. Let me set up your personalized experience..."
 
 **Response Style**:
@@ -218,9 +234,9 @@ HEIGHT PARSING - CRITICAL:
 - Never say height is "short" or make judgments - all heights are perfectly fine!
 - If someone gives just two numbers separated by space, assume feet and inches
 
-- If you have all 9 required fields, set isComplete to true immediately
+- After getting all 9 core fields, ask if they want to add intermittent fasting to their plan
+- Once fasting preference is answered (or skipped), set isComplete to true
 - When complete, congratulate them warmly and say you're setting up their personalized experience
-- Do NOT ask about fasting, meal timing, or other features - those are separate in the app
 
 Respond in JSON format:
 {
@@ -409,6 +425,17 @@ export function extractDataFromText(
 export function isOnboardingComplete(data: Partial<OnboardingData>): boolean {
   const hasHeight = !!(data.heightFeet && (data.heightInches !== undefined && data.heightInches !== null));
 
+  // usesFasting is optional - if not set, we consider onboarding complete without it
+  const hasCoreData = !!(
+    data.age &&
+    data.gender &&
+    hasHeight &&
+    data.weightLbs &&
+    data.primaryGoal &&
+    data.activityLevel &&
+    data.dietType
+  );
+
   console.log('[Onboarding] Completion check:', {
     age: !!data.age,
     gender: !!data.gender,
@@ -419,17 +446,11 @@ export function isOnboardingComplete(data: Partial<OnboardingData>): boolean {
     primaryGoal: !!data.primaryGoal,
     activityLevel: !!data.activityLevel,
     dietType: !!data.dietType,
+    usesFasting: data.usesFasting,
+    hasCoreData,
   });
 
-  return !!(
-    data.age &&
-    data.gender &&
-    hasHeight &&
-    data.weightLbs &&
-    data.primaryGoal &&
-    data.activityLevel &&
-    data.dietType
-  );
+  return hasCoreData;
 }
 
 /**
