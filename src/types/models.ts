@@ -181,9 +181,9 @@ export interface EndFastingInput {
 }
 
 // Goal types
-export type GoalType = 'weight' | 'nutrition' | 'fitness' | 'habit' | 'custom';
-export type GoalCategory = 'health' | 'fitness' | 'nutrition' | 'lifestyle';
-export type GoalStatus = 'active' | 'completed' | 'paused' | 'abandoned';
+export type GoalType = 'weight' | 'nutrition' | 'fitness' | 'habit' | 'custom' | 'calories' | 'protein' | 'carbs' | 'fat' | 'water' | 'exercise' | 'sleep' | 'streak';
+export type GoalCategory = 'health' | 'fitness' | 'nutrition' | 'lifestyle' | 'weight' | 'hydration' | 'exercise' | 'sleep' | 'habits' | 'custom';
+export type GoalStatus = 'active' | 'completed' | 'paused' | 'abandoned' | 'ahead' | 'on_track' | 'behind';
 
 export interface Goal {
   id: string;
@@ -201,6 +201,10 @@ export interface Goal {
   completed_at?: string;
   created_at: string;
   updated_at?: string;
+  // Additional properties used in GoalsScreen and GoalsService
+  progress?: number;
+  milestones?: GoalMilestone[];
+  priority?: 'low' | 'medium' | 'high';
 }
 
 export interface GoalMilestone {
@@ -211,6 +215,9 @@ export interface GoalMilestone {
   target_value?: number;
   achieved_at?: string;
   created_at: string;
+  // Additional properties used in GoalsService
+  achieved?: boolean;
+  value?: number;
 }
 
 export interface Achievement {
@@ -222,6 +229,10 @@ export interface Achievement {
   badge_url?: string;
   earned_at: string;
   category?: string;
+  // Additional properties used in GoalsScreen and GoalsService
+  color?: string;
+  earned_date?: string;
+  criteria_met?: boolean;
 }
 
 export interface CreateGoalInput {
@@ -232,6 +243,9 @@ export interface CreateGoalInput {
   target_value?: number;
   unit?: string;
   target_date?: string;
+  // Additional properties used in GoalsService
+  priority?: 'low' | 'medium' | 'high';
+  current_value?: number;
 }
 
 export interface UpdateGoalInput extends Partial<CreateGoalInput> {
