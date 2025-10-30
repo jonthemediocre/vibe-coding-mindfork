@@ -196,6 +196,250 @@ export interface GoalMilestone {
 4. **Human-in-the-Loop**: All schema changes, deprecations, and architectural decisions require human approval
 5. **Preserve Data**: Never make changes that could cause data loss
 6. **Fix Errors Proactively**: When you see errors, fix them in the context of the parts they touch
+7. **Read Before Write**: Always read existing code/files before making changes
+8. **Test Thinking**: Consider edge cases and potential failures
+9. **Document Intent**: Code should explain why, not just what
+10. **Performance Awareness**: Consider cost, speed, and resource usage
+
+## Additional First Principles
+
+### 7. Read Before Write
+
+**CRITICAL RULE**: Always read existing code, files, and context before making changes. Never assume you know what's there.
+
+**Why This Matters:**
+- Prevents overwriting sophisticated implementations with naive ones
+- Reveals existing patterns to follow
+- Discovers dependencies and side effects
+- Shows what's already been tried/solved
+
+**Examples:**
+
+**✅ CORRECT:**
+```typescript
+// Read the file first
+const existingService = await read('services/FoodService.ts');
+
+// Analyze: Oh, there's already sophisticated caching, retries, error handling
+// Add the new method following the existing patterns
+
+// Add new method that matches existing patterns:
+async getRecentFoods(userId: string, limit = 10) {
+  return this.withCache(`recent-${userId}`, async () => {
+    return this.withRetry(async () => {
+      // follows existing patterns
+    });
+  });
+}
+```
+
+**❌ WRONG:**
+```typescript
+// Just write without reading first
+async getRecentFoods(userId: string) {
+  return await supabase.from('foods').select('*'); // Naive, no error handling
+}
+```
+
+### 8. Test Thinking (Edge Cases and Failure Modes)
+
+**CRITICAL RULE**: Always think about what can go wrong. Consider edge cases, error states, and failure modes.
+
+**Edge Cases to Consider:**
+1. **Empty States**: What if array is empty? String is ""? Object is null?
+2. **Boundary Conditions**: What if number is 0? Negative? Very large?
+3. **Type Edges**: What if user passes wrong type? Undefined? NaN?
+4. **Network Failures**: What if API call fails? Times out? Returns malformed data?
+5. **Race Conditions**: What if function called twice simultaneously?
+6. **User Errors**: What if user provides invalid input? Contradictory data?
+
+**Examples:**
+
+**✅ CORRECT: Edge Case Handling**
+```typescript
+async function calculateBMR(weight_kg: number, height_cm: number, age: number, gender: string) {
+  // Validate inputs - edge case thinking
+  if (!weight_kg || weight_kg <= 0 || weight_kg > 500) {
+    throw new Error('Invalid weight: must be between 0 and 500 kg');
+  }
+  if (!height_cm || height_cm <= 0 || height_cm > 300) {
+    throw new Error('Invalid height: must be between 0 and 300 cm');
+  }
+  if (!age || age < 13 || age > 120) {
+    throw new Error('Invalid age: must be between 13 and 120');
+  }
+
+  // Calculate BMR with validated inputs
+  let bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age;
+
+  // Handle gender edge case
+  if (gender === 'male') {
+    bmr += 5;
+  } else if (gender === 'female') {
+    bmr -= 161;
+  } else {
+    // Fallback for 'other' or unexpected values
+    bmr -= 78;
+  }
+
+  return Math.round(bmr);
+}
+```
+
+**❌ WRONG: No Edge Case Handling**
+```typescript
+async function calculateBMR(weight_kg, height_cm, age, gender) {
+  // What if weight is negative? Height is 0? Age is 500?
+  let bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age;
+  if (gender === 'male') bmr += 5;
+  return bmr; // What if gender is null? Returns NaN
+}
+```
+
+**Failure Mode Thinking:**
+- Network request: Add timeout, retry logic, error handling
+- Database query: Handle empty results, connection failures, schema mismatches
+- User input: Validate, sanitize, provide clear error messages
+- API calls: Handle rate limits, invalid tokens, malformed responses
+- File operations: Handle missing files, permissions, disk full
+
+### 9. Document Intent, Not Just Implementation
+
+**CRITICAL RULE**: Code should explain WHY decisions were made, not just WHAT the code does.
+
+**What to Document:**
+1. **Why this approach**: "Using exponential backoff because API rate limits"
+2. **Why this limitation**: "Max 100 items due to mobile memory constraints"
+3. **Why this workaround**: "Parsing manually because API returns invalid JSON in some cases"
+4. **Why this order**: "Must check permissions before fetching data"
+5. **Why this exception**: "Allowing null for backwards compatibility with old profiles"
+
+**Examples:**
+
+**✅ CORRECT: Intent Documentation**
+```typescript
+/**
+ * Calculate nutrition goals using Mifflin-St Jeor equation
+ *
+ * Why Mifflin-St Jeor: Most accurate for modern populations (vs Harris-Benedict)
+ * Why separate male/female: Biological metabolism differences require different formulas
+ * Why 'other' uses average: Provides reasonable estimate without biological data
+ *
+ * @param profile - User profile with biological metrics
+ * @returns Calculated daily nutrition goals
+ */
+export function calculateNutritionGoals(profile: UserProfile): NutritionGoals {
+  // Must use biological sex (not gender identity) for metabolic calculations
+  const bmr = calculateBMR(profile.weight_kg, profile.height_cm, profile.age, profile.gender);
+
+  // TDEE multiplier validated against research studies
+  const tdee = bmr * ACTIVITY_MULTIPLIERS[profile.activity_level];
+
+  // 500 calorie deficit = ~0.5kg/week loss (safe, sustainable rate)
+  const dailyCalories = profile.goal === 'lose_weight' ? tdee - 500 : tdee;
+
+  return { daily_calories: dailyCalories, /* ... */ };
+}
+```
+
+**❌ WRONG: No Intent**
+```typescript
+// Calculate BMR
+export function calculateNutritionGoals(profile) {
+  const bmr = calculateBMR(profile.weight_kg, profile.height_cm, profile.age, profile.gender);
+  const tdee = bmr * ACTIVITY_MULTIPLIERS[profile.activity_level];
+  const dailyCalories = profile.goal === 'lose_weight' ? tdee - 500 : tdee;
+  return { daily_calories: dailyCalories };
+}
+```
+
+**Key Questions for Intent Documentation:**
+- Why this algorithm/approach over alternatives?
+- Why this specific number/threshold/limit?
+- Why this order of operations?
+- Why this exception/special case?
+- Why this dependency/library?
+- What problem does this solve that wasn't obvious?
+
+### 10. Performance and Cost Awareness
+
+**CRITICAL RULE**: Consider the cost and performance implications of your code. Mobile apps, API calls, and database queries have real costs.
+
+**What to Consider:**
+
+**1. API Costs:**
+- OpenAI API: ~$0.01-0.10 per request depending on model
+- Image generation: ~$0.04 per image
+- Every API call has latency (network round-trip)
+
+**2. Mobile Performance:**
+- Bundle size: Every KB matters for download/startup time
+- Memory: Mobile devices have limited RAM
+- Battery: Excessive computation drains battery
+- Network: Users may be on slow/metered connections
+
+**3. Database Costs:**
+- Query complexity: JOINs and scans are expensive
+- Index usage: Queries should use indexes
+- Read/write volume: Supabase bills by usage
+- Real-time subscriptions: Constant connections cost more
+
+**Examples:**
+
+**✅ CORRECT: Performance Aware**
+```typescript
+// Cache expensive calculation for 5 minutes
+const cachedGoals = await cache.get(`goals-${userId}`);
+if (cachedGoals && Date.now() - cachedGoals.timestamp < 300000) {
+  return cachedGoals.data; // Avoid re-calculation
+}
+
+// Only fetch needed fields (not SELECT *)
+const profile = await supabase
+  .from('profiles')
+  .select('weight_kg, height_cm, age, gender, activity_level') // Specific fields
+  .eq('user_id', userId)
+  .single();
+
+// Calculate once, use many times
+const nutritionGoals = calculateNutritionGoals(profile);
+await cache.set(`goals-${userId}`, { data: nutritionGoals, timestamp: Date.now() });
+```
+
+**❌ WRONG: Performance Unaware**
+```typescript
+// Calculate every time (expensive)
+export async function getDailyGoals(userId: string) {
+  // SELECT * fetches all fields unnecessarily
+  const profile = await supabase.from('profiles').select('*').eq('user_id', userId);
+
+  // Recalculate every time (should cache)
+  return calculateNutritionGoals(profile);
+}
+
+// Called on every screen render - hundreds of times!
+function DashboardScreen() {
+  const goals = getDailyGoals(userId); // No memoization!
+}
+```
+
+**Performance Checklist:**
+- [ ] Can this be cached?
+- [ ] Can this be computed once and reused?
+- [ ] Am I fetching only needed data?
+- [ ] Is this query using an index?
+- [ ] Will this work on slow networks?
+- [ ] What's the worst-case performance?
+- [ ] Could this cause memory issues on mobile?
+- [ ] Am I unnecessarily calling expensive APIs?
+
+**Cost Optimization:**
+- Use cheaper models when possible (gpt-4o-mini vs gpt-4)
+- Cache API responses
+- Batch operations when possible
+- Use database indexes
+- Optimize images before upload
+- Lazy load non-critical data
 
 ## Error Handling and Proactive Fixing
 

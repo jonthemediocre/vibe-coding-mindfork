@@ -199,6 +199,43 @@ export class PrivacyComplianceService {
       issues,
     };
   }
+
+  /**
+   * Report a privacy incident for logging and monitoring
+   * Used when potential privacy violations are detected
+   */
+  static reportPrivacyIncident(incident: {
+    type: string;
+    description: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    userId?: string;
+    context?: any;
+  }): void {
+    // In production, this would:
+    // 1. Log to secure audit trail
+    // 2. Alert privacy/security team if severity is high/critical
+    // 3. Create incident ticket for review
+    // 4. Potentially pause processing until reviewed
+
+    const timestamp = new Date().toISOString();
+    const logMessage = `[PRIVACY INCIDENT] ${timestamp} - Type: ${incident.type}, Severity: ${incident.severity}, Description: ${incident.description}`;
+
+    if (incident.severity === 'critical' || incident.severity === 'high') {
+      console.error(logMessage);
+    } else {
+      console.warn(logMessage);
+    }
+
+    // Log data access for audit trail
+    if (incident.userId) {
+      this.logDataAccess(
+        incident.userId,
+        'coach_context',
+        'read',
+        `privacy_incident_${incident.type}`
+      );
+    }
+  }
 }
 
 /**
