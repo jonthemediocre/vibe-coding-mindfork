@@ -464,6 +464,8 @@ export async function completeOnboarding(
     throw new Error("Onboarding data incomplete");
   }
 
+  console.log('[Onboarding] Starting database save for user:', userId);
+
   // Convert to metric
   const { height_cm, weight_kg } = convertImperialToMetric(
     data.heightFeet!,
@@ -475,6 +477,8 @@ export async function completeOnboarding(
     ? data.targetWeightLbs * 0.453592
     : undefined;
 
+  console.log('[Onboarding] Converted metrics:', { height_cm, weight_kg, targetWeightKg });
+
   // Calculate nutrition goals
   const goals = calculateNutritionGoals({
     weight_kg,
@@ -485,32 +489,59 @@ export async function completeOnboarding(
     primary_goal: data.primaryGoal!,
   });
 
-  // Save to database
-  const { error } = await supabase
+  console.log('[Onboarding] Calculated nutrition goals:', goals);
+
+  // Map activity level to database values
+  const activityLevelMap = {
+    sedentary: 'sedentary',
+    light: 'lightly_active',
+    moderate: 'moderately_active',
+    active: 'very_active',
+    very_active: 'extra_active',
+  } as const;
+
+  const dbActivityLevel = activityLevelMap[data.activityLevel as keyof typeof activityLevelMap] || 'sedentary';
+
+  // Update profiles table (only fields that exist)
+  const { error: profileError } = await supabase
     .from("profiles")
     .update({
       full_name: data.fullName || null,
-      age: data.age,
       gender: data.gender,
       height_cm,
       weight_kg: weight_kg,
-      target_weight_kg: targetWeightKg,
-      primary_goal: data.primaryGoal,
-      activity_level: data.activityLevel,
-      diet_type: data.dietType,
-      daily_calorie_goal: goals.daily_calories,
-      daily_protein_goal: goals.daily_protein_g,
-      daily_carbs_goal: goals.daily_carbs_g,
-      daily_fat_goal: goals.daily_fat_g,
-      daily_fiber_goal: goals.daily_fiber_g,
+      activity_level: dbActivityLevel,
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     })
-    .eq("user_id", userId);
+    .eq("id", userId);
 
-  if (error) {
-    throw error;
+  if (profileError) {
+    console.error('[Onboarding] Profile update error:', profileError);
+    throw profileError;
   }
+
+  console.log('[Onboarding] Profile updated successfully');
+
+  // Upsert user_settings table (nutrition goals)
+  const { error: settingsError } = await supabase
+    .from("user_settings")
+    .upsert({
+      user_id: userId,
+      daily_calorie_goal: Math.round(goals.daily_calories),
+      protein_goal_g: Math.round(goals.daily_protein_g),
+      carbs_goal_g: Math.round(goals.daily_carbs_g),
+      fat_goal_g: Math.round(goals.daily_fat_g),
+      fiber_goal_g: Math.round(goals.daily_fiber_g),
+      updated_at: new Date().toISOString(),
+    });
+
+  if (settingsError) {
+    console.error('[Onboarding] Settings upsert error:', settingsError);
+    throw settingsError;
+  }
+
+  console.log('[Onboarding] User settings saved successfully');
 }
 
 /**
