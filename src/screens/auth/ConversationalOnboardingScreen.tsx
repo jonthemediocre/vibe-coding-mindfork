@@ -7,10 +7,13 @@ import {
   Pressable,
   ActivityIndicator,
   Image,
+  StyleSheet,
 } from "react-native";
 import { Screen, Text, TextInput, useThemedStyles } from "../../ui";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../app-components/components/ThemeProvider";
 import type { Theme } from "../../app-components/components/ThemeProvider";
+import { ThemeToggle } from "../../components/ThemeToggle";
 import {
   sendOnboardingMessage,
   getInitialGreeting,
@@ -33,6 +36,7 @@ export const ConversationalOnboardingScreen: React.FC<
 > = ({ navigation }) => {
   const styles = useThemedStyles(createStyles);
   const { user } = useAuth();
+  const { isDark, theme } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [messages, setMessages] = useState<OnboardingMessage[]>([
@@ -244,14 +248,30 @@ export const ConversationalOnboardingScreen: React.FC<
     if (fields.length === 0) return null;
 
     return (
-      <View className="bg-purple-50 dark:bg-gray-800 rounded-lg p-3 mb-4 border border-purple-200 dark:border-gray-700">
-        <Text className="text-xs font-semibold text-purple-800 dark:text-purple-300 mb-2">
+      <View style={{
+        backgroundColor: isDark ? '#1F2937' : '#F3E8FF',
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: isDark ? '#374151' : '#C084FC',
+      }}>
+        <Text style={{
+          fontSize: 12,
+          fontWeight: '600',
+          color: isDark ? '#C084FC' : '#6B21A8',
+          marginBottom: 8,
+        }}>
           Information collected:
         </Text>
         {fields.map((field, idx) => (
           <Text
             key={idx}
-            className="text-xs text-gray-900 dark:text-gray-200 mb-1"
+            style={{
+              fontSize: 12,
+              color: isDark ? '#F3F4F6' : '#1F2937',
+              marginBottom: 4,
+            }}
           >
             • {field}
           </Text>
@@ -270,19 +290,22 @@ export const ConversationalOnboardingScreen: React.FC<
         <View className="flex-1 px-4">
           {/* Header */}
           <View className="py-4 border-b border-gray-200 dark:border-gray-700">
-            <View className="flex-row items-center">
-              <Image
-                source={require("../../../assets/coaches/assets_coaches_coach_synapse.png")}
-                className="w-12 h-12 rounded-full mr-3"
-              />
-              <View>
-                <Text className="text-lg font-bold text-gray-900 dark:text-white">
-                  Synapse
-                </Text>
-                <Text className="text-sm text-gray-600 dark:text-gray-400">
-                  Your AI Health Coach
-                </Text>
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center flex-1">
+                <Image
+                  source={require("../../../assets/coaches/assets_coaches_coach_synapse.png")}
+                  className="w-12 h-12 rounded-full mr-3"
+                />
+                <View>
+                  <Text className="text-lg font-bold text-gray-900 dark:text-white">
+                    Synapse
+                  </Text>
+                  <Text className="text-sm text-gray-600 dark:text-gray-400">
+                    Your AI Health Coach
+                  </Text>
+                </View>
               </View>
+              <ThemeToggle size={20} />
             </View>
           </View>
 

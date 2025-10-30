@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useNavigationState } from "@react-navigation/native";
 import { Feather as Icon } from "@expo/vector-icons";
 import { useTheme } from "../app-components/components/ThemeProvider";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { DashboardScreen } from "../screens/dashboard/DashboardScreen";
 import { FoodScreen } from "../screens/food/FoodScreen";
 import { FastingScreen } from "../screens/fasting/FastingScreen";
@@ -67,6 +68,7 @@ export function TabNavigator() {
           fontWeight: "600",
           fontSize: 18,
         },
+        headerRight: () => <ThemeToggle size={20} style={{ marginRight: 16 }} />,
       }}
     >
       <Tab.Screen
