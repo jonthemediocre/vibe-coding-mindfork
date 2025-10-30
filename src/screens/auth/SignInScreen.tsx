@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { View, StyleSheet, TextInput, Alert, Dimensions } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, StyleSheet, TextInput, Alert, Dimensions, Pressable } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
 import { ThemeToggle } from "../../components/ThemeToggle";
 import { useAuth } from "../../contexts/AuthContext";
@@ -8,6 +9,7 @@ import { useTheme } from "../../app-components/components/ThemeProvider";
 import { ENV } from "../../config/env";
 
 const { width } = Dimensions.get('window');
+const PHI = 1.618; // Golden ratio
 
 export const SignInScreen: React.FC = () => {
   const { signIn, signUp, bypassAuth, isLoading } = useAuth();
@@ -17,6 +19,8 @@ export const SignInScreen: React.FC = () => {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const passwordInputRef = useRef<TextInput>(null);
 
   const handleSubmit = async () => {
     if (!email.trim() || !password.trim()) {
@@ -86,6 +90,9 @@ export const SignInScreen: React.FC = () => {
               keyboardType="email-address"
               value={email}
               onChangeText={setEmail}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
+              blurOnSubmit={false}
               style={[styles.input, {
                 borderColor: colors.border,
                 color: colors.text,
@@ -93,18 +100,34 @@ export const SignInScreen: React.FC = () => {
               }]}
               placeholderTextColor={colors.textSecondary}
             />
-            <TextInput
-              placeholder="Password"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              style={[styles.input, {
-                borderColor: colors.border,
-                color: colors.text,
-                backgroundColor: isDark ? colors.surface : colors.background,
-              }]}
-              placeholderTextColor={colors.textSecondary}
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                ref={passwordInputRef}
+                placeholder="Password"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                returnKeyType="go"
+                onSubmitEditing={handleSubmit}
+                style={[styles.input, styles.passwordInput, {
+                  borderColor: colors.border,
+                  color: colors.text,
+                  backgroundColor: isDark ? colors.surface : colors.background,
+                }]}
+                placeholderTextColor={colors.textSecondary}
+              />
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.passwordToggle}
+                hitSlop={8}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={24}
+                  color={colors.textSecondary}
+                />
+              </Pressable>
+            </View>
           </View>
 
           <Button
@@ -224,7 +247,7 @@ const createStyles = (theme: any) =>
       borderRadius: 50,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 16,
+      marginBottom: Math.round(100 / PHI), // Golden ratio: 100 / 1.618 ≈ 62px
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
@@ -237,7 +260,7 @@ const createStyles = (theme: any) =>
     appName: {
       fontSize: 36,
       fontWeight: 'bold',
-      marginBottom: 8,
+      marginBottom: Math.round(36 / PHI / PHI), // 36 / PHI² ≈ 14px
       letterSpacing: -1,
     },
     tagline: {
@@ -261,12 +284,24 @@ const createStyles = (theme: any) =>
       gap: 12,
       marginBottom: 20,
     },
+    passwordContainer: {
+      position: 'relative',
+    },
     input: {
       borderWidth: 2,
       borderRadius: 16,
       paddingHorizontal: 18,
       paddingVertical: 16,
       fontSize: 16,
+    },
+    passwordInput: {
+      paddingRight: 50, // Space for eye icon
+    },
+    passwordToggle: {
+      position: 'absolute',
+      right: 14,
+      top: 16,
+      padding: 4,
     },
     submitButton: {
       marginBottom: 16,

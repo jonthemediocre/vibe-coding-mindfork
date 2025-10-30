@@ -319,6 +319,8 @@ export const ConversationalOnboardingScreen: React.FC<
                 className="flex-1 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-3 mr-2 max-h-24"
                 editable={!isCompleting}
                 onSubmitEditing={handleSend}
+                blurOnSubmit={false}
+                returnKeyType="send"
               />
               <Pressable
                 onPress={handleSend}
