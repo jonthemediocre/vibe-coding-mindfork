@@ -514,7 +514,7 @@ export async function completeOnboarding(
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", userId);
+    .eq("user_id", userId);
 
   if (profileError) {
     console.error('[Onboarding] Profile update error:', profileError);
