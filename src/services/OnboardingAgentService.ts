@@ -68,7 +68,7 @@ export async function sendOnboardingMessage(
       isComplete: data.isComplete,
     };
   } catch (error) {
-    console.error("Error calling onboarding agent:", error);
+    console.log("Onboarding edge function unavailable, using local fallback");
     // Fallback to local extraction
     return fallbackOnboardingAgent(conversationHistory, currentData);
   }
