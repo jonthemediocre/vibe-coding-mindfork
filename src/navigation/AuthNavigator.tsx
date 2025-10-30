@@ -5,6 +5,7 @@ import { View, ActivityIndicator } from "react-native";
 import { TabNavigator } from "./TabNavigator";
 import { SignInScreen } from "../screens/auth/SignInScreen";
 import { ConversationalOnboardingScreen } from "../screens/auth/ConversationalOnboardingScreen";
+import { ShareableImageScreen } from "../screens/onboarding/ShareableImageScreen";
 import { useTheme } from "../app-components/components/ThemeProvider";
 import { useAuth } from "../contexts/AuthContext";
 import { useProfile } from "../contexts/ProfileContext";
@@ -71,11 +72,18 @@ export function AuthNavigator() {
             <Stack.Screen name="Auth" component={SignInScreen} />
           </>
         ) : needsOnboarding ? (
-          <Stack.Screen
-            name="Onboarding"
-            component={ConversationalOnboardingScreen}
-            options={{ animationTypeForReplace: 'push' }}
-          />
+          <>
+            <Stack.Screen
+              name="Onboarding"
+              component={ConversationalOnboardingScreen}
+              options={{ animationTypeForReplace: 'push' }}
+            />
+            <Stack.Screen
+              name="ShareableImage"
+              component={ShareableImageScreen}
+              options={{ animationTypeForReplace: 'push' }}
+            />
+          </>
         ) : (
           <Stack.Screen
             name="Main"

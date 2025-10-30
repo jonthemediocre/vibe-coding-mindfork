@@ -29,7 +29,7 @@
 - ✅ Personality-specific vocabulary and response patterns
 - ✅ LoRA/fine-tuning capabilities (see `docs/ENHANCE_COACH_PERSONALITIES.md`)
 
-### 🎯 Conversational AI Onboarding (NEW!)
+### 🎯 Conversational AI Onboarding with Photo Capture (NEW!)
 **YES! The onboarding uses natural language AI instead of forms:**
 
 **How it works:**
@@ -38,10 +38,24 @@
 3. No tedious forms - just type like you're texting a friend!
 4. AI asks follow-up questions to fill in missing info
 5. Shows a live preview of collected data
-6. Automatically saves to backend when complete
+6. After completion, users take a selfie
+7. AI generates a shareable welcome image with the user and AI coach together
+8. Users can share on social media to promote their wellness journey and MindFork!
+
+**Photo Capture & Social Sharing:**
+- Camera modal with circular guide for perfect selfies
+- Front/back camera flip
+- AI-generated composite image of user + AI coach as friends
+- Personalized welcome message based on their goals
+- One-tap sharing to Instagram, Facebook, Twitter, etc.
+- Save to photo library
+- Skip option if they prefer not to share
 
 **Technical Implementation:**
 - `ConversationalOnboardingScreen.tsx` - Chat UI with message bubbles
+- `PhotoCaptureModal.tsx` - Camera capture with permissions
+- `ShareableImageScreen.tsx` - Display and share generated image
+- `WelcomeImageService.ts` - AI image generation for social media posts
 - `OnboardingAgentService.ts` - Natural language parser + AI integration
 - Supabase Edge Function: `onboarding-agent` - GPT-4o-mini for conversation
 - Dual extraction: Local regex parser + AI extraction for accuracy
@@ -58,6 +72,8 @@ User: I want to lose about 20 lbs. I'm 5'10" and weigh 190
 Synapse: Got it! So you're 5'10", 190 lbs, and looking to drop 20 pounds.
         That's totally doable! How active are you during the week?
 ...
+Synapse: Perfect! 🎉 Let's take a quick photo - I'll create a special
+         welcome image you can share! 📸
 ```
 
 ### 🎯 Dynamic Interface Based on Goals & Onboarding

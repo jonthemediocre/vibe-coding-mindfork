@@ -20,6 +20,7 @@ import {
   type OnboardingData,
   type OnboardingMessage,
 } from "../../services/OnboardingAgentService";
+import { PhotoCaptureModal } from "../../components/PhotoCaptureModal";
 
 interface ConversationalOnboardingScreenProps {
   navigation: any;
@@ -43,6 +44,8 @@ export const ConversationalOnboardingScreen: React.FC<
   const [isLoading, setIsLoading] = useState(false);
   const [onboardingData, setOnboardingData] = useState<Partial<OnboardingData>>({});
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showPhotoCapture, setShowPhotoCapture] = useState(false);
+  const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -112,20 +115,17 @@ export const ConversationalOnboardingScreen: React.FC<
     try {
       await completeOnboarding(user.id, data);
 
-      // Show success message
+      // Show success message and prompt for photo
       const successMessage: OnboardingMessage = {
         role: "assistant",
-        content: "Perfect! 🎉 I've got everything I need. Setting up your personalized dashboard now...",
+        content: "Perfect! 🎉 I've got everything I need.\n\nBefore we get started, let's take a quick photo of you! I'll create a special welcome image you can share on social media to celebrate starting your wellness journey. 📸",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, successMessage]);
 
-      // Navigate to main app after short delay
+      // Wait a moment, then show photo capture
       setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Main" }],
-        });
+        setShowPhotoCapture(true);
       }, 2000);
     } catch (error) {
       console.error("Error completing onboarding:", error);
@@ -137,6 +137,30 @@ export const ConversationalOnboardingScreen: React.FC<
       setMessages((prev) => [...prev, errorMessage]);
       setIsCompleting(false);
     }
+  };
+
+  const handlePhotoCapture = (photoUri: string) => {
+    setCapturedPhotoUri(photoUri);
+    setShowPhotoCapture(false);
+
+    // Navigate to shareable image screen
+    const goalText = onboardingData.primaryGoal?.replace('_', ' ') || 'wellness journey';
+
+    navigation.navigate('ShareableImage', {
+      userPhotoUri: photoUri,
+      userName: onboardingData.fullName || 'there',
+      userGoal: goalText,
+    });
+  };
+
+  const handleSkipPhoto = () => {
+    setShowPhotoCapture(false);
+
+    // Navigate directly to main app
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Main' }],
+    });
   };
 
   const renderMessage = (message: OnboardingMessage, index: number) => {
@@ -290,6 +314,13 @@ export const ConversationalOnboardingScreen: React.FC<
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Photo Capture Modal */}
+      <PhotoCaptureModal
+        visible={showPhotoCapture}
+        onClose={handleSkipPhoto}
+        onPhotoCapture={handlePhotoCapture}
+      />
     </Screen>
   );
 };
