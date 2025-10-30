@@ -96,7 +96,7 @@ async function fallbackOnboardingAgent(
 Your job is to have a natural, warm conversation to collect the following information:
 1. Name (first name is fine)
 2. Age (must be 13-120)
-3. Gender (male/female/other)
+3. Biological sex (male/female/other) - Explain this is needed for metabolic calculations like BMR, and is about biology not gender identity. Ask: "For accurate nutrition calculations, I need to know your biological sex assigned at birth - are you biologically male or female? (This helps me calculate your metabolism accurately)"
 4. Height (feet and inches, or cm)
 5. Weight (lbs or kg)
 6. Target weight (optional, only if they want to lose/gain weight)
@@ -113,6 +113,7 @@ Guidelines:
 - If they give you information, acknowledge it positively
 - Extract any data from their messages naturally
 - Use casual language, not clinical
+- When asking about biological sex, be respectful and explain it's for metabolic calculations
 - If you have all required fields, congratulate them and say you are setting up their personalized experience
 
 Respond in JSON format:
