@@ -21,6 +21,8 @@ import {
   type OnboardingMessage,
 } from "../../services/OnboardingAgentService";
 import { PhotoCaptureModal } from "../../components/PhotoCaptureModal";
+import { PhotoOptionsModal } from "../../components/PhotoOptionsModal";
+import { pickImageFromGallery } from "../../utils/imagePickerHelpers";
 
 interface ConversationalOnboardingScreenProps {
   navigation: any;
@@ -44,6 +46,7 @@ export const ConversationalOnboardingScreen: React.FC<
   const [isLoading, setIsLoading] = useState(false);
   const [onboardingData, setOnboardingData] = useState<Partial<OnboardingData>>({});
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [showPhotoCapture, setShowPhotoCapture] = useState(false);
   const [capturedPhotoUri, setCapturedPhotoUri] = useState<string | null>(null);
 
@@ -118,14 +121,14 @@ export const ConversationalOnboardingScreen: React.FC<
       // Show success message and prompt for photo
       const successMessage: OnboardingMessage = {
         role: "assistant",
-        content: "Perfect! 🎉 I've got everything I need.\n\nBefore we get started, let's take a quick photo of you! I'll create a special welcome image you can share on social media to celebrate starting your wellness journey. 📸",
+        content: "Perfect! 🎉 I've got everything I need.\n\nBefore we get started, let's create a special welcome image you can share on social media to celebrate starting your wellness journey! 📸\n\nYou can take a selfie, upload a photo, or stay anonymous with a fun silhouette image.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, successMessage]);
 
-      // Wait a moment, then show photo capture
+      // Wait a moment, then show photo options
       setTimeout(() => {
-        setShowPhotoCapture(true);
+        setShowPhotoOptions(true);
       }, 2000);
     } catch (error) {
       console.error("Error completing onboarding:", error);
@@ -139,28 +142,46 @@ export const ConversationalOnboardingScreen: React.FC<
     }
   };
 
+  const handleTakePhoto = () => {
+    setShowPhotoOptions(false);
+    setShowPhotoCapture(true);
+  };
+
+  const handleUploadPhoto = async () => {
+    setShowPhotoOptions(false);
+    const imageUri = await pickImageFromGallery();
+
+    if (imageUri) {
+      handlePhotoSelected(imageUri);
+    }
+  };
+
+  const handleSkipPhoto = () => {
+    setShowPhotoOptions(false);
+    handlePhotoSelected(null); // null means anonymous
+  };
+
   const handlePhotoCapture = (photoUri: string) => {
     setCapturedPhotoUri(photoUri);
     setShowPhotoCapture(false);
+    handlePhotoSelected(photoUri);
+  };
 
-    // Navigate to shareable image screen
+  const handlePhotoSelected = (photoUri: string | null) => {
     const goalText = onboardingData.primaryGoal?.replace('_', ' ') || 'wellness journey';
 
     navigation.navigate('ShareableImage', {
       userPhotoUri: photoUri,
       userName: onboardingData.fullName || 'there',
       userGoal: goalText,
+      isAnonymous: photoUri === null,
     });
   };
 
-  const handleSkipPhoto = () => {
+  const handleCloseCameraModal = () => {
     setShowPhotoCapture(false);
-
-    // Navigate directly to main app
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Main' }],
-    });
+    // Go back to options
+    setShowPhotoOptions(true);
   };
 
   const renderMessage = (message: OnboardingMessage, index: number) => {
@@ -315,10 +336,26 @@ export const ConversationalOnboardingScreen: React.FC<
         </View>
       </KeyboardAvoidingView>
 
+      {/* Photo Options Modal */}
+      <PhotoOptionsModal
+        visible={showPhotoOptions}
+        onClose={() => {
+          setShowPhotoOptions(false);
+          // Navigate to main app if they close without choosing
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Main' }],
+          });
+        }}
+        onTakePhoto={handleTakePhoto}
+        onUploadPhoto={handleUploadPhoto}
+        onSkip={handleSkipPhoto}
+      />
+
       {/* Photo Capture Modal */}
       <PhotoCaptureModal
         visible={showPhotoCapture}
-        onClose={handleSkipPhoto}
+        onClose={handleCloseCameraModal}
         onPhotoCapture={handlePhotoCapture}
       />
     </Screen>

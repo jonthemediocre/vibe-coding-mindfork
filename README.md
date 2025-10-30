@@ -43,20 +43,28 @@
 8. Users can share on social media to promote their wellness journey and MindFork!
 
 **Photo Capture & Social Sharing:**
+- **Three photo options modal:**
+  - 📸 Take a Selfie - Open camera with circular guide for perfect framing
+  - 🖼️ Choose from Gallery - Pick existing photo with square crop editor
+  - 👤 Stay Anonymous - Fun silhouette version with playful message
 - Camera modal with circular guide for perfect selfies
 - Front/back camera flip
-- AI-generated composite image of user + AI coach as friends
+- AI-generated composite image:
+  - **With photo**: User + AI coach as friends giving high-five
+  - **Anonymous**: Silhouette figure + AI coach with message "No photo? No problem! Loving my [goal] with MindFork!"
 - Personalized welcome message based on their goals
 - **Native iOS/Android share sheet** - Opens system share popup with all installed apps (Instagram, Facebook, Twitter, Messages, etc.)
 - Automatically copies personalized message to clipboard for easy pasting
 - Save to photo library with one tap
-- Skip option if they prefer not to share
+- Skip/close option to go directly to app
 
 **Technical Implementation:**
 - `ConversationalOnboardingScreen.tsx` - Chat UI with message bubbles
+- `PhotoOptionsModal.tsx` - Three-option modal (Take/Upload/Anonymous)
 - `PhotoCaptureModal.tsx` - Camera capture with permissions
+- `imagePickerHelpers.ts` - Gallery picker with permissions and cropping
 - `ShareableImageScreen.tsx` - Display and share generated image
-- `WelcomeImageService.ts` - AI image generation for social media posts
+- `WelcomeImageService.ts` - AI image generation for social media posts (handles both normal and anonymous modes)
 - `OnboardingAgentService.ts` - Natural language parser + AI integration
 - Supabase Edge Function: `onboarding-agent` - GPT-4o-mini for conversation
 - Dual extraction: Local regex parser + AI extraction for accuracy

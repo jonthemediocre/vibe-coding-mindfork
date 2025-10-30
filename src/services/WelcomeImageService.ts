@@ -6,26 +6,51 @@ import { generateImage } from '../api/image-generation';
  */
 
 interface WelcomeImageOptions {
-  userPhotoUri: string;
+  userPhotoUri?: string | null; // Optional now - can be null for anonymous
   userName: string;
   userGoal?: string;
+  isAnonymous?: boolean; // Flag for anonymous mode
 }
 
 /**
  * Generate a shareable welcome image that composites the user's photo with an AI coach
- * @param options User photo URI, name, and optional goal
+ * @param options User photo URI (optional for anonymous), name, and optional goal
  * @returns URL of the generated composite image
  */
 export async function generateWelcomeImage(
   options: WelcomeImageOptions
 ): Promise<string> {
-  const { userName, userGoal } = options;
+  const { userName, userGoal, isAnonymous } = options;
 
   // Create a detailed prompt for the AI image generation
-  // This will create a friendly, motivational image suitable for social media
   const goalText = userGoal || 'wellness journey';
 
-  const prompt = `Create a vibrant, inspiring social media post image for a health and wellness app called MindFork.
+  let prompt: string;
+
+  if (isAnonymous) {
+    // Anonymous version - silhouette with fun message
+    prompt = `Create a vibrant, inspiring social media post image for a health and wellness app called MindFork.
+
+The image should feature:
+- Two friends standing side by side giving each other a high-five or fist bump
+- One person is a mysterious SILHOUETTE figure (completely dark/shadowed, no facial features visible) representing someone who chose to stay anonymous but is excited about their journey
+- The other person is an AI health coach named Synapse, appearing friendly and supportive with a visible happy face
+- Modern, clean aesthetic with a gradient background in shades of purple, pink, and blue
+- Soft lighting that gives an uplifting, motivational vibe
+- Synapse wearing casual athletic/wellness attire
+- The silhouette figure should be clearly a person shape but completely blacked out/shadowed
+- Include subtle brain/wellness/health icons floating in the background
+
+Style: Modern digital art, friendly and approachable, professional but warm, Instagram-worthy
+Mood: Inspiring, motivational, friendly, supportive, playful
+Colors: Purple (#9333ea), pink (#ec4899), blue (#3b82f6), white accents
+
+Text overlay at the bottom: "No photo? No problem! Loving my ${goalText} with MindFork! 🧠💪"
+
+The image should look like a professional social media announcement post with a fun twist about staying anonymous, suitable for sharing on Instagram, Facebook, or Twitter.`;
+  } else {
+    // Regular version with user
+    prompt = `Create a vibrant, inspiring social media post image for a health and wellness app called MindFork.
 
 The image should feature:
 - Two friends standing side by side, smiling and giving each other a high-five or fist bump
@@ -43,6 +68,7 @@ Colors: Purple (#9333ea), pink (#ec4899), blue (#3b82f6), white accents
 Text overlay at the bottom: "Starting my ${goalText} with MindFork! 🧠💪"
 
 The image should look like a professional social media announcement post, suitable for sharing on Instagram, Facebook, or Twitter.`;
+  }
 
   try {
     console.log('[WelcomeImageService] Generating welcome image...');

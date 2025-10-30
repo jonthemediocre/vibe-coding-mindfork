@@ -24,9 +24,10 @@ interface ShareableImageScreenProps {
   navigation: any;
   route: {
     params: {
-      userPhotoUri: string;
+      userPhotoUri?: string | null;
       userName: string;
       userGoal?: string;
+      isAnonymous?: boolean;
     };
   };
 }
@@ -38,7 +39,7 @@ export const ShareableImageScreen: React.FC<ShareableImageScreenProps> = ({
   route,
 }) => {
   const { theme } = useTheme();
-  const { userPhotoUri, userName, userGoal } = route.params;
+  const { userPhotoUri, userName, userGoal, isAnonymous = false } = route.params;
 
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
@@ -59,6 +60,7 @@ export const ShareableImageScreen: React.FC<ShareableImageScreenProps> = ({
         userPhotoUri,
         userName,
         userGoal,
+        isAnonymous,
       });
 
       setGeneratedImageUrl(imageUrl);
