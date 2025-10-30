@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import type { ViewStyle } from "react-native";
 import { useColorScheme } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const THEME_STORAGE_KEY = "mindfork-theme-preference";
 
 export interface Theme {
   colors: {
@@ -148,11 +151,42 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const systemColorScheme = useColorScheme();
   const [isDark, setIsDark] = useState(systemColorScheme === "dark");
+  const [isLoading, setIsLoading] = useState(true);
   const theme = isDark ? darkTheme : lightTheme;
 
-  const toggleTheme = () => {
-    setIsDark(!isDark);
+  // Load saved theme preference on mount
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (saved !== null) {
+          setIsDark(saved === "dark");
+        }
+      } catch (error) {
+        console.warn("Failed to load theme preference:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadThemePreference();
+  }, []);
+
+  const toggleTheme = async () => {
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+
+    // Persist theme preference
+    try {
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, newIsDark ? "dark" : "light");
+    } catch (error) {
+      console.warn("Failed to save theme preference:", error);
+    }
   };
+
+  // Don't render children until theme is loaded
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, isDark, toggleTheme }}>

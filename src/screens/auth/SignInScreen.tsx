@@ -1,13 +1,19 @@
 import React, { useState } from "react";
-import { View, StyleSheet, TextInput, Alert } from "react-native";
-import { Screen, Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
+import { View, StyleSheet, TextInput, Alert, Dimensions } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
+import { Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
+import { ThemeToggle } from "../../components/ThemeToggle";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../app-components/components/ThemeProvider";
 import { ENV } from "../../config/env";
+
+const { width } = Dimensions.get('window');
 
 export const SignInScreen: React.FC = () => {
   const { signIn, signUp, bypassAuth, isLoading } = useAuth();
   const colors = useThemeColors();
   const styles = useThemedStyles(createStyles);
+  const { isDark } = useTheme();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,108 +38,264 @@ export const SignInScreen: React.FC = () => {
   };
 
   return (
-    <Screen contentContainerStyle={styles.container}>
-      <Card elevation={2} padding="lg">
-        <Text variant="headingSmall" style={styles.heading}>
-          {mode === "signin" ? "Welcome back" : "Create your account"}
-        </Text>
-        <TextInput
-          placeholder="you@email.com"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-          style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-          placeholderTextColor={colors.textSecondary}
-        />
-        <TextInput
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          style={[styles.input, { borderColor: colors.border, color: colors.text }]}
-          placeholderTextColor={colors.textSecondary}
-        />
-        <Button
-          title={mode === "signin" ? "Sign in" : "Sign up"}
-          onPress={handleSubmit}
-          loading={isLoading}
-          containerStyle={styles.submitButton}
-        />
-        <View style={styles.switchRow}>
-          <Text variant="bodySmall" color={colors.textSecondary}>
-            {mode === "signin" ? "Need an account?" : "Already have an account?"}
+    <View style={styles.container}>
+      {/* Background Gradient */}
+      <LinearGradient
+        colors={isDark
+          ? ['#1A1A1A', '#2A2A2A', '#1A1A1A']
+          : ['#FFE5EF', '#FFF5F8', '#FFFFFF']
+        }
+        style={styles.gradient}
+      />
+
+      {/* Theme Toggle */}
+      <View style={styles.themeToggleContainer}>
+        <ThemeToggle />
+      </View>
+
+      {/* Content */}
+      <View style={styles.content}>
+        {/* Logo & Branding */}
+        <View style={styles.brandingContainer}>
+          <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
+            <Text style={styles.logoText}>🧠</Text>
+          </View>
+          <Text style={[styles.appName, { color: colors.text }]}>MindFork</Text>
+          <Text style={[styles.tagline, { color: colors.textSecondary }]}>
+            Your AI-Powered Health Coach
           </Text>
+        </View>
+
+        {/* Auth Card */}
+        <Card elevation={3} padding="lg" style={styles.card}>
+          <Text variant="headingSmall" style={[styles.heading, { color: colors.text }]}>
+            {mode === "signin" ? "Welcome Back" : "Join MindFork"}
+          </Text>
+
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+            {mode === "signin"
+              ? "Sign in to continue your journey"
+              : "Start your personalized wellness journey"
+            }
+          </Text>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Email address"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+              style={[styles.input, {
+                borderColor: colors.border,
+                color: colors.text,
+                backgroundColor: isDark ? colors.surface : colors.background,
+              }]}
+              placeholderTextColor={colors.textSecondary}
+            />
+            <TextInput
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              style={[styles.input, {
+                borderColor: colors.border,
+                color: colors.text,
+                backgroundColor: isDark ? colors.surface : colors.background,
+              }]}
+              placeholderTextColor={colors.textSecondary}
+            />
+          </View>
+
           <Button
-            title={mode === "signin" ? "Create one" : "Sign in"}
-            variant="ghost"
-            size="small"
-            onPress={() => setMode(prev => (prev === "signin" ? "signup" : "signin"))}
+            title={mode === "signin" ? "Sign In" : "Create Account"}
+            onPress={handleSubmit}
+            loading={isLoading}
+            containerStyle={styles.submitButton}
+          />
+
+          <View style={styles.switchRow}>
+            <Text variant="bodySmall" color={colors.textSecondary}>
+              {mode === "signin" ? "Don't have an account?" : "Already have an account?"}
+            </Text>
+            <Button
+              title={mode === "signin" ? "Sign Up" : "Sign In"}
+              variant="ghost"
+              size="small"
+              onPress={() => setMode(prev => (prev === "signin" ? "signup" : "signin"))}
+            />
+          </View>
+        </Card>
+
+        {/* Features */}
+        <View style={styles.featuresContainer}>
+          <FeatureItem
+            icon="🎯"
+            text="Personalized Goals"
+            color={colors.textSecondary}
+          />
+          <FeatureItem
+            icon="🤖"
+            text="AI Coach"
+            color={colors.textSecondary}
+          />
+          <FeatureItem
+            icon="📊"
+            text="Track Progress"
+            color={colors.textSecondary}
           />
         </View>
-        
-        {/* Development bypass auth button */}
+
+        {/* Development bypass */}
         {ENV.BYPASS_AUTH && __DEV__ && (
-          <View style={styles.devSection}>
+          <Card elevation={1} padding="md" style={styles.devCard}>
             <Text variant="bodySmall" color={colors.textSecondary} style={styles.devLabel}>
               Development Mode
             </Text>
             <Button
-              title="🚀 Bypass Auth (Dev Only)"
+              title="🚀 Bypass Auth"
               variant="outline"
               size="small"
               onPress={() => bypassAuth()}
               loading={isLoading}
               containerStyle={styles.bypassButton}
             />
-          </View>
+          </Card>
         )}
-      </Card>
-    </Screen>
+      </View>
+    </View>
   );
 };
 
-const createStyles = () =>
+// Feature item component
+const FeatureItem: React.FC<{ icon: string; text: string; color: string }> = ({ icon, text, color }) => (
+  <View style={featureStyles.container}>
+    <Text style={featureStyles.icon}>{icon}</Text>
+    <Text style={[featureStyles.text, { color }]}>{text}</Text>
+  </View>
+);
+
+const featureStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  icon: {
+    fontSize: 20,
+  },
+  text: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
+
+const createStyles = (theme: any) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 20,
+    },
+    gradient: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+    },
+    themeToggleContainer: {
+      position: 'absolute',
+      top: 50,
+      right: 20,
+      zIndex: 10,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 24,
+      paddingTop: 80,
+      paddingBottom: 40,
+    },
+    brandingContainer: {
+      alignItems: 'center',
+      marginBottom: 48,
+    },
+    logoContainer: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    logoText: {
+      fontSize: 48,
+    },
+    appName: {
+      fontSize: 36,
+      fontWeight: 'bold',
+      marginBottom: 8,
+      letterSpacing: -1,
+    },
+    tagline: {
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    card: {
+      borderRadius: 24,
+      marginBottom: 32,
     },
     heading: {
-      marginBottom: 16,
+      marginBottom: 8,
+      fontSize: 24,
+      fontWeight: '700',
+    },
+    subtitle: {
+      marginBottom: 24,
+      fontSize: 15,
+    },
+    inputContainer: {
+      gap: 12,
+      marginBottom: 20,
     },
     input: {
-      borderWidth: StyleSheet.hairlineWidth,
-      borderRadius: 12,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      marginBottom: 12,
+      borderWidth: 2,
+      borderRadius: 16,
+      paddingHorizontal: 18,
+      paddingVertical: 16,
+      fontSize: 16,
     },
     submitButton: {
-      marginTop: 8,
+      marginBottom: 16,
     },
     switchRow: {
-      marginTop: 16,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
     },
-    devSection: {
-      marginTop: 24,
-      paddingTop: 16,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: "rgba(0,0,0,0.1)",
-      alignItems: "center",
+    featuresContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      paddingHorizontal: 16,
+      marginBottom: 24,
+    },
+    devCard: {
+      borderRadius: 16,
+      alignItems: 'center',
     },
     devLabel: {
-      marginBottom: 8,
-      fontSize: 12,
-      textTransform: "uppercase",
-      letterSpacing: 1,
+      marginBottom: 12,
+      fontSize: 11,
+      textTransform: 'uppercase',
+      letterSpacing: 1.5,
+      fontWeight: '600',
     },
     bypassButton: {
-      width: "100%",
+      width: '100%',
     },
   });
 
