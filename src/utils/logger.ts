@@ -147,24 +147,29 @@ class Logger {
 
     const logMessage = `${timestamp}${prefix} ${entry.message}${contextStr}`;
 
-    // Console output
-    switch (entry.level) {
-      case 'error':
-        console.error(logMessage, entry.error || '');
-        if (entry.error) {
-          this.getSentryService()?.captureError(entry.error, entry.context);
-        }
-        break;
-      case 'warn':
-        console.warn(logMessage);
-        break;
-      case 'info':
-        console.log(logMessage);
-        break;
-      case 'debug':
-      case 'trace':
-        if (isDev) console.log(logMessage);
-        break;
+    // Console output - wrapped to prevent infinite loops
+    try {
+      switch (entry.level) {
+        case 'error':
+          // Use warn instead of error to avoid triggering error handlers
+          console.warn('[ERROR]', logMessage, entry.error || '');
+          if (entry.error) {
+            this.getSentryService()?.captureError(entry.error, entry.context);
+          }
+          break;
+        case 'warn':
+          console.warn(logMessage);
+          break;
+        case 'info':
+          console.log(logMessage);
+          break;
+        case 'debug':
+        case 'trace':
+          if (isDev) console.log(logMessage);
+          break;
+      }
+    } catch (e) {
+      // Prevent infinite loops if console itself fails
     }
 
     // Buffer for batch shipping (future: send to analytics)
