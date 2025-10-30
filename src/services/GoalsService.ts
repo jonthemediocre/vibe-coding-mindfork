@@ -436,6 +436,7 @@ export class GoalsService {
           icon: 'trophy',
           color: '#FFD700',
           category: 'milestones',
+          earned_at: new Date().toISOString(),
         });
       }
 
@@ -445,8 +446,9 @@ export class GoalsService {
           title: 'Weight Goal Master',
           description: 'Achieved your weight goal',
           icon: 'scale',
-          color: '#FFA8D2',
-          category: 'weight',
+          color: '#4CAF50',
+          category: 'fitness',
+          earned_at: new Date().toISOString(),
         });
       }
     } catch (error) {

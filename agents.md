@@ -195,6 +195,101 @@ export interface GoalMilestone {
 3. **Spec-Driven**: Specifications define exact requirements
 4. **Human-in-the-Loop**: All schema changes, deprecations, and architectural decisions require human approval
 5. **Preserve Data**: Never make changes that could cause data loss
+6. **Fix Errors Proactively**: When you see errors, fix them in the context of the parts they touch
+
+## Error Handling and Proactive Fixing
+
+### The Principle: Fix Errors When You See Them
+
+**CRITICAL RULE**: Errors seen should be fixed immediately in the context of the parts they touch. Do not ignore errors or defer them.
+
+### Why This Matters:
+
+1. **Context Awareness**: You have agents.md loaded in context - this means you understand the full development philosophy
+2. **Immediate Fix**: When you see an error (typecheck, lint, runtime), fix it right away
+3. **Contextual Fixes**: Fix errors in the context of what you're working on
+4. **Prevent Accumulation**: Don't let errors pile up - they compound over time
+5. **Quality Assurance**: Every interaction should leave the codebase better than you found it
+
+### When You See Errors:
+
+**DO THIS:**
+1. Read the error message carefully
+2. Identify the root cause (missing type, wrong field name, missing import, etc.)
+3. Apply the fix following all agent guidelines (additive, schema-driven, preserve data)
+4. Verify the fix doesn't break other parts
+5. Continue with your main task
+
+**DON'T DO THIS:**
+- ❌ Ignore the error and move on
+- ❌ Say "there are 48 errors but they're not critical"
+- ❌ Defer fixes to later
+- ❌ Only fix errors in your immediate task
+
+### Examples:
+
+**✅ CORRECT: Proactive Error Fixing**
+```typescript
+// You're working on onboarding, you see:
+// Error: Property 'addToRecentFoods' does not exist on type 'typeof FoodService'
+
+// Even though you're not working on FoodService right now:
+// 1. Check if the method exists but not exported
+// 2. If missing, add the method signature to match usage
+// 3. Document that implementation is needed
+// 4. Continue with onboarding work
+
+// Result: Error fixed, codebase improved
+```
+
+**❌ WRONG: Ignoring Errors**
+```typescript
+// You're working on onboarding, you see:
+// Error: Property 'addToRecentFoods' does not exist on type 'typeof FoodService'
+
+// You think: "I'm working on onboarding, not FoodService, so I'll ignore this"
+
+// Result: Error remains, compounds with other errors, breaks later
+```
+
+### Error Categories and Priority:
+
+**Fix Immediately (High Priority):**
+- Type errors in files you're currently editing
+- Missing imports/exports blocking functionality
+- Schema mismatches causing data loss risk
+- Broken navigation/routing
+- Runtime errors in critical paths
+
+**Fix When Seen (Medium Priority):**
+- Type errors in related files
+- Missing method implementations
+- Theme/styling issues
+- Non-critical navigation issues
+
+**Document and Ask (Low Priority):**
+- Architectural changes needed
+- Major refactoring required
+- Feature implementations beyond scope
+
+### Integration with Other Principles:
+
+All error fixes must follow:
+- ✅ **Additive Only**: Don't remove functionality to fix errors
+- ✅ **Schema-Driven**: Match database schema when fixing type errors
+- ✅ **Spec-Driven**: Follow specifications when adding missing implementations
+- ✅ **UX-Driven**: Maintain user experience while fixing errors
+- ✅ **Preserve Data**: Never fix errors in ways that could lose data
+
+### The Standard:
+
+**Every time you complete a task, the codebase should have:**
+- ✅ Fewer errors than when you started
+- ✅ Better type safety
+- ✅ More complete implementations
+- ✅ Improved documentation
+
+**The goal is progressive improvement, not perfection in one pass.**
 
 ## User Experience vs Schema: Best of Both Worlds
 

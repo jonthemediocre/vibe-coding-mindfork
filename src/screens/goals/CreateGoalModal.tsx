@@ -207,7 +207,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
                     backgroundColor:
                       selectedGoal?.type === option.type
                         ? `${option.color}20`
-                        : colors.cardBackground,
+                        : colors.surface,
                     borderColor:
                       selectedGoal?.type === option.type
                         ? option.color
@@ -245,7 +245,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
                 style={[
                   styles.input,
                   {
-                    backgroundColor: colors.cardBackground,
+                    backgroundColor: colors.surface,
                     color: colors.text,
                     borderColor: colors.border,
                   },
@@ -266,7 +266,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
                     styles.input,
                     styles.flexInput,
                     {
-                      backgroundColor: colors.cardBackground,
+                      backgroundColor: colors.surface,
                       color: colors.text,
                       borderColor: colors.border,
                     },
@@ -294,7 +294,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
                     styles.input,
                     styles.flexInput,
                     {
-                      backgroundColor: colors.cardBackground,
+                      backgroundColor: colors.surface,
                       color: colors.text,
                       borderColor: colors.border,
                     },
@@ -322,7 +322,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
                     style={[
                       styles.input,
                       {
-                        backgroundColor: colors.cardBackground,
+                        backgroundColor: colors.surface,
                         color: colors.text,
                         borderColor: colors.border,
                       },
@@ -349,7 +349,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
                         backgroundColor:
                           selectedTimeframe === option.days
                             ? `${colors.primary}20`
-                            : colors.cardBackground,
+                            : colors.surface,
                         borderColor:
                           selectedTimeframe === option.days
                             ? colors.primary
@@ -382,7 +382,7 @@ export const CreateGoalModal: React.FC<CreateGoalModalProps> = ({
                   styles.input,
                   styles.textArea,
                   {
-                    backgroundColor: colors.cardBackground,
+                    backgroundColor: colors.surface,
                     color: colors.text,
                     borderColor: colors.border,
                   },
