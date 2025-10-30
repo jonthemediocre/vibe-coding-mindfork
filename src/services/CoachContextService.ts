@@ -482,21 +482,33 @@ export class CoachContextService {
     }
 
     // Remove any potential medical identifiers from achievements/challenges descriptions
-    sanitized.achievements = sanitized.achievements.slice(0, 5).map(achievement => ({
-      ...achievement,
-      description: this.sanitizeMedicalDescription(achievement.description),
-    }));
-    
-    sanitized.challenges = sanitized.challenges.slice(0, 3).map(challenge => ({
-      ...challenge,
-      description: this.sanitizeMedicalDescription(challenge.description),
-      suggestion: this.sanitizeMedicalDescription(challenge.suggestion),
-    }));
-    
+    if (Array.isArray(sanitized.achievements)) {
+      sanitized.achievements = sanitized.achievements.slice(0, 5).map(achievement => ({
+        ...achievement,
+        description: this.sanitizeMedicalDescription(achievement.description),
+      }));
+    } else {
+      sanitized.achievements = [];
+    }
+
+    if (Array.isArray(sanitized.challenges)) {
+      sanitized.challenges = sanitized.challenges.slice(0, 3).map(challenge => ({
+        ...challenge,
+        description: this.sanitizeMedicalDescription(challenge.description),
+        suggestion: this.sanitizeMedicalDescription(challenge.suggestion),
+      }));
+    } else {
+      sanitized.challenges = [];
+    }
+
     // Filter out any medical-related dietary restrictions
-    sanitized.restrictions = sanitized.restrictions
-      .filter(restriction => !this.isMedicalRestriction(restriction))
-      .slice(0, 5);
+    if (Array.isArray(sanitized.restrictions)) {
+      sanitized.restrictions = sanitized.restrictions
+        .filter(restriction => !this.isMedicalRestriction(restriction))
+        .slice(0, 5);
+    } else {
+      sanitized.restrictions = [];
+    }
 
     // Remove any weight change data that could be sensitive
     if (sanitized.currentProgress.weight_change !== undefined) {
