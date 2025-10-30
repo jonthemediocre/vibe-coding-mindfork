@@ -180,7 +180,8 @@ export interface EndFastingInput {
   session_id: string;
 }
 
-// Goal types
+// Goal types - matches Supabase 'goals' table schema
+// Note: Database uses strings, these types provide client-side validation
 export type GoalType = 'weight' | 'nutrition' | 'fitness' | 'habit' | 'custom' | 'calories' | 'protein' | 'carbs' | 'fat' | 'water' | 'exercise' | 'sleep' | 'streak';
 export type GoalCategory = 'health' | 'fitness' | 'nutrition' | 'lifestyle' | 'weight' | 'hydration' | 'exercise' | 'sleep' | 'habits' | 'custom';
 export type GoalStatus = 'active' | 'completed' | 'paused' | 'abandoned' | 'ahead' | 'on_track' | 'behind';
@@ -190,21 +191,23 @@ export interface Goal {
   user_id: string;
   title: string;
   description?: string;
-  type: GoalType;
-  category: GoalCategory;
-  status: GoalStatus;
-  target_value?: number;
+  type: string; // Database has string, not enum
+  category: string; // Database has string, not enum
+  status: string; // Database has string, not enum
+  target_value: number; // Required in database
   current_value?: number;
-  unit?: string;
+  start_value?: number; // From database schema
+  unit: string; // Required in database
   start_date: string;
   target_date?: string;
-  completed_at?: string;
-  created_at: string;
+  completed_date?: string; // Database uses 'completed_date', not 'completed_at'
+  created_at?: string;
   updated_at?: string;
-  // Additional properties used in GoalsScreen and GoalsService
+  // Database schema includes these
   progress?: number;
+  priority?: string; // Database has string, not enum
+  // Service layer adds these via JOIN (not in database table)
   milestones?: GoalMilestone[];
-  priority?: 'low' | 'medium' | 'high';
 }
 
 export interface GoalMilestone {
@@ -212,12 +215,10 @@ export interface GoalMilestone {
   goal_id: string;
   title: string;
   description?: string;
-  target_value?: number;
-  achieved_at?: string;
-  created_at: string;
-  // Additional properties used in GoalsService
-  achieved?: boolean;
-  value?: number;
+  value: number; // Required in database - was 'target_value' in my version
+  achieved?: boolean; // From database schema
+  achieved_date?: string; // From database schema - was 'achieved_at' in my version
+  created_at?: string;
 }
 
 export interface Achievement {
