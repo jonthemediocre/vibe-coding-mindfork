@@ -62,10 +62,22 @@ export const SignInScreen: React.FC = () => {
         {/* Logo & Branding */}
         <View style={styles.brandingContainer}>
           <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
-            <Text style={styles.logoText}>🧠</Text>
+            <Ionicons name="brain" size={56} color="#FFFFFF" />
           </View>
-          <Text style={[styles.appName, { color: colors.text }]}>MindFork</Text>
-          <Text style={[styles.tagline, { color: colors.textSecondary }]}>
+          <Text style={[styles.appName, {
+            color: colors.text,
+            textShadowColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+            textShadowOffset: { width: 0, height: 2 },
+            textShadowRadius: 8,
+          }]}>
+            MindFork
+          </Text>
+          <Text style={[styles.tagline, {
+            color: colors.textSecondary,
+            textShadowColor: isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 6,
+          }]}>
             Your AI-Powered Health Coach
           </Text>
         </View>
@@ -242,29 +254,30 @@ const createStyles = (theme: any) =>
       marginBottom: 48,
     },
     logoContainer: {
-      width: 100,
-      height: 100,
-      borderRadius: 50,
+      width: 120,
+      height: 120,
+      borderRadius: 60,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: Math.round(100 / PHI), // Golden ratio: 100 / 1.618 ≈ 62px
+      marginBottom: Math.round(120 / PHI), // Golden ratio: 120 / 1.618 ≈ 74px
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      elevation: 12,
     },
     logoText: {
       fontSize: 48,
     },
     appName: {
-      fontSize: 36,
-      fontWeight: 'bold',
-      marginBottom: Math.round(36 / PHI / PHI), // 36 / PHI² ≈ 14px
-      letterSpacing: -1,
+      fontSize: 42,
+      fontWeight: '900',
+      marginBottom: Math.round(42 / PHI / PHI), // 42 / PHI² ≈ 16px
+      letterSpacing: -1.5,
     },
     tagline: {
-      fontSize: 16,
+      fontSize: 17,
+      fontWeight: '600',
       textAlign: 'center',
     },
     card: {
