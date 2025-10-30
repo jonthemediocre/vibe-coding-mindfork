@@ -47,8 +47,9 @@
 - Front/back camera flip
 - AI-generated composite image of user + AI coach as friends
 - Personalized welcome message based on their goals
-- One-tap sharing to Instagram, Facebook, Twitter, etc.
-- Save to photo library
+- **Native iOS/Android share sheet** - Opens system share popup with all installed apps (Instagram, Facebook, Twitter, Messages, etc.)
+- Automatically copies personalized message to clipboard for easy pasting
+- Save to photo library with one tap
 - Skip option if they prefer not to share
 
 **Technical Implementation:**

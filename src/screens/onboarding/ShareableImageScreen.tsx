@@ -5,11 +5,13 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
-  Share,
+  Platform,
   Dimensions,
 } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen, Text } from '../../ui';
 import { useTheme } from '../../app-components/components/ThemeProvider';
@@ -42,6 +44,7 @@ export const ShareableImageScreen: React.FC<ShareableImageScreenProps> = ({
   const [isGenerating, setIsGenerating] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     generateWelcomeImageAsync();
@@ -59,6 +62,11 @@ export const ShareableImageScreen: React.FC<ShareableImageScreenProps> = ({
       });
 
       setGeneratedImageUrl(imageUrl);
+
+      // Download image to local cache for sharing
+      const fileUri = `${FileSystem.cacheDirectory}mindfork-welcome-${Date.now()}.png`;
+      const downloadResult = await FileSystem.downloadAsync(imageUrl, fileUri);
+      setLocalImageUri(downloadResult.uri);
     } catch (err) {
       console.error('Error generating welcome image:', err);
       setError('Failed to create your welcome image. Please try again.');
@@ -68,7 +76,7 @@ export const ShareableImageScreen: React.FC<ShareableImageScreenProps> = ({
   };
 
   const handleSaveToGallery = async () => {
-    if (!generatedImageUrl) return;
+    if (!localImageUri) return;
 
     try {
       setIsSaving(true);
@@ -85,12 +93,8 @@ export const ShareableImageScreen: React.FC<ShareableImageScreenProps> = ({
         return;
       }
 
-      // Download the image
-      const fileUri = `${FileSystem.cacheDirectory}mindfork-welcome-${Date.now()}.png`;
-      const downloadResult = await FileSystem.downloadAsync(generatedImageUrl, fileUri);
-
       // Save to media library
-      await MediaLibrary.saveToLibraryAsync(downloadResult.uri);
+      await MediaLibrary.saveToLibraryAsync(localImageUri);
 
       Alert.alert(
         'Success! 📸',
@@ -106,17 +110,42 @@ export const ShareableImageScreen: React.FC<ShareableImageScreenProps> = ({
   };
 
   const handleShare = async () => {
-    if (!generatedImageUrl) return;
+    if (!localImageUri) return;
 
     try {
-      const message = getShareMessage(userName, userGoal);
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
 
-      await Share.share({
-        message,
-        url: generatedImageUrl,
+      if (!isAvailable) {
+        Alert.alert(
+          'Sharing Not Available',
+          'Sharing is not available on this device. Try saving the image instead.'
+        );
+        return;
+      }
+
+      // Copy share message to clipboard for easy pasting
+      const shareMessage = getShareMessage(userName, userGoal);
+      await Clipboard.setStringAsync(shareMessage);
+
+      // Share using native share sheet (iOS/Android)
+      await Sharing.shareAsync(localImageUri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Share Your MindFork Journey',
+        UTI: 'public.png',
       });
+
+      // Show tip about the copied message
+      setTimeout(() => {
+        Alert.alert(
+          '💡 Tip',
+          'Your personalized message has been copied to your clipboard! Just paste it when sharing.',
+          [{ text: 'Got it!' }]
+        );
+      }, 500);
     } catch (err) {
       console.error('Error sharing:', err);
+      Alert.alert('Error', 'Failed to share image. Please try again.');
     }
   };
 
