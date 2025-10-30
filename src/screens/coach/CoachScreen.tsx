@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View, StyleSheet, TextInput, ScrollView, TouchableOpacity } from "react-native";
 import { Screen, Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
 import { useAuth } from "../../contexts/AuthContext";
-import { useAgentStream } from "../../agent/useAgentStream";
+import { useAgentStream } from "../../hooks/useAgentStream";
 import { useNavigation } from "@react-navigation/native";
 import { supabase } from "../../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
