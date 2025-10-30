@@ -7,6 +7,7 @@ import { SignInScreen } from "../screens/auth/SignInScreen";
 import { ConversationalOnboardingScreen } from "../screens/auth/ConversationalOnboardingScreen";
 import { useTheme } from "../app-components/components/ThemeProvider";
 import { useAuth } from "../contexts/AuthContext";
+import { useProfile } from "../contexts/ProfileContext";
 
 const Stack = createNativeStackNavigator();
 
@@ -29,23 +30,11 @@ function LoadingScreen() {
 
 export function AuthNavigator() {
   const { isAuthenticated, isInitialized, user, session } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const { isDark } = useTheme();
-  const [needsOnboarding, setNeedsOnboarding] = React.useState(false);
 
-  // Check if user needs onboarding
-  React.useEffect(() => {
-    if (isAuthenticated && user) {
-      // For development bypass, always show onboarding to test it
-      if (user.id === "dev-user-123") {
-        setNeedsOnboarding(true);
-        return;
-      }
-      
-      // In real app, check if onboarding is completed
-      // This would typically come from the user profile
-      setNeedsOnboarding(false);
-    }
-  }, [isAuthenticated, user]);
+  // Check if user needs onboarding based on profile existence
+  const needsOnboarding = isAuthenticated && !profileLoading && !profile;
 
   // Debug logging for navigation state
   React.useEffect(() => {
@@ -56,12 +45,14 @@ export function AuthNavigator() {
         hasUser: !!user,
         hasSession: !!session,
         userId: user?.id,
+        hasProfile: !!profile,
+        profileLoading,
         needsOnboarding,
       });
     }
-  }, [isAuthenticated, isInitialized, user, session, needsOnboarding]);
+  }, [isAuthenticated, isInitialized, user, session, profile, profileLoading, needsOnboarding]);
 
-  if (!isInitialized) {
+  if (!isInitialized || (isAuthenticated && profileLoading)) {
     return <LoadingScreen />;
   }
 
@@ -86,8 +77,8 @@ export function AuthNavigator() {
             options={{ animationTypeForReplace: 'push' }}
           />
         ) : (
-          <Stack.Screen 
-            name="Main" 
+          <Stack.Screen
+            name="Main"
             component={TabNavigator}
             options={{ animationTypeForReplace: 'push' }}
           />
