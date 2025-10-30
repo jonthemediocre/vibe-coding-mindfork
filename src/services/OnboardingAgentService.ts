@@ -97,7 +97,11 @@ Your job is to have a natural, warm conversation to collect the following inform
 1. Name (first name is fine)
 2. Age (must be 13-120)
 3. Biological sex (male/female/other) - Explain this is needed for metabolic calculations like BMR, and is about biology not gender identity. Ask: "For accurate nutrition calculations, I need to know your biological sex assigned at birth - are you biologically male or female? (This helps me calculate your metabolism accurately)"
-4. Height (feet and inches, or cm)
+4. Height - Accept ANY format:
+   - "5 9" or "5 foot 9" or "5'9" or "5 feet 9 inches" all mean 5 feet 9 inches
+   - "175" or "175cm" or "1.75m" all mean 175 centimeters
+   - If just two numbers like "5 9", assume first is feet, second is inches
+   - If single number over 100, assume centimeters
 5. Weight (lbs or kg)
 6. Target weight (optional, only if they want to lose/gain weight)
 7. Primary goal: lose_weight, gain_muscle, maintain, or get_healthy
@@ -126,6 +130,14 @@ INTELLIGENCE GUIDELINES - VERY IMPORTANT:
 - Be supportive and non-judgmental about any personal information shared
 - Focus on collecting accurate biological data for health calculations while being respectful
 
+HEIGHT PARSING - CRITICAL:
+- "5 9" means 5 feet 9 inches (heightFeet: 5, heightInches: 9)
+- "6 2" means 6 feet 2 inches (heightFeet: 6, heightInches: 2)
+- "5'11" means 5 feet 11 inches (heightFeet: 5, heightInches: 11)
+- "175" or "175cm" means 175 centimeters (store as heightFeet and heightInches by converting)
+- Never say height is "short" or make judgments - all heights are perfectly fine!
+- If someone gives just two numbers separated by space, assume feet and inches
+
 - If you have all required fields, congratulate them and say you are setting up their personalized experience
 
 Respond in JSON format:
@@ -134,6 +146,7 @@ Respond in JSON format:
   "extractedData": {
     // Any new data extracted from their last message
     // For gender: ONLY use "male" or "female" or "other" - extract biological sex from any variation
+    // For height: Store as heightFeet and heightInches (convert from cm if needed)
   },
   "isComplete": false or true if all required fields collected
 }`;
@@ -224,10 +237,23 @@ export function extractDataFromText(
   }
 
   // Extract height (feet and inches)
+  // Handles formats: "5'9", "5 feet 9 inches", "5ft9in", "5 9" (just two numbers)
   const heightMatch = text.match(/(\d+)\s*(?:feet|ft|')\s*(\d+)?\s*(?:inches|in|")?/i);
   if (heightMatch) {
     newData.heightFeet = parseInt(heightMatch[1]);
     newData.heightInches = heightMatch[2] ? parseInt(heightMatch[2]) : 0;
+  } else {
+    // Try to match just two numbers separated by space (like "5 9")
+    const simpleHeightMatch = text.match(/\b(\d)\s+(\d{1,2})\b/);
+    if (simpleHeightMatch) {
+      const feet = parseInt(simpleHeightMatch[1]);
+      const inches = parseInt(simpleHeightMatch[2]);
+      // Only accept if it looks like realistic height (4-7 feet, 0-11 inches)
+      if (feet >= 4 && feet <= 7 && inches >= 0 && inches <= 11) {
+        newData.heightFeet = feet;
+        newData.heightInches = inches;
+      }
+    }
   }
 
   // Extract weight
