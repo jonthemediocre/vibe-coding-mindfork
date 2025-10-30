@@ -6,3 +6,13 @@ packages/
 specs/
 guidelines/
 *.md
+node_modules/
+.expo/
+.expo-shared/
+build/
+android/
+ios/
+dist/
+**/*.min.js
+**/jsdoc/**
+**/typedoc/**
