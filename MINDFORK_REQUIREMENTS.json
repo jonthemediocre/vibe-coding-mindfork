@@ -1,0 +1,265 @@
+{
+  "app_name": "MindFork MVP",
+  "version": "1.0.0",
+  "target_audience": "B2C",
+  "launch_date": "2025-09-21",
+  "completion_status": 85,
+  
+  "features": [
+    {
+      "id": "ai-coaching",
+      "name": "AI-Powered Nutrition Coaching",
+      "priority": "high",
+      "completion": 90,
+      "stories": [
+        "As a health-conscious professional, I want conversational AI coaching so I can get personalized nutrition advice without research",
+        "As a fitness enthusiast, I want data-driven analytical insights so I can optimize my nutrition scientifically",
+        "As a premium subscriber, I want access to different coaching modes so I can choose my preferred interaction style"
+      ],
+      "acceptance_criteria": [
+        "OpenAI API key configured in Supabase Edge Functions",
+        "Synapse coach responds with analytical, data-driven personality",
+        "Conversation history persists across sessions (max 6 messages)",
+        "Response time averages <3 seconds",
+        "Fallback responses activate when API unavailable",
+        "Free tier: 5 messages/day, Premium tier: unlimited",
+        "Three coaching modes accessible to premium users"
+      ],
+      "dependencies": ["supabase-edge-functions", "openai-api", "stripe-subscription"]
+    },
+    {
+      "id": "food-logging",
+      "name": "Food Logging and Photo Recognition", 
+      "priority": "high",
+      "completion": 95,
+      "stories": [
+        "As a user, I want to log food by taking photos so I can quickly track meals without manual entry",
+        "As a user, I want access to comprehensive food database so I can find accurate nutrition information",
+        "As a premium user, I want unlimited food logging so I can track everything I eat"
+      ],
+      "acceptance_criteria": [
+        "USDA FoodData Central API key configured",
+        "Camera integration captures and processes food images",
+        "Photo recognition identifies common food items (70%+ accuracy)",
+        "Manual search fallback with autocomplete",
+        "Free tier: 3 entries/day, Premium tier: unlimited",
+        "Nutrition data displays macros and key micronutrients",
+        "Daily/weekly nutrition summaries generated"
+      ],
+      "dependencies": ["usda-api", "expo-camera", "image-processing"]
+    },
+    {
+      "id": "subscription-payments",
+      "name": "Subscription Payment System",
+      "priority": "high", 
+      "completion": 95,
+      "stories": [
+        "As a user, I want to upgrade to premium seamlessly so I can access unlimited features",
+        "As a user, I want transparent pricing so I understand what I'm paying for",
+        "As a subscriber, I want secure payment processing so my financial information is protected"
+      ],
+      "acceptance_criteria": [
+        "Stripe subscription products created in dashboard",
+        "Monthly subscription: $9.99/month (price_1QpEctDTZlgSSjJ82sKvUbZP)",
+        "Yearly subscription: $99.99/year (20% discount - needs price ID creation)",
+        "Subscription status verification before premium feature access",
+        "Payment failure handling with retry mechanism",
+        "Subscription cancellation through app settings",
+        "Receipt email delivery confirmation"
+      ],
+      "dependencies": ["stripe-api", "supabase-webhooks"]
+    },
+    {
+      "id": "cross-platform-sync",
+      "name": "Cross-Platform Data Synchronization",
+      "priority": "medium",
+      "completion": 100,
+      "stories": [
+        "As a user, I want my data to sync across devices so I can access my information anywhere",
+        "As a user, I want offline functionality so I can log food without internet connection"
+      ],
+      "acceptance_criteria": [
+        "Real-time sync between mobile and web platforms",
+        "Offline data persistence with sync on reconnection", 
+        "Conflict resolution for simultaneous edits",
+        "User authentication across all platforms",
+        "Data backup and recovery mechanisms"
+      ],
+      "dependencies": ["supabase-realtime", "async-storage"]
+    }
+  ],
+
+  "constraints": {
+    "technical": {
+      "platforms": ["React Native", "Next.js"],
+      "backend": "Supabase",
+      "payment_processor": "Stripe",
+      "ai_provider": "OpenAI",
+      "deployment": "EAS Build + Vercel"
+    },
+    "budget": {
+      "development_complete": true,
+      "operational_costs": {
+        "supabase": "$25/month",
+        "stripe": "2.9% + 30¢ per transaction",
+        "openai": "$20/1M tokens",
+        "eas_builds": "$99/month"
+      }
+    },
+    "timeline": {
+      "final_sprint": "2 weeks",
+      "launch_target": "2025-09-21",
+      "critical_path": ["api-keys", "stripe-products", "app-store-submission"]
+    },
+    "compliance": {
+      "app_stores": ["Google Play Store", "Apple App Store"],
+      "privacy": "GDPR compliant",
+      "payments": "PCI DSS via Stripe",
+      "health_data": "No HIPAA requirements for MVP"
+    }
+  },
+
+  "integration_map": {
+    "mobile_app": {
+      "dependencies": ["supabase", "stripe", "expo-modules"],
+      "api_integrations": ["openai", "usda", "stripe-webhooks"],
+      "data_flow": "Client -> Supabase -> Edge Functions -> External APIs"
+    },
+    "web_app": {
+      "dependencies": ["supabase", "stripe", "next.js"],
+      "api_integrations": ["openai", "meilisearch", "redis"],
+      "data_flow": "Client -> Next.js API -> Supabase -> External Services"
+    },
+    "backend": {
+      "core": "Supabase (PostgreSQL + Auth + Storage)",
+      "functions": ["simple-ai-coach", "food-recognition", "stripe-webhook"],
+      "external_apis": ["OpenAI GPT-4", "USDA FoodData", "Stripe API"],
+      "monitoring": ["Sentry", "Supabase Analytics"]
+    }
+  },
+
+  "quality_metrics": {
+    "performance": {
+      "app_launch_time": "<3 seconds",
+      "ai_response_time": "<3 seconds (95th percentile)",
+      "food_search_time": "<500ms",
+      "crash_rate": "<1%"
+    },
+    "business": {
+      "user_registrations": "100 target (first week)",
+      "subscription_conversion": ">10%",
+      "retention_7_day": ">40%",
+      "app_store_rating": ">4.0 stars"
+    },
+    "security": {
+      "authentication": "Supabase Auth + RLS",
+      "payment_security": "PCI DSS compliant",
+      "data_encryption": "HTTPS + at-rest encryption",
+      "api_security": "Keys in Supabase Vault only"
+    }
+  },
+
+  "remaining_tasks": [
+    {
+      "category": "API Configuration",
+      "tasks": [
+        "Add OpenAI API key to Supabase Vault",
+        "Configure USDA FoodData Central API key",
+        "Test Edge Function connectivity"
+      ],
+      "estimated_effort": "4 hours",
+      "blocking": true
+    },
+    {
+      "category": "Stripe Setup", 
+      "tasks": [
+        "Create monthly subscription product ($9.99)",
+        "Create yearly subscription product ($99.99)",
+        "Update price IDs in mobile app",
+        "Test payment flow end-to-end"
+      ],
+      "estimated_effort": "6 hours",
+      "blocking": true
+    },
+    {
+      "category": "Production Builds",
+      "tasks": [
+        "Generate production Android APK/AAB",
+        "Generate production iOS IPA",
+        "Validate builds on physical devices",
+        "Upload to distribution platforms"
+      ],
+      "estimated_effort": "8 hours",
+      "blocking": true
+    },
+    {
+      "category": "App Store Assets",
+      "tasks": [
+        "Create app icons for all sizes",
+        "Generate screenshots for store listings",
+        "Write app descriptions and metadata",
+        "Prepare privacy policy and terms"
+      ],
+      "estimated_effort": "12 hours",
+      "blocking": false
+    },
+    {
+      "category": "Testing & Validation",
+      "tasks": [
+        "Run MVP validation script",
+        "End-to-end payment testing",
+        "Performance testing under load",
+        "Security vulnerability scan"
+      ],
+      "estimated_effort": "10 hours",
+      "blocking": false
+    }
+  ],
+
+  "launch_sequence": [
+    {
+      "phase": "Week 1 - Technical Completion",
+      "days": "1-7",
+      "milestones": [
+        "API keys configured and tested",
+        "Stripe products created and integrated", 
+        "Production builds generated and validated",
+        "Internal testing completed"
+      ]
+    },
+    {
+      "phase": "Week 2 - Store Submission",
+      "days": "8-14", 
+      "milestones": [
+        "App store assets completed",
+        "Google Play submission",
+        "Apple App Store submission",
+        "Launch marketing prepared"
+      ]
+    }
+  ],
+
+  "risk_assessment": {
+    "high_risk": [
+      "App store rejection due to policy violations",
+      "Payment processing failures affecting revenue",
+      "API rate limits impacting user experience"
+    ],
+    "medium_risk": [
+      "Build issues preventing timely deployment",
+      "Performance problems on lower-end devices",
+      "User onboarding confusion affecting retention"
+    ],
+    "low_risk": [
+      "Minor UI inconsistencies across platforms",
+      "Edge case bugs in non-critical features",
+      "Marketing message optimization needs"
+    ],
+    "mitigation_strategies": [
+      "Pre-submission app store guideline review",
+      "Payment flow testing with multiple scenarios",
+      "Load testing and performance optimization",
+      "User testing sessions for onboarding flow"
+    ]
+  }
+}

@@ -1,1 +1,8 @@
+supabase/
+docs/
+scripts/
+tools/
+packages/
+specs/
+guidelines/
 *.md

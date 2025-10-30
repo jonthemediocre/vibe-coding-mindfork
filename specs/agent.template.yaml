@@ -1,0 +1,115 @@
+version: 0.7
+id: "cordalux.agent.template"
+name: "TemplateAgent"
+role: "planner|researcher|executor"
+owner: "cordalux"
+
+compliance:
+  protocols:
+    mcp:
+      spec_version: "v2025-03-26"
+      clients: ["desktop","server"]
+      servers: ["github","filesystem","vector_store"]
+    a2a:
+      spec: "a2a:generic-v1"
+      capabilities: ["handshake","capabilities.discover","task.transfer","artifact.exchange"]
+    ap2:
+      spec: "ap2:generic-v1"
+      payments_enabled: true
+      currencies: ["USD","USDC"]
+      risk_controls:
+        require_user_intent_token: true
+        per_txn_limit: 200.00
+        daily_cap: 500.00
+        vendors_allowlist_ref: "doc://risk/vendors-allowlist.yaml#sha256:..."
+
+contracts:
+  io:
+    input_schema_ref: "schema://inputs.json"
+    output_schema_ref: "schema://outputs.json"
+  runtime:
+    sla:
+      max_latency_ms: 6000
+      p99_timeout_ms: 120000
+      retry_policy: {max_retries: 2, backoff: "expo"}
+  safety:
+    refusal_policy_ref: "doc://policies/refusals.md#v3"
+    tool_use_rules_ref: "doc://policies/tool-use.md#v4"
+
+spec:
+  objectives:
+    - id: "O1"
+      text: "Plan and execute tasks; cite sources when making factual claims."
+      kpis: [{name: "task_success", target: ">=0.85"}, {name: "citation_integrity", target: ">=0.95"}]
+  non_functional:
+    cost_per_task_usd: "<= 0.05"
+    data_residency: "us"
+  context_budget: { max_tokens: 64000 }
+  memory_policies_ref: "doc://memory/policy.md#v2"
+
+state:
+  schema_ref: "schema://state.json"
+  volatile: ["scratchpad","tool_traces"]
+  persistent: ["episodic_memory_ref","embeddings","auth_bindings"]
+  reducers: ["append_messages","merge_artifacts"]
+
+tools:
+  allowed:
+    - {name: "mcp:github", rate_limit: "30/min"}
+    - {name: "mcp:filesystem", rate_limit: "120/min"}
+    - {name: "http", rate_limit: "60/min"}
+    - {name: "ap2:pay", constraints_ref: "doc://risk/pay-constraints.yaml#v1"}
+  fallbacks:
+    - {on: "tool_error", action: "retry_then_degrade"}
+
+interoperability:
+  a2a:
+    topics: ["task.assign","artifact.share","payment.intent.created"]
+  ap2:
+    payment_intents:
+      require_user_presence: false
+      verifier_ref: "fn://verify/ap2-intent"
+    ledger:
+      provider: "hashchain:blake3"
+      write_ref: "bucket://ledgers/ap2-ledger"
+
+rlvr:
+  reward_sources:
+    - {id: RS1.citations,     type: verifiable,   verifier: {kind: strategy,    ref: "fn://verifiers/citations_strategy@v2"}}
+    - {id: RS2.outputs_json,  type: schema,       verifier: {kind: jsonschema,  schema_ref: "schema://outputs.json#sha256:..."}}
+    - {id: RS3.ap2_proof,     type: cryptographic,verifier: {kind: ap2_attest,  ref: "fn://verify/ap2-attest@v1"}}
+  reward_aggregation:
+    method: "composite"
+    formula: "min(RS1,RS2) * 0.7 + RS3 * 0.3"
+    diversity_penalty: {threshold: 0.9, penalty_factor: 0.1}
+    scope: ["step","episode"]
+    emit:
+      on: ["step","episode"]
+      checkpoint: {episode: "end", step: "every_k", k: 1}
+    smoothing: {type: "ema", alpha: 0.2}
+    clipping: {max: 1.0}
+  training:
+    mode: "online|offline"
+    buffer: {capacity: 10000, persist: "bucket://rl/buffers/template"}
+
+evaluation:
+  offline_suites:
+    - {name: "spec-compliance", ref: "suite://checks/spec-compliance.yaml"}
+    - {name: "security-redteam", ref: "suite://checks/redteam.yaml"}
+  online_metrics:
+    - {name: "success_rate", source: "telemetry"}
+    - {name: "cot_pass@k",  source: "rlvr"}
+
+governance:
+  change_control:
+    spec_editors: ["HumanOwner","SpecialAssistantAI"]
+    audit_log: "bucket://audit/spec"
+observability:
+  telemetry:
+    sink: "otlp:http://otel:4317"
+    pii_scrub_rules_ref: "doc://security/pii-scrub.yaml"
+
+patterns:
+  verifier_strategy: "Swap verifiable/script/embed via ref; default to layered (script then embed)"
+  emission_observer: "Hook telemetry/RLVR to node exits; decouple via pubsub"
+  graph_composition: "Subgraphs for sub-agents; conditional edges on KPI targets"
