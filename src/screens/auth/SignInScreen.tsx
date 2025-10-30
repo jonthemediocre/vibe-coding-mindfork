@@ -70,7 +70,7 @@ export const SignInScreen: React.FC = () => {
           {/* Logo & Branding */}
           <View style={styles.brandingContainer}>
             <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
-              <Ionicons name="brain" size={56} color="#FFFFFF" />
+              <Ionicons name="bulb" size={60} color="#FFFFFF" />
             </View>
             <Text style={[styles.appName, {
               color: colors.text,
@@ -90,121 +90,121 @@ export const SignInScreen: React.FC = () => {
             </Text>
           </View>
 
-        {/* Auth Card */}
-        <Card elevation={3} padding="lg" style={styles.card}>
-          <Text variant="headingSmall" style={[styles.heading, { color: colors.text }]}>
-            {mode === "signin" ? "Welcome Back" : "Join MindFork"}
-          </Text>
+          {/* Auth Card */}
+          <Card elevation={3} padding="lg" style={styles.card}>
+            <Text variant="headingSmall" style={[styles.heading, { color: colors.text }]}>
+              {mode === "signin" ? "Welcome Back" : "Join MindFork"}
+            </Text>
 
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {mode === "signin"
-              ? "Sign in to continue your journey"
-              : "Start your personalized wellness journey"
-            }
-          </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {mode === "signin"
+                ? "Sign in to continue your journey"
+                : "Start your personalized wellness journey"
+              }
+            </Text>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder="Email address"
-              autoCapitalize="none"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-              returnKeyType="next"
-              onSubmitEditing={() => passwordInputRef.current?.focus()}
-              blurOnSubmit={false}
-              style={[styles.input, {
-                borderColor: colors.border,
-                color: colors.text,
-                backgroundColor: isDark ? colors.surface : colors.background,
-              }]}
-              placeholderTextColor={colors.textSecondary}
-            />
-            <View style={styles.passwordContainer}>
+            <View style={styles.inputContainer}>
               <TextInput
-                ref={passwordInputRef}
-                placeholder="Password"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                returnKeyType="go"
-                onSubmitEditing={handleSubmit}
-                style={[styles.input, styles.passwordInput, {
+                placeholder="Email address"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                blurOnSubmit={false}
+                style={[styles.input, {
                   borderColor: colors.border,
                   color: colors.text,
                   backgroundColor: isDark ? colors.surface : colors.background,
                 }]}
                 placeholderTextColor={colors.textSecondary}
               />
-              <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.passwordToggle}
-                hitSlop={8}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={24}
-                  color={colors.textSecondary}
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  ref={passwordInputRef}
+                  placeholder="Password"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  returnKeyType="go"
+                  onSubmitEditing={handleSubmit}
+                  style={[styles.input, styles.passwordInput, {
+                    borderColor: colors.border,
+                    color: colors.text,
+                    backgroundColor: isDark ? colors.surface : colors.background,
+                  }]}
+                  placeholderTextColor={colors.textSecondary}
                 />
-              </Pressable>
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.passwordToggle}
+                  hitSlop={8}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={24}
+                    color={colors.textSecondary}
+                  />
+                </Pressable>
+              </View>
             </View>
-          </View>
 
-          <Button
-            title={mode === "signin" ? "Sign In" : "Create Account"}
-            onPress={handleSubmit}
-            loading={isLoading}
-            containerStyle={styles.submitButton}
-          />
-
-          <View style={styles.switchRow}>
-            <Text variant="bodySmall" color={colors.textSecondary}>
-              {mode === "signin" ? "Don't have an account?" : "Already have an account?"}
-            </Text>
             <Button
-              title={mode === "signin" ? "Sign Up" : "Sign In"}
-              variant="ghost"
-              size="small"
-              onPress={() => setMode(prev => (prev === "signin" ? "signup" : "signin"))}
-            />
-          </View>
-        </Card>
-
-        {/* Features */}
-        <View style={styles.featuresContainer}>
-          <FeatureItem
-            icon="🎯"
-            text="Personalized Goals"
-            color={colors.textSecondary}
-          />
-          <FeatureItem
-            icon="🤖"
-            text="AI Coach"
-            color={colors.textSecondary}
-          />
-          <FeatureItem
-            icon="📊"
-            text="Track Progress"
-            color={colors.textSecondary}
-          />
-        </View>
-
-        {/* Development bypass */}
-        {ENV.BYPASS_AUTH && __DEV__ && (
-          <Card elevation={1} padding="md" style={styles.devCard}>
-            <Text variant="bodySmall" color={colors.textSecondary} style={styles.devLabel}>
-              Development Mode
-            </Text>
-            <Button
-              title="🚀 Bypass Auth"
-              variant="outline"
-              size="small"
-              onPress={() => bypassAuth()}
+              title={mode === "signin" ? "Sign In" : "Create Account"}
+              onPress={handleSubmit}
               loading={isLoading}
-              containerStyle={styles.bypassButton}
+              containerStyle={styles.submitButton}
             />
+
+            <View style={styles.switchRow}>
+              <Text variant="bodySmall" color={colors.textSecondary}>
+                {mode === "signin" ? "Don't have an account?" : "Already have an account?"}
+              </Text>
+              <Button
+                title={mode === "signin" ? "Sign Up" : "Sign In"}
+                variant="ghost"
+                size="small"
+                onPress={() => setMode(prev => (prev === "signin" ? "signup" : "signin"))}
+              />
+            </View>
           </Card>
-        )}
+
+          {/* Features */}
+          <View style={styles.featuresContainer}>
+            <FeatureItem
+              icon="🎯"
+              text="Personalized Goals"
+              color={colors.textSecondary}
+            />
+            <FeatureItem
+              icon="🤖"
+              text="AI Coach"
+              color={colors.textSecondary}
+            />
+            <FeatureItem
+              icon="📊"
+              text="Track Progress"
+              color={colors.textSecondary}
+            />
+          </View>
+
+          {/* Development bypass */}
+          {ENV.BYPASS_AUTH && __DEV__ && (
+            <Card elevation={1} padding="md" style={styles.devCard}>
+              <Text variant="bodySmall" color={colors.textSecondary} style={styles.devLabel}>
+                Development Mode
+              </Text>
+              <Button
+                title="🚀 Bypass Auth"
+                variant="outline"
+                size="small"
+                onPress={() => bypassAuth()}
+                loading={isLoading}
+                containerStyle={styles.bypassButton}
+              />
+            </Card>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
