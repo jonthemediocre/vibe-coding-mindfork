@@ -550,3 +550,25 @@ export async function completeOnboarding(
 export function getInitialGreeting(): string {
   return "Hey there! 👋 I'm Synapse, your AI health coach. I'm so excited to help you on your wellness journey!\n\nLet's start by getting to know each other. What should I call you?";
 }
+
+/**
+ * Resets onboarding status for a user (useful when onboarding failed)
+ */
+export async function resetOnboardingStatus(userId: string): Promise<void> {
+  console.log('[Onboarding] Resetting onboarding status for user:', userId);
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      onboarding_completed: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error('[Onboarding] Error resetting onboarding status:', error);
+    throw error;
+  }
+
+  console.log('[Onboarding] Onboarding status reset successfully');
+}
