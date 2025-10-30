@@ -179,3 +179,63 @@ export interface StartFastingInput {
 export interface EndFastingInput {
   session_id: string;
 }
+
+// Goal types
+export type GoalType = 'weight' | 'nutrition' | 'fitness' | 'habit' | 'custom';
+export type GoalCategory = 'health' | 'fitness' | 'nutrition' | 'lifestyle';
+export type GoalStatus = 'active' | 'completed' | 'paused' | 'abandoned';
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  type: GoalType;
+  category: GoalCategory;
+  status: GoalStatus;
+  target_value?: number;
+  current_value?: number;
+  unit?: string;
+  start_date: string;
+  target_date?: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface GoalMilestone {
+  id: string;
+  goal_id: string;
+  title: string;
+  description?: string;
+  target_value?: number;
+  achieved_at?: string;
+  created_at: string;
+}
+
+export interface Achievement {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  icon?: string;
+  badge_url?: string;
+  earned_at: string;
+  category?: string;
+}
+
+export interface CreateGoalInput {
+  title: string;
+  description?: string;
+  type: GoalType;
+  category: GoalCategory;
+  target_value?: number;
+  unit?: string;
+  target_date?: string;
+}
+
+export interface UpdateGoalInput extends Partial<CreateGoalInput> {
+  id: string;
+  status?: GoalStatus;
+  current_value?: number;
+}

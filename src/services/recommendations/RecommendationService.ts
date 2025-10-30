@@ -22,11 +22,21 @@ import type {
   RecommendationServiceConfig,
   RecommendationCacheEntry,
   PerformanceMetrics,
-  RecommendationError,
-  RecommendationErrorCode,
 } from '../../types/recommendations';
 import type { FoodItem, ScoringContext } from './CompatibilityScorer';
 import crypto from 'crypto';
+
+// Error types
+export class RecommendationError extends Error {
+  code: string;
+  constructor(message: string, code: string) {
+    super(message);
+    this.name = 'RecommendationError';
+    this.code = code;
+  }
+}
+
+export type RecommendationErrorCode = 'CACHE_ERROR' | 'FETCH_ERROR' | 'INVALID_INPUT' | 'SERVICE_ERROR';
 
 export class RecommendationService {
   private static instance: RecommendationService;

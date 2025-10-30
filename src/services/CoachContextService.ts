@@ -109,15 +109,15 @@ export class CoachContextService {
     if (wellnessCheck.hasWellnessData) {
       console.log('Wellness preferences found:', wellnessCheck.wellnessFields);
       WellnessDataService.logWellnessDataAccess(
-        profile.user_id, 
-        'read', 
-        'coaching_context_generation', 
+        profile.id,
+        'read',
+        'coaching_context_generation',
         wellnessCheck.wellnessFields
       );
     }
 
     // Privacy compliance check
-    if (!PrivacyComplianceService.canProcessData(profile.user_id, 'coach_context', 'coaching')) {
+    if (!PrivacyComplianceService.canProcessData(profile.id, 'coach_context', 'coaching')) {
       throw new Error('User has not consented to coaching data processing');
     }
 
@@ -135,19 +135,18 @@ export class CoachContextService {
     };
 
     const sanitizedContext = this.validateAndSanitizeContext(context);
-    
+
     // Wellness validation
     const hipaaValidation = PrivacyComplianceService.validateCoachingContext(sanitizedContext);
     if (!hipaaValidation.isValid) {
       const hipaaIssues = hipaaValidation.issues.filter(issue => issue.includes('HIPAA'));
       if (hipaaIssues.length > 0) {
-        HIPAAComplianceService.reportHIPAAIncident({
+        PrivacyComplianceService.reportPrivacyIncident({
           type: 'wellness_boundary_violation',
           description: 'Medical terminology found in coaching context',
-          phiFields: phiCheck.phiFields,
           severity: 'high',
         });
-        throw new Error('HIPAA violation: PHI detected in coaching context');
+        throw new Error('Privacy violation: Sensitive data detected in coaching context');
       }
       console.warn('Privacy validation issues:', hipaaValidation.issues);
     }

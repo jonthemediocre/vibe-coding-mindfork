@@ -330,10 +330,9 @@ export const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({
                 title={button.title}
                 variant={button.variant}
                 onPress={() => handleNavigation(button.action)}
-                containerStyle={[
-                  styles.actionButton,
+                containerStyle={
                   index === 0 ? styles.primaryActionButton : styles.secondaryActionButton
-                ]}
+                }
               />
             ))}
           </View>
