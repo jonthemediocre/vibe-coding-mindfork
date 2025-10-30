@@ -298,7 +298,7 @@ export const ConversationalOnboardingScreen: React.FC<
   };
 
   return (
-    <Screen preset="fixed" safeAreaEdges={["top", "bottom"]}>
+    <Screen>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"

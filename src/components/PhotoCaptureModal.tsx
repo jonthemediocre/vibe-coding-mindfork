@@ -39,9 +39,8 @@ export const PhotoCaptureModal: React.FC<PhotoCaptureModalProps> = ({
 
     try {
       setIsCapturing(true);
-      const photo = await cameraRef.current.takePictureAsync({
+      const photo = await cameraRef.current.takePicture({
         quality: 0.8,
-        base64: false,
       });
 
       if (photo?.uri) {

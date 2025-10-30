@@ -169,7 +169,6 @@ export const ShareableImageScreen: React.FC<ShareableImageScreenProps> = ({
   return (
     <Screen
       scrollable
-      safeAreaEdges={['top', 'bottom']}
       style={{ backgroundColor: theme.colors.background }}
     >
       <View className="flex-1 px-6 py-8">
