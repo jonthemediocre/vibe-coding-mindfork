@@ -244,14 +244,14 @@ export const ConversationalOnboardingScreen: React.FC<
     if (fields.length === 0) return null;
 
     return (
-      <View className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 mb-4">
-        <Text className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+      <View className="bg-purple-50 dark:bg-gray-800 rounded-lg p-3 mb-4 border border-purple-200 dark:border-gray-700">
+        <Text className="text-xs font-semibold text-purple-800 dark:text-purple-300 mb-2">
           Information collected:
         </Text>
         {fields.map((field, idx) => (
           <Text
             key={idx}
-            className="text-xs text-gray-700 dark:text-gray-300 mb-1"
+            className="text-xs text-gray-900 dark:text-gray-200 mb-1"
           >
             • {field}
           </Text>
