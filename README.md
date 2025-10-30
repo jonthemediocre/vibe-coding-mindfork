@@ -6,7 +6,11 @@
 
 ✅ **FULLY CONFIGURED - SUPABASE CONNECTED!**
 
-**Latest Update:** Supabase credentials successfully configured in app.config.ts. App now has full database connectivity and is ready to use. Access via: `exp://019a324a-fecc-732d-953a-8a341fb7f48c.tunnel.vibecodeapp.io`
+**Latest Update (2025-01-30):**
+- Fixed onboarding field name mismatches between AI extraction and validation
+- Fixed camera C++ exception by updating to correct expo-camera API (`takePicture` instead of `takePictureAsync`)
+- Added comprehensive debug logging to track onboarding flow
+- App now has full database connectivity and is ready to use. Access via: `exp://019a324a-fecc-732d-953a-8a341fb7f48c.tunnel.vibecodeapp.io`
 
 📄 **See [PRODUCTION_LAUNCH_COMPLETE.md](./PRODUCTION_LAUNCH_COMPLETE.md) for launch commands and checklist.**
 
