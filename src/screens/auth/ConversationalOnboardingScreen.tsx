@@ -124,7 +124,7 @@ export const ConversationalOnboardingScreen: React.FC<
       setTimeout(() => {
         navigation.reset({
           index: 0,
-          routes: [{ name: "MainTabs" }],
+          routes: [{ name: "Main" }],
         });
       }, 2000);
     } catch (error) {

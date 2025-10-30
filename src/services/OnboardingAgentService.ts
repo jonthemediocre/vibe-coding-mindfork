@@ -330,20 +330,20 @@ export async function completeOnboarding(
       age: data.age,
       gender: data.gender,
       height_cm,
-      current_weight_kg: weight_kg,
+      weight_kg: weight_kg,
       target_weight_kg: targetWeightKg,
       primary_goal: data.primaryGoal,
       activity_level: data.activityLevel,
       diet_type: data.dietType,
-      daily_calorie_goal: goals.dailyCalories,
-      daily_protein_goal: goals.dailyProtein,
-      daily_carbs_goal: goals.dailyCarbs,
-      daily_fat_goal: goals.dailyFat,
-      daily_fiber_goal: goals.dailyFiber,
+      daily_calorie_goal: goals.daily_calories,
+      daily_protein_goal: goals.daily_protein_g,
+      daily_carbs_goal: goals.daily_carbs_g,
+      daily_fat_goal: goals.daily_fat_g,
+      daily_fiber_goal: goals.daily_fiber_g,
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", userId);
+    .eq("user_id", userId);
 
   if (error) {
     throw error;
