@@ -1,6 +1,7 @@
 /**
  * Coach Context Service
  * Generates personalized context for AI coaches based on user profile and progress
+ * Now with deep personality integration for authentic, distinct coaching experiences
  */
 
 import type { UserProfile } from '../types/profile';
@@ -9,6 +10,7 @@ import { PrivacyComplianceService } from '../utils/privacyCompliance';
 import { WellnessDataService } from '../utils/hipaaCompliance';
 import { boundaryEnforcer } from '../utils/boundaryEnforcer';
 import { terminologyMapper } from '../utils/wellnessTerminology';
+import { getCoachPersonality } from '../data/coachPersonalities';
 
 export interface CoachContext {
   // User goals and preferences
@@ -558,18 +560,107 @@ export class CoachContextService {
   }
 
   /**
-   * Generate coach-specific context prompt with privacy safeguards
+   * Generate coach-specific context prompt with deep personality integration
+   * Each coach now has a rich, distinct personality that shapes their responses
    */
   static generateCoachPrompt(
     context: CoachContext,
-    coachPersonality: string,
+    coachIdOrPersonality: string,
     userMessage: string
   ): string {
+    // Get deep personality profile for this coach
+    const personality = getCoachPersonality(coachIdOrPersonality);
+
+    if (!personality) {
+      // Fallback to generic coaching if personality not found
+      return this.generateGenericPrompt(context, coachIdOrPersonality, userMessage);
+    }
+
     // PRIVACY NOTICE: This prompt contains only nutrition/fitness data, no medical information
     const prompt = `
-You are a ${coachPersonality} nutrition coach providing wellness guidance. Here's the user's context:
+${personality.corePersonality}
 
-IMPORTANT: This is wellness and lifestyle coaching. Focus on nutrition and fitness guidance only.
+YOUR COMMUNICATION STYLE:
+${personality.communicationStyle}
+
+YOUR COACHING METHODOLOGY:
+${personality.coachingMethodology}
+
+YOUR SPECIALIZED KNOWLEDGE:
+${personality.specializedKnowledge}
+
+YOUR RESPONSE STRUCTURE:
+${personality.responseStructure}
+
+VOCABULARY PATTERNS YOU USE:
+${personality.vocabularyPatterns.slice(0, 6).join(', ')}
+
+YOUR MOTIVATIONAL APPROACH:
+${personality.motivationalApproach}
+
+TONE AND VOICE:
+${personality.toneAndVoice}
+
+---
+
+USER'S CONTEXT:
+
+GOALS:
+- Primary goal: ${context.userGoals.primary_goal}
+- Daily calories: ${context.userGoals.daily_calories} kcal
+- Protein target: ${context.userGoals.macro_targets.protein_g}g
+- Diet type: ${context.userGoals.diet_type}
+- Activity level: ${context.userGoals.activity_level}
+
+TODAY'S PROGRESS:
+- Calories: ${context.currentProgress.calories_consumed}/${context.userGoals.daily_calories} (${Math.round((context.currentProgress.calories_consumed / context.userGoals.daily_calories) * 100)}%)
+- Protein: ${context.currentProgress.macros_consumed.protein_g}g/${context.userGoals.macro_targets.protein_g}g
+- Consistency score: ${Math.round(context.currentProgress.consistency_score)}%
+- Days tracked: ${context.currentProgress.days_tracked}
+
+RECENT ACHIEVEMENTS:
+${context.achievements.length > 0 ? context.achievements.map(a => `- ${a.description}`).join('\n') : '- None yet (this is an opportunity to encourage!)'}
+
+CURRENT CHALLENGES:
+${context.challenges.length > 0 ? context.challenges.map(c => `- ${c.description}`).join('\n') : '- No challenges identified'}
+
+DIETARY RESTRICTIONS:
+${context.restrictions.length > 0 ? context.restrictions.join(', ') : 'None'}
+
+TIME CONTEXT: ${context.metadata.time_of_day}, ${context.metadata.days_since_onboarding} days since starting
+
+---
+
+USER'S MESSAGE: "${userMessage}"
+
+---
+
+IMPORTANT GUIDELINES:
+- Stay true to your unique personality and coaching style (as ${personality.name})
+- Use your signature vocabulary patterns naturally
+- Apply your specific coaching methodology to this situation
+- Draw on your specialized knowledge when relevant
+- Provide wellness and nutrition guidance only (not medical advice)
+- Keep response under 200 words but make every word count
+- End in a way consistent with your personality (check your example closers)
+- Encourage consulting healthcare professionals for medical concerns
+
+Remember: You are ${personality.name}, and your distinct voice is what makes you valuable. Don't be generic - be authentically YOU.
+    `.trim();
+
+    return prompt;
+  }
+
+  /**
+   * Fallback generic prompt if personality not found
+   */
+  private static generateGenericPrompt(
+    context: CoachContext,
+    coachId: string,
+    userMessage: string
+  ): string {
+    const prompt = `
+You are a supportive nutrition coach providing wellness guidance.
 
 GOALS:
 - Primary goal: ${context.userGoals.primary_goal}
@@ -586,7 +677,7 @@ RECENT ACHIEVEMENTS:
 ${context.achievements.map(a => `- ${a.description}`).join('\n') || '- None yet'}
 
 CURRENT CHALLENGES:
-${context.challenges.map(c => `- ${c.description} (${c.suggestion})`).join('\n') || '- None identified'}
+${context.challenges.map(c => `- ${c.description}`).join('\n') || '- None identified'}
 
 DIETARY RESTRICTIONS:
 ${context.restrictions.join(', ') || 'None'}
@@ -598,10 +689,9 @@ User message: "${userMessage}"
 RESPONSE GUIDELINES:
 - Provide wellness and nutrition guidance only
 - Focus on lifestyle support and fitness goals
-- Encourage consulting healthcare professionals for health concerns
-- Encourage consulting healthcare providers for medical concerns
 - Keep response under 150 words
 - Be encouraging and reference their progress when relevant
+- Encourage consulting healthcare providers for medical concerns
     `.trim();
 
     return prompt;
