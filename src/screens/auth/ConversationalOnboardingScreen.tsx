@@ -149,9 +149,13 @@ export const ConversationalOnboardingScreen: React.FC<
         setShowPhotoOptions(true);
         setIsCompleting(false); // Reset completing state
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[Onboarding] Error completing onboarding:", error);
-      console.error("[Onboarding] Error details:", JSON.stringify(error, null, 2));
+      console.error("[Onboarding] Error message:", error?.message);
+      console.error("[Onboarding] Error code:", error?.code);
+      console.error("[Onboarding] Error details:", error?.details);
+      console.error("[Onboarding] Error hint:", error?.hint);
+      console.error("[Onboarding] Full error:", error);
 
       const errorMessage: OnboardingMessage = {
         role: "assistant",
