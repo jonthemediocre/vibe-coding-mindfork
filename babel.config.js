@@ -13,6 +13,8 @@ module.exports = function (api) {
           },
         },
       ],
+      // CRITICAL: Reanimated plugin must be last in the plugins array
+      'react-native-reanimated/plugin',
     ],
   };
 };
