@@ -33,8 +33,8 @@ export function AuthNavigator() {
   const { profile, loading: profileLoading } = useProfile();
   const { isDark } = useTheme();
 
-  // Check if user needs onboarding based on profile existence
-  const needsOnboarding = isAuthenticated && !profileLoading && !profile;
+  // Check if user needs onboarding based on profile existence or completion status
+  const needsOnboarding = isAuthenticated && !profileLoading && (!profile || !profile.onboarding_completed);
 
   // Debug logging for navigation state
   React.useEffect(() => {
