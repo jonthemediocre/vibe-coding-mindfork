@@ -9,7 +9,7 @@ import { Screen, Card, Text, Button, PhoneInput, useThemeColors } from '../../ui
 import { useAuth } from '../../contexts/AuthContext';
 import { logger } from '../../utils/logger';
 
-export function SettingsScreen() {
+export function SettingsScreen({ navigation }: { navigation?: any }) {
   const { user, signOut } = useAuth();
   const colors = useThemeColors();
   const [phoneNumber, setPhoneNumber] = useState(user?.phone_number || '');
@@ -152,6 +152,13 @@ export function SettingsScreen() {
           </Text>
 
           <Button
+            title="Developer Tools"
+            variant="outline"
+            onPress={() => navigation?.navigate('DevTools')}
+            containerStyle={styles.devToolsButton}
+          />
+
+          <Button
             title="Sign Out"
             variant="outline"
             onPress={handleSignOut}
@@ -207,6 +214,9 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 4,
+  },
+  devToolsButton: {
+    marginBottom: 8,
   },
   signOutButton: {
     marginTop: 8,

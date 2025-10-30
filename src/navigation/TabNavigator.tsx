@@ -9,7 +9,7 @@ import { FoodScreen } from "../screens/food/FoodScreen";
 import { FastingScreen } from "../screens/fasting/FastingScreen";
 import { MealsScreen } from "../screens/meals/MealsScreen";
 import { CoachStackNavigator } from "./CoachStackNavigator";
-import { SettingsScreen } from "../screens/profile/SettingsScreen";
+import { SettingsStackNavigator } from "./SettingsStackNavigator";
 import { analytics } from "../utils/analytics";
 import { performanceMonitor } from "../utils/performance";
 
@@ -113,11 +113,10 @@ export function TabNavigator() {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => <Icon name="settings" color={color} size={size} />,
-          headerShown: true,
-          headerTitle: "Settings",
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
