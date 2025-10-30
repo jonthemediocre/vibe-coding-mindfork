@@ -116,11 +116,17 @@ export const ConversationalOnboardingScreen: React.FC<
   };
 
   const handleComplete = async (data: OnboardingData) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.error('[Onboarding] No user ID available');
+      return;
+    }
 
+    console.log('[Onboarding] Starting completion with data:', JSON.stringify(data, null, 2));
     setIsCompleting(true);
+
     try {
       await completeOnboarding(user.id, data);
+      console.log('[Onboarding] Completion successful');
 
       // Show success message and prompt for photo
       const successMessage: OnboardingMessage = {
@@ -133,9 +139,12 @@ export const ConversationalOnboardingScreen: React.FC<
       // Wait a moment, then show photo options
       setTimeout(() => {
         setShowPhotoOptions(true);
+        setIsCompleting(false); // Reset completing state
       }, 2000);
     } catch (error) {
-      console.error("Error completing onboarding:", error);
+      console.error("[Onboarding] Error completing onboarding:", error);
+      console.error("[Onboarding] Error details:", JSON.stringify(error, null, 2));
+
       const errorMessage: OnboardingMessage = {
         role: "assistant",
         content: "Oops, I had trouble saving your information. Could you try sending your last message again?",
