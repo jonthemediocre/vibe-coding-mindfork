@@ -384,11 +384,24 @@ export function extractDataFromText(
  * Checks if onboarding data is complete
  */
 export function isOnboardingComplete(data: Partial<OnboardingData>): boolean {
+  const hasHeight = !!(data.heightFeet && (data.heightInches !== undefined && data.heightInches !== null));
+
+  console.log('[Onboarding] Completion check:', {
+    age: !!data.age,
+    gender: !!data.gender,
+    heightFeet: !!data.heightFeet,
+    heightInches: data.heightInches,
+    hasHeight,
+    weightLbs: !!data.weightLbs,
+    primaryGoal: !!data.primaryGoal,
+    activityLevel: !!data.activityLevel,
+    dietType: !!data.dietType,
+  });
+
   return !!(
     data.age &&
     data.gender &&
-    data.heightFeet &&
-    data.heightInches !== undefined &&
+    hasHeight &&
     data.weightLbs &&
     data.primaryGoal &&
     data.activityLevel &&

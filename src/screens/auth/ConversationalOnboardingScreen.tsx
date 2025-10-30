@@ -78,6 +78,7 @@ export const ConversationalOnboardingScreen: React.FC<
     try {
       // Extract data from user's message using local parser
       const extractedData = extractDataFromText(inputText, onboardingData);
+      console.log('[Onboarding] Extracted data from user input:', JSON.stringify(extractedData, null, 2));
       setOnboardingData(extractedData);
 
       // Get AI response
@@ -88,6 +89,8 @@ export const ConversationalOnboardingScreen: React.FC<
 
       // Update data with AI extraction
       const finalData = { ...extractedData, ...result.extractedData };
+      console.log('[Onboarding] Final data after AI extraction:', JSON.stringify(finalData, null, 2));
+      console.log('[Onboarding] AI says isComplete:', result.isComplete);
       setOnboardingData(finalData);
 
       // Add AI response
@@ -99,8 +102,13 @@ export const ConversationalOnboardingScreen: React.FC<
       setMessages((prev) => [...prev, aiMessage]);
 
       // Check if complete
-      if (result.isComplete && isOnboardingComplete(finalData)) {
+      const localComplete = isOnboardingComplete(finalData);
+      console.log('[Onboarding] Local isComplete check:', localComplete);
+      if (result.isComplete && localComplete) {
+        console.log('[Onboarding] Both checks passed, starting completion...');
         await handleComplete(finalData as OnboardingData);
+      } else {
+        console.log('[Onboarding] Not complete yet. AI complete:', result.isComplete, 'Local complete:', localComplete);
       }
     } catch (error) {
       console.error("Error sending message:", error);
