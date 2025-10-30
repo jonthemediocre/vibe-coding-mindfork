@@ -267,12 +267,19 @@ export function extractDataFromText(
   const newData: Partial<OnboardingData> = { ...currentData };
   const lowerText = text.toLowerCase();
 
-  // Extract name (if "my name is" or "i'm" or "i am")
-  const nameMatch =
-    text.match(/(?:my name is|i'm|i am|call me)\s+([a-z]+)/i) ||
-    text.match(/^([A-Z][a-z]+)\s*$/);
-  if (nameMatch && !newData.fullName) {
-    newData.fullName = nameMatch[1];
+  // Common greetings and words to ignore - don't extract as names
+  const greetings = ['hello', 'hi', 'hey', 'hola', 'sup', 'yo', 'greetings', 'howdy'];
+  const isJustGreeting = greetings.some(greeting =>
+    lowerText.trim() === greeting || lowerText.trim() === greeting + '!'
+  );
+
+  // Extract name (ONLY if explicitly stated with "my name is" or "i'm" or "i am" or "call me")
+  // Do NOT extract from standalone words like "hello", "hi", etc.
+  if (!isJustGreeting) {
+    const nameMatch = text.match(/(?:my name is|i'm|i am|call me)\s+([a-z]+)/i);
+    if (nameMatch && !newData.fullName) {
+      newData.fullName = nameMatch[1];
+    }
   }
 
   // Extract age
