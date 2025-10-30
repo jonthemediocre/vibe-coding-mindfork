@@ -5,6 +5,7 @@ import { AuthNavigator } from "./src/navigation/AuthNavigator";
 import { ThemeProvider } from "./src/app-components/components/ThemeProvider";
 import { ErrorBoundary } from "./src/app-components/components/ErrorBoundary";
 import { AuthProvider } from "./src/contexts/AuthContext";
+import { ProfileProvider } from "./src/contexts/ProfileContext";
 import { View } from "react-native";
 import "./global.css";
 
@@ -15,9 +16,11 @@ const App: React.FC = () => {
         <SafeAreaProvider>
           <ThemeProvider>
             <AuthProvider>
-              <View testID="app-ready" style={{ flex: 1 }}>
-                <AuthNavigator />
-              </View>
+              <ProfileProvider>
+                <View testID="app-ready" style={{ flex: 1 }}>
+                  <AuthNavigator />
+                </View>
+              </ProfileProvider>
             </AuthProvider>
           </ThemeProvider>
         </SafeAreaProvider>
