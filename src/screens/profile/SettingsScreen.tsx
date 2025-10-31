@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Pressable, Modal, TextInput } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Pressable, Modal, TextInput, Platform } from 'react-native';
 import { Screen, Card, Text, Button, PhoneInput, useThemeColors } from '../../ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { logger } from '../../utils/logger';
@@ -17,8 +17,29 @@ import {
 } from '../../services/ProfileUpdateService';
 import type { UserProfile, UserProfileUpdate } from '../../types/profile';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 
 type EditField = 'age' | 'gender' | 'height' | 'weight' | 'target_weight' | 'primary_goal' | 'activity_level' | 'diet_type' | null;
+
+const GENDER_OPTIONS = ['male', 'female', 'other'];
+const GOAL_OPTIONS = ['lose_weight', 'gain_muscle', 'maintain', 'get_healthy'];
+const ACTIVITY_OPTIONS = ['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extremely_active'];
+const DIET_OPTIONS = ['none', 'vegetarian', 'vegan', 'pescatarian', 'keto', 'paleo', 'mediterranean'];
+
+const GOAL_LABELS: Record<string, string> = {
+  lose_weight: 'Lose Weight',
+  gain_muscle: 'Gain Muscle',
+  maintain: 'Maintain Weight',
+  get_healthy: 'Get Healthy'
+};
+
+const ACTIVITY_LABELS: Record<string, string> = {
+  sedentary: 'Sedentary (little/no exercise)',
+  lightly_active: 'Lightly Active (1-3 days/week)',
+  moderately_active: 'Moderately Active (3-5 days/week)',
+  very_active: 'Very Active (6-7 days/week)',
+  extremely_active: 'Extremely Active (athlete)'
+};
 
 export function SettingsScreen({ navigation }: { navigation?: any }) {
   const { user, signOut } = useAuth();
@@ -43,12 +64,32 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
 
     try {
       setLoading(true);
+      console.log('[SettingsScreen] Loading profile for user:', user.id);
+
       const result = await getCompleteUserProfile(user.id);
+
+      console.log('[SettingsScreen] Profile loaded:', {
+        hasProfile: !!result,
+        hasSettings: !!result?.settings,
+        profileData: result?.profile ? {
+          age: result.profile.age,
+          gender: result.profile.gender,
+          height_cm: result.profile.height_cm,
+          weight_kg: result.profile.weight_kg,
+          primary_goal: result.profile.primary_goal,
+          activity_level: result.profile.activity_level,
+          diet_type: result.profile.diet_type
+        } : null
+      });
+
       if (result) {
         setProfile(result.profile);
         setUseImperial(result.settings?.height_unit === 'ft' || false);
+      } else {
+        console.warn('[SettingsScreen] No profile data returned');
       }
     } catch (error) {
+      console.error('[SettingsScreen] Failed to load profile:', error);
       logger.error('Failed to load profile', error as Error);
     } finally {
       setLoading(false);
@@ -91,6 +132,7 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
   };
 
   const openEditModal = (field: EditField, currentValue: any) => {
+    console.log('[SettingsScreen] Opening edit modal:', { field, currentValue });
     setEditingField(field);
     setEditValue(String(currentValue || ''));
   };
@@ -102,6 +144,8 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
 
   const handleSaveField = async () => {
     if (!user?.id || !editingField) return;
+
+    console.log('[SettingsScreen] Saving field:', { field: editingField, value: editValue });
 
     const updates: UserProfileUpdate = {};
 
@@ -145,6 +189,13 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
 
       const result = await updateUserProfile(user.id, updates);
 
+      console.log('[SettingsScreen] Update result:', {
+        success: result.success,
+        hasProfile: !!result.profile,
+        hasRecalculatedGoals: !!result.recalculatedGoals,
+        error: result.error
+      });
+
       if (!result.success) {
         throw new Error(result.error || 'Failed to update profile');
       }
@@ -166,6 +217,7 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
 
       closeEditModal();
     } catch (error: any) {
+      console.error('[SettingsScreen] Save error:', error);
       logger.error('Failed to update profile field', error as Error);
       Alert.alert('Error', error.message || 'Failed to update profile. Please try again.');
     } finally {
@@ -213,12 +265,100 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
           <Text variant="bodySmall" color={colors.textSecondary}>
             {label}
           </Text>
-          <Text variant="body">{value || 'Not set'}</Text>
+          <Text variant="body" style={!value ? styles.notSetText : undefined}>
+            {value || 'Not set - tap to add'}
+          </Text>
         </View>
       </View>
       <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
     </Pressable>
   );
+
+  const renderEditModal = () => {
+    if (!editingField) return null;
+
+    const isPickerField = ['gender', 'primary_goal', 'activity_level', 'diet_type'].includes(editingField);
+    const isNumericField = ['age', 'height', 'weight', 'target_weight'].includes(editingField);
+
+    return (
+      <Modal
+        visible={true}
+        transparent
+        animationType="slide"
+        onRequestClose={closeEditModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+            <View style={styles.modalHeader}>
+              <Text variant="headingSmall">
+                Edit {editingField.replace(/_/g, ' ')}
+              </Text>
+              <Pressable onPress={closeEditModal}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </Pressable>
+            </View>
+
+            {isPickerField ? (
+              <View style={[styles.pickerContainer, {
+                backgroundColor: colors.surface,
+                borderColor: colors.border
+              }]}>
+                <Picker
+                  selectedValue={editValue}
+                  onValueChange={setEditValue}
+                  style={{ color: colors.text }}
+                >
+                  {editingField === 'gender' && GENDER_OPTIONS.map(opt => (
+                    <Picker.Item key={opt} label={opt.charAt(0).toUpperCase() + opt.slice(1)} value={opt} />
+                  ))}
+                  {editingField === 'primary_goal' && GOAL_OPTIONS.map(opt => (
+                    <Picker.Item key={opt} label={GOAL_LABELS[opt] || opt} value={opt} />
+                  ))}
+                  {editingField === 'activity_level' && ACTIVITY_OPTIONS.map(opt => (
+                    <Picker.Item key={opt} label={ACTIVITY_LABELS[opt] || opt} value={opt} />
+                  ))}
+                  {editingField === 'diet_type' && DIET_OPTIONS.map(opt => (
+                    <Picker.Item key={opt} label={opt.charAt(0).toUpperCase() + opt.slice(1)} value={opt} />
+                  ))}
+                </Picker>
+              </View>
+            ) : (
+              <TextInput
+                style={[styles.input, {
+                  backgroundColor: colors.surface,
+                  color: colors.text,
+                  borderColor: colors.border
+                }]}
+                value={editValue}
+                onChangeText={setEditValue}
+                placeholder={`Enter ${editingField.replace(/_/g, ' ')}`}
+                placeholderTextColor={colors.textSecondary}
+                keyboardType={isNumericField ? 'numeric' : 'default'}
+                autoFocus
+              />
+            )}
+
+            <View style={styles.modalButtons}>
+              <Button
+                title="Cancel"
+                variant="outline"
+                onPress={closeEditModal}
+                containerStyle={styles.modalButton}
+              />
+              <Button
+                title="Save"
+                variant="primary"
+                onPress={handleSaveField}
+                loading={saving}
+                disabled={saving || !editValue}
+                containerStyle={styles.modalButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   if (loading) {
     return (
@@ -229,6 +369,26 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
       </Screen>
     );
   }
+
+  const formatGoal = (goal: string | undefined) => {
+    if (!goal) return undefined;
+    return GOAL_LABELS[goal] || goal;
+  };
+
+  const formatActivity = (activity: string | undefined) => {
+    if (!activity) return undefined;
+    return ACTIVITY_LABELS[activity] || activity;
+  };
+
+  const formatGender = (gender: string | undefined) => {
+    if (!gender) return undefined;
+    return gender.charAt(0).toUpperCase() + gender.slice(1);
+  };
+
+  const formatDiet = (diet: string | undefined) => {
+    if (!diet) return undefined;
+    return diet.charAt(0).toUpperCase() + diet.slice(1);
+  };
 
   return (
     <Screen>
@@ -248,7 +408,7 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
 
           {renderEditableField(
             'Gender',
-            profile?.gender,
+            formatGender(profile?.gender),
             'gender',
             'person-outline'
           )}
@@ -257,7 +417,7 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
         {/* Physical Metrics Section */}
         <Card style={styles.card}>
           <View style={styles.sectionHeader}>
-            <Text variant="headingSmall" style={styles.sectionTitle}>
+            <Text variant="headingSmall">
               Physical Metrics
             </Text>
             <Pressable onPress={() => setUseImperial(!useImperial)}>
@@ -309,21 +469,21 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
 
           {renderEditableField(
             'Primary Goal',
-            profile?.primary_goal,
+            formatGoal(profile?.primary_goal),
             'primary_goal',
             'trophy-outline'
           )}
 
           {renderEditableField(
             'Activity Level',
-            profile?.activity_level,
+            formatActivity(profile?.activity_level),
             'activity_level',
             'walk-outline'
           )}
 
           {renderEditableField(
             'Diet Type',
-            profile?.diet_type || 'None',
+            formatDiet(profile?.diet_type) || 'None',
             'diet_type',
             'nutrition-outline'
           )}
@@ -463,61 +623,7 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
         </View>
       </ScrollView>
 
-      {/* Edit Modal */}
-      <Modal
-        visible={editingField !== null}
-        transparent
-        animationType="slide"
-        onRequestClose={closeEditModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={styles.modalHeader}>
-              <Text variant="headingSmall">
-                Edit {editingField?.replace('_', ' ')}
-              </Text>
-              <Pressable onPress={closeEditModal}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </Pressable>
-            </View>
-
-            <TextInput
-              style={[styles.input, {
-                backgroundColor: colors.surface,
-                color: colors.text,
-                borderColor: colors.border
-              }]}
-              value={editValue}
-              onChangeText={setEditValue}
-              placeholder={`Enter ${editingField?.replace('_', ' ')}`}
-              placeholderTextColor={colors.textSecondary}
-              keyboardType={
-                editingField === 'age' || editingField === 'height' ||
-                editingField === 'weight' || editingField === 'target_weight'
-                  ? 'numeric'
-                  : 'default'
-              }
-            />
-
-            <View style={styles.modalButtons}>
-              <Button
-                title="Cancel"
-                variant="outline"
-                onPress={closeEditModal}
-                containerStyle={styles.modalButton}
-              />
-              <Button
-                title="Save"
-                variant="primary"
-                onPress={handleSaveField}
-                loading={saving}
-                disabled={saving || !editValue}
-                containerStyle={styles.modalButton}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {renderEditModal()}
     </Screen>
   );
 }
@@ -562,6 +668,10 @@ const styles = StyleSheet.create({
   fieldTextContainer: {
     gap: 4,
     flex: 1,
+  },
+  notSetText: {
+    fontStyle: 'italic',
+    opacity: 0.6,
   },
   targetsGrid: {
     flexDirection: 'row',
@@ -649,6 +759,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     fontSize: 16,
     marginBottom: 20,
+  },
+  pickerContainer: {
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 20,
+    overflow: 'hidden',
   },
   modalButtons: {
     flexDirection: 'row',
