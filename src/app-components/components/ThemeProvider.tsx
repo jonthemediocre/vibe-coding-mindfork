@@ -37,6 +37,7 @@ export interface Theme {
     sm: number;
     md: number;
     lg: number;
+    xl: number;
     full: number;
   };
 }

@@ -44,7 +44,7 @@ export const FoodScreen: React.FC = () => {
   const handleScanFood = async () => {
     setIsScanning(true);
     try {
-      const foodData = await AIFoodScanService.scanFood();
+      const foodData = await AIFoodScanService.scanFoodImage();
 
       if (foodData) {
         const success = await addFoodEntry(foodData);
