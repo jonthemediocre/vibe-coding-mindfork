@@ -184,7 +184,7 @@ export const getGrokTextResponse = async (messages: AIMessage[], options?: AIReq
 
   try {
     const client = getGrokClient();
-    const defaultModel = "grok-3-beta";
+    const defaultModel = "grok-4-fast-non-reasoning"; // Latest Grok 4 - best for math and reasoning
 
     const apiCall = client.chat.completions.create({
       model: options?.model || defaultModel,
