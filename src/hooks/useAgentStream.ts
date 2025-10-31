@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { getAnthropicTextResponse } from "../api/chat-service";
 import { AIMessage } from "../types/ai";
+import { buildRoastModePrompt } from "../services/RoastModeService";
 
 interface Message {
   id: string;
@@ -25,7 +26,8 @@ interface AgentState {
 
 interface UseAgentStreamOptions {
   userId: string;
-  coachPersona?: string;
+  coachId?: string; // Changed from coachPersona to coachId for proper integration
+  coachPersona?: string; // Keep for backwards compatibility
   roastLevel?: number;
   isPremium?: boolean;
   accessToken?: string;
@@ -69,18 +71,30 @@ export function useAgentStream(options: UseAgentStreamOptions) {
       }));
 
       try {
+        // Build proper system prompt with coach personality and roast level
+        const coachId = options.coachId || options.coachPersona || 'synapse';
+        const roastLevel = options.roastLevel || 3;
+
+        const systemPrompt = buildRoastModePrompt({
+          coachId,
+          roastLevel,
+          context: undefined // Can be added later for context-aware coaching
+        });
+
         // Build conversation history for AI
+        // IMPORTANT: System message is NOT stored in state.messages to prevent leaking
+        // Only user/assistant messages are stored and displayed to user
         const conversationHistory: AIMessage[] = [
           {
             role: "system",
-            content: `You are a ${options.coachPersona || "supportive"} coach with a roast level of ${
-              options.roastLevel || 3
-            }/10. Help the user with their fitness and nutrition goals.`,
+            content: systemPrompt,
           },
-          ...state.messages.map((msg) => ({
-            role: msg.role as "user" | "assistant",
-            content: msg.content,
-          })),
+          ...state.messages
+            .filter(msg => msg.role !== "system") // Never include system messages from state
+            .map((msg) => ({
+              role: msg.role as "user" | "assistant",
+              content: msg.content,
+            })),
           {
             role: "user",
             content: userMessage,
@@ -129,7 +143,7 @@ export function useAgentStream(options: UseAgentStreamOptions) {
         abortControllerRef.current = null;
       }
     },
-    [options.coachPersona, options.roastLevel, state.messages]
+    [options.coachId, options.coachPersona, options.roastLevel, state.messages]
   );
 
   const cancel = useCallback(() => {
