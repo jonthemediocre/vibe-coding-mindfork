@@ -8,6 +8,7 @@ import type {
   DailyStats,
 } from '../types/models';
 import { apiInterceptor } from '../utils/api-interceptor';
+import { FoodClassificationService } from './FoodClassificationService';
 
 type FoodEntryInsert = Database['public']['Tables']['food_entries']['Insert'];
 type FoodEntryUpdate = Database['public']['Tables']['food_entries']['Update'];

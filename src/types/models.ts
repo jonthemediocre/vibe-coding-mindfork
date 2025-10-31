@@ -2,6 +2,8 @@
  * Core data models for MindFork app
  */
 
+import type { DietColor } from './supabase';
+
 export interface FoodEntry {
   id: string;
   user_id: string;
@@ -13,6 +15,10 @@ export interface FoodEntry {
   fat?: number;
   fiber?: number;
   meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  diet_color?: DietColor | null;
+  tags?: string[] | null;
+  food_category?: string | null;
+  ai_classification_confidence?: number | null;
   photo_url?: string;
   logged_at: string;
   created_at: string;
