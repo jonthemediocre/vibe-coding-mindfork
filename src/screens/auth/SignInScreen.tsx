@@ -129,6 +129,10 @@ export const SignInScreen: React.FC = () => {
                   onChangeText={setPassword}
                   returnKeyType="go"
                   onSubmitEditing={handleSubmit}
+                  blurOnSubmit={true}
+                  enablesReturnKeyAutomatically={true}
+                  textContentType="password"
+                  autoComplete="password"
                   style={[styles.input, styles.passwordInput, {
                     borderColor: colors.border,
                     color: colors.text,
