@@ -95,6 +95,7 @@
     "nativewind": "^4.1.23",
     "openai": "^4.89.0",
     "patch-package": "^8.0.0",
+    "pg": "^8.16.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-hook-form": "^7.65.0",
