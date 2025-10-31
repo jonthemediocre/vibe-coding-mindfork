@@ -20,9 +20,9 @@ export interface ButtonProps extends Omit<PressableProps, "style"> {
 }
 
 const sizeStyles: Record<ButtonSize, { paddingVertical: number; paddingHorizontal: number; borderRadius: number; textVariant: TextVariant }> = {
-  small: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 18, textVariant: "bodySmall" },
-  medium: { paddingVertical: 12, paddingHorizontal: 18, borderRadius: 20, textVariant: "body" },
-  large: { paddingVertical: 14, paddingHorizontal: 22, borderRadius: 24, textVariant: "bodyLarge" },
+  small: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20, textVariant: "bodySmall" },
+  medium: { paddingVertical: 16, paddingHorizontal: 24, borderRadius: 22, textVariant: "body" },
+  large: { paddingVertical: 18, paddingHorizontal: 28, borderRadius: 24, textVariant: "bodyLarge" },
 };
 
 export const Button: React.FC<ButtonProps> = ({
