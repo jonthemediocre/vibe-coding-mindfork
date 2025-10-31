@@ -9,9 +9,50 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+// Diet color classification enum
+export type DietColor = "green" | "yellow" | "red" | "neutral";
+
 export interface Database {
   public: {
     Tables: {
+      diet_classification_rules: {
+        Row: {
+          id: string;
+          rule_name: string;
+          diet_color: DietColor;
+          category_pattern: string | null;
+          tag_pattern: string | null;
+          nutrient_criteria: Json | null;
+          priority: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          rule_name: string;
+          diet_color: DietColor;
+          category_pattern?: string | null;
+          tag_pattern?: string | null;
+          nutrient_criteria?: Json | null;
+          priority?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          rule_name?: string;
+          diet_color?: DietColor;
+          category_pattern?: string | null;
+          tag_pattern?: string | null;
+          nutrient_criteria?: Json | null;
+          priority?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
       profiles: {
         Row: {
           id: string;
@@ -947,6 +988,10 @@ export interface Database {
           fat: number | null;
           fiber: number | null;
           meal_type: "breakfast" | "lunch" | "dinner" | "snack" | null;
+          diet_color: DietColor | null;
+          tags: string[] | null;
+          food_category: string | null;
+          ai_classification_confidence: number | null;
           logged_at: string;
           created_at: string;
           updated_at: string | null;
@@ -962,6 +1007,10 @@ export interface Database {
           fat?: number | null;
           fiber?: number | null;
           meal_type?: "breakfast" | "lunch" | "dinner" | "snack" | null;
+          diet_color?: DietColor | null;
+          tags?: string[] | null;
+          food_category?: string | null;
+          ai_classification_confidence?: number | null;
           logged_at?: string;
           created_at?: string;
           updated_at?: string | null;
@@ -977,6 +1026,10 @@ export interface Database {
           fat?: number | null;
           fiber?: number | null;
           meal_type?: "breakfast" | "lunch" | "dinner" | "snack" | null;
+          diet_color?: DietColor | null;
+          tags?: string[] | null;
+          food_category?: string | null;
+          ai_classification_confidence?: number | null;
           logged_at?: string;
           created_at?: string;
           updated_at?: string | null;
