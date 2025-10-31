@@ -25,6 +25,8 @@ export interface Database {
           nutrient_criteria: Json | null;
           priority: number;
           is_active: boolean;
+          diet_type: string | null;
+          goal_type: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -37,6 +39,8 @@ export interface Database {
           nutrient_criteria?: Json | null;
           priority?: number;
           is_active?: boolean;
+          diet_type?: string | null;
+          goal_type?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -49,6 +53,8 @@ export interface Database {
           nutrient_criteria?: Json | null;
           priority?: number;
           is_active?: boolean;
+          diet_type?: string | null;
+          goal_type?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -73,6 +79,10 @@ export interface Database {
           dietary_restrictions: string[] | null;
           allergies: string[] | null;
           health_conditions: string[] | null;
+          primary_goal: string | null;
+          diet_type: string | null;
+          custom_diet_name: string | null;
+          daily_calorie_goal: number | null;
           timezone: string | null;
           onboarding_completed: boolean | null;
           created_at: string;
@@ -97,6 +107,10 @@ export interface Database {
           dietary_restrictions?: string[] | null;
           allergies?: string[] | null;
           health_conditions?: string[] | null;
+          primary_goal?: string | null;
+          diet_type?: string | null;
+          custom_diet_name?: string | null;
+          daily_calorie_goal?: number | null;
           timezone?: string | null;
           onboarding_completed?: boolean | null;
           created_at?: string;
@@ -121,6 +135,10 @@ export interface Database {
           dietary_restrictions?: string[] | null;
           allergies?: string[] | null;
           health_conditions?: string[] | null;
+          primary_goal?: string | null;
+          diet_type?: string | null;
+          custom_diet_name?: string | null;
+          daily_calorie_goal?: number | null;
           timezone?: string | null;
           onboarding_completed?: boolean | null;
           created_at?: string;

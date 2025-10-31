@@ -7,23 +7,33 @@
 ✅ **FULLY CONFIGURED - SUPABASE CONNECTED!**
 
 **Latest Update (2025-10-31):**
-- ✅ **🟢🟡🔴 Green/Yellow/Red Food Classification DEPLOYED** - Database migration complete!
-- ✅ **Smart Auto-Classification** - 15+ rules automatically categorize foods by nutrition
-- ✅ **Color Balance Tracking** - Daily food color distribution view for quick insights
-- ✅ **Automatic Triggers** - All new food entries get instant color assignment
-- ✅ **Service Layer Ready** - FoodClassificationService with color scoring algorithms
-- ✅ **UI Components Built** - ColorCodedFoodCard and ColorDistributionBar components
-- ✅ **Compete with Noom** - Same $59/month feature now built into MindFork
-- ✅ **Zero Breaking Changes** - All existing data preserved, fully additive migration
+- ✅ **🎯 PERSONALIZED Food Classification DEPLOYED** - Diet-aware color system live!
+- ✅ **User-Specific Rules** - Different colors for keto, vegan, paleo, vegetarian, mediterranean diets
+- ✅ **Goal-Based Classification** - Colors adjust for weight loss, muscle gain, or maintenance goals
+- ✅ **Allergen Protection** - Automatic RED for foods matching user allergies
+- ✅ **56+ Total Rules** - 35 diet-specific + 21 generic rules
+- ✅ **Smart Prioritization** - Diet+goal specific → diet-only → goal-only → generic fallback
+- ✅ **Compete with Noom** - Same $59/month feature, but BETTER (personalized to user context)
+- ✅ **Zero Breaking Changes** - All existing data preserved, fully additive migrations
 
 **Database Changes Applied:**
 - ✅ Added `diet_color` enum (green, yellow, red, neutral) to food_entries
 - ✅ Added `tags[]` array, `food_category`, and `ai_classification_confidence` fields
-- ✅ Created `diet_classification_rules` table with 15 pre-configured rules
-- ✅ Implemented `classify_food_color()` PostgreSQL function
-- ✅ Auto-classification trigger on food_entries inserts/updates
+- ✅ Created `diet_classification_rules` table with diet-specific support
+- ✅ Added `diet_type` and `goal_type` columns to classification rules
+- ✅ Implemented `classify_food_color_personalized()` PostgreSQL function
+- ✅ Updated auto-classification trigger to use personalized function
 - ✅ Created `daily_food_colors` view for dashboard queries
-- ✅ Performance indexes on diet_color and tags columns
+- ✅ Performance indexes on diet_color, tags, diet_type, and goal_type columns
+
+**Diet-Specific Rules:**
+- 🥑 **Keto Diet**: 10 rules (high-fat proteins GREEN, grains/fruits RED, berries YELLOW)
+- 🌱 **Vegan Diet**: 7 rules (all animal products RED, plant proteins GREEN)
+- 🥩 **Paleo Diet**: 8 rules (meat/fish/veggies GREEN, grains/legumes/dairy RED)
+- 🥗 **Vegetarian**: 4 rules (meat/fish RED, eggs/dairy ok)
+- 🫒 **Mediterranean**: 6 rules (olive oil/fish GREEN, red meat YELLOW)
+- 💪 **Weight Loss Goal**: Extra strict on calorie-dense foods
+- 🏋️ **Muscle Gain Goal**: Prioritizes high-protein, less strict on calories
 
 **Previous Update (2025-01-31):**
 - ✅ **Enhanced Settings Screen** - Complete profile management with editable onboarding data
