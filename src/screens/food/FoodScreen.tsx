@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, FlatList, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { Screen, Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
 import { useFoodTracking } from "../../hooks";
+import { useAuth } from "../../contexts/AuthContext";
 import { AIFoodScanService } from "../../services/AIFoodScanService";
+import { FoodClassificationService } from "../../services/FoodClassificationService";
+import { ColorCodedFoodCard, ColorDistributionBar } from "../../components/food/ColorCodedFoodCard";
 import type { CreateFoodEntryInput } from "../../types/models";
 
 const QUICK_ADD_ITEMS: CreateFoodEntryInput[] = [
@@ -178,28 +181,18 @@ export const FoodScreen: React.FC = () => {
             scrollEnabled={false}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
             renderItem={({ item }) => (
-              <View style={styles.row}>
-                <View style={{ flex: 1 }}>
-                  <Text variant="bodyLarge">{item.name}</Text>
-                  <Text variant="bodySmall" color={colors.textSecondary}>
-                    {item.serving}
-                  </Text>
-                  {item.protein && (
-                    <Text variant="caption" color={colors.textSecondary}>
-                      P: {item.protein}g | C: {item.carbs}g | F: {item.fat}g
-                    </Text>
-                  )}
-                </View>
-                <View style={styles.entryRight}>
-                  <Text variant="bodyLarge">{item.calories} kcal</Text>
-                  <Button
-                    title="Delete"
-                    size="small"
-                    variant="ghost"
-                    onPress={() => handleDelete(item.id)}
-                  />
-                </View>
-              </View>
+              <ColorCodedFoodCard
+                name={item.name}
+                serving={item.serving}
+                calories={item.calories}
+                protein={item.protein || 0}
+                carbs={item.carbs || 0}
+                fat={item.fat || 0}
+                dietColor={item.diet_color || "neutral"}
+                mealType={item.meal_type}
+                onPress={() => handleDelete(item.id)}
+                showColorLabel={true}
+              />
             )}
           />
         )}
