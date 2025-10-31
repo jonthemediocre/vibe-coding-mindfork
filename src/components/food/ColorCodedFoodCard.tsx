@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { DietColor } from "@/types/supabase";
 import { FoodClassificationService } from "@/services/FoodClassificationService";
@@ -19,10 +19,6 @@ interface ColorCodedFoodCardProps {
 
 /**
  * ColorCodedFoodCard - Display food entries with color-coded visual indicators
- *
- * Green = Great choice (vegetables, fruits, lean proteins)
- * Yellow = Moderate (track portions)
- * Red = Limit (occasional treats)
  */
 export function ColorCodedFoodCard({
   name,
@@ -44,36 +40,25 @@ export function ColorCodedFoodCard({
   return (
     <Pressable
       onPress={onPress}
-      className="mb-3 overflow-hidden rounded-xl bg-white"
-      style={{
-        borderLeftWidth: 4,
-        borderLeftColor: colors.primary,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-      }}
+      style={[
+        styles.card,
+        {
+          borderLeftWidth: 4,
+          borderLeftColor: colors.primary,
+        },
+      ]}
     >
-      <View className="p-4">
+      <View style={styles.cardContent}>
         {/* Header with meal type and color indicator */}
-        <View className="mb-2 flex-row items-center justify-between">
+        <View style={styles.header}>
           {mealType && (
-            <View className="rounded-full bg-gray-100 px-3 py-1">
-              <Text className="text-xs font-medium capitalize text-gray-600">
-                {mealType}
-              </Text>
+            <View style={styles.mealTypeBadge}>
+              <Text style={styles.mealTypeText}>{mealType}</Text>
             </View>
           )}
           {showColorLabel && (
-            <View
-              className="rounded-full px-3 py-1"
-              style={{ backgroundColor: colors.light }}
-            >
-              <Text
-                className="text-xs font-semibold"
-                style={{ color: colors.text }}
-              >
+            <View style={[styles.colorLabel, { backgroundColor: colors.light }]}>
+              <Text style={[styles.colorLabelText, { color: colors.text }]}>
                 {emoji} {label}
               </Text>
             </View>
@@ -81,68 +66,55 @@ export function ColorCodedFoodCard({
         </View>
 
         {/* Food name and serving */}
-        <View className="mb-3">
-          <Text className="text-lg font-bold text-gray-900">{name}</Text>
-          <Text className="text-sm text-gray-500">{serving}</Text>
+        <View style={styles.nameContainer}>
+          <Text style={styles.foodName}>{name}</Text>
+          <Text style={styles.serving}>{serving}</Text>
         </View>
 
         {/* Nutrition summary */}
-        <View className="flex-row items-center justify-between border-t border-gray-100 pt-3">
-          <View className="flex-row items-center space-x-4">
+        <View style={styles.nutritionContainer}>
+          <View style={styles.nutritionRow}>
             {/* Calories */}
-            <View className="flex-row items-center">
+            <View style={styles.nutritionItem}>
               <Ionicons name="flame" size={16} color="#F59E0B" />
-              <Text className="ml-1 text-sm font-semibold text-gray-700">
-                {calories}
-              </Text>
-              <Text className="ml-0.5 text-xs text-gray-400">cal</Text>
+              <Text style={styles.nutritionValue}>{calories}</Text>
+              <Text style={styles.nutritionUnit}>cal</Text>
             </View>
 
             {/* Protein */}
             {protein != null && (
-              <View className="flex-row items-center">
+              <View style={styles.nutritionItem}>
                 <Ionicons name="fitness" size={16} color="#EF4444" />
-                <Text className="ml-1 text-sm font-semibold text-gray-700">
-                  {Math.round(protein)}
-                </Text>
-                <Text className="ml-0.5 text-xs text-gray-400">P</Text>
+                <Text style={styles.nutritionValue}>{Math.round(protein)}</Text>
+                <Text style={styles.nutritionUnit}>P</Text>
               </View>
             )}
 
             {/* Carbs */}
             {carbs != null && (
-              <View className="flex-row items-center">
+              <View style={styles.nutritionItem}>
                 <Ionicons name="leaf" size={16} color="#FBBF24" />
-                <Text className="ml-1 text-sm font-semibold text-gray-700">
-                  {Math.round(carbs)}
-                </Text>
-                <Text className="ml-0.5 text-xs text-gray-400">C</Text>
+                <Text style={styles.nutritionValue}>{Math.round(carbs)}</Text>
+                <Text style={styles.nutritionUnit}>C</Text>
               </View>
             )}
 
             {/* Fat */}
             {fat != null && (
-              <View className="flex-row items-center">
+              <View style={styles.nutritionItem}>
                 <Ionicons name="water" size={16} color="#14B8A6" />
-                <Text className="ml-1 text-sm font-semibold text-gray-700">
-                  {Math.round(fat)}
-                </Text>
-                <Text className="ml-0.5 text-xs text-gray-400">F</Text>
+                <Text style={styles.nutritionValue}>{Math.round(fat)}</Text>
+                <Text style={styles.nutritionUnit}>F</Text>
               </View>
             )}
           </View>
 
-          {onPress && (
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          )}
+          {onPress && <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />}
         </View>
       </View>
 
       {/* Color indicator bar at bottom */}
-      <View
-        className="h-1"
-        style={{ backgroundColor: colors.primary }}
-      />
+      <View style={[styles.colorBar, { backgroundColor: colors.primary }]} />
     </Pressable>
   );
 }
@@ -168,8 +140,8 @@ export function ColorDistributionBar({ distribution }: ColorDistributionBarProps
 
   if (total === 0) {
     return (
-      <View className="rounded-xl bg-gray-50 p-4">
-        <Text className="text-center text-sm text-gray-500">
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>
           Log meals to see your color balance
         </Text>
       </View>
@@ -184,17 +156,16 @@ export function ColorDistributionBar({ distribution }: ColorDistributionBarProps
   const score = FoodClassificationService.calculateColorScore(distribution);
 
   return (
-    <View className="rounded-xl bg-white p-4 shadow-sm">
-      <Text className="mb-3 text-sm font-semibold text-gray-700">
-        Today{"'"}s Balance
-      </Text>
+    <View style={styles.distributionCard}>
+      <Text style={styles.distributionTitle}>Today's Balance</Text>
 
       {/* Color bars */}
-      <View className="mb-3 h-4 flex-row overflow-hidden rounded-full">
+      <View style={styles.barContainer}>
         {greenPercent > 0 && (
           <View
             style={{
               width: `${greenPercent}%`,
+              height: '100%',
               backgroundColor: FoodClassificationService.COLORS.green.primary,
             }}
           />
@@ -203,6 +174,7 @@ export function ColorDistributionBar({ distribution }: ColorDistributionBarProps
           <View
             style={{
               width: `${yellowPercent}%`,
+              height: '100%',
               backgroundColor: FoodClassificationService.COLORS.yellow.primary,
             }}
           />
@@ -211,6 +183,7 @@ export function ColorDistributionBar({ distribution }: ColorDistributionBarProps
           <View
             style={{
               width: `${redPercent}%`,
+              height: '100%',
               backgroundColor: FoodClassificationService.COLORS.red.primary,
             }}
           />
@@ -219,6 +192,7 @@ export function ColorDistributionBar({ distribution }: ColorDistributionBarProps
           <View
             style={{
               width: `${neutralPercent}%`,
+              height: '100%',
               backgroundColor: FoodClassificationService.COLORS.neutral.primary,
             }}
           />
@@ -226,51 +200,209 @@ export function ColorDistributionBar({ distribution }: ColorDistributionBarProps
       </View>
 
       {/* Legend */}
-      <View className="flex-row justify-between">
-        <View className="flex-row items-center">
+      <View style={styles.legend}>
+        <View style={styles.legendItem}>
           <View
-            className="mr-2 h-3 w-3 rounded-full"
-            style={{
-              backgroundColor: FoodClassificationService.COLORS.green.primary,
-            }}
+            style={[
+              styles.legendDot,
+              { backgroundColor: FoodClassificationService.COLORS.green.primary },
+            ]}
           />
-          <Text className="text-xs text-gray-600">
-            Green: {distribution.green.count}
-          </Text>
+          <Text style={styles.legendText}>Green: {distribution.green.count}</Text>
         </View>
 
-        <View className="flex-row items-center">
+        <View style={styles.legendItem}>
           <View
-            className="mr-2 h-3 w-3 rounded-full"
-            style={{
-              backgroundColor: FoodClassificationService.COLORS.yellow.primary,
-            }}
+            style={[
+              styles.legendDot,
+              { backgroundColor: FoodClassificationService.COLORS.yellow.primary },
+            ]}
           />
-          <Text className="text-xs text-gray-600">
-            Yellow: {distribution.yellow.count}
-          </Text>
+          <Text style={styles.legendText}>Yellow: {distribution.yellow.count}</Text>
         </View>
 
-        <View className="flex-row items-center">
+        <View style={styles.legendItem}>
           <View
-            className="mr-2 h-3 w-3 rounded-full"
-            style={{
-              backgroundColor: FoodClassificationService.COLORS.red.primary,
-            }}
+            style={[
+              styles.legendDot,
+              { backgroundColor: FoodClassificationService.COLORS.red.primary },
+            ]}
           />
-          <Text className="text-xs text-gray-600">
-            Red: {distribution.red.count}
-          </Text>
+          <Text style={styles.legendText}>Red: {distribution.red.count}</Text>
         </View>
       </View>
 
       {/* Score */}
-      <View className="mt-3 items-center border-t border-gray-100 pt-3">
-        <Text className="text-2xl font-bold" style={{ color: score >= 70 ? "#10B981" : score >= 40 ? "#F59E0B" : "#EF4444" }}>
+      <View style={styles.scoreContainer}>
+        <Text
+          style={[
+            styles.scoreValue,
+            {
+              color: score >= 70 ? "#10B981" : score >= 40 ? "#F59E0B" : "#EF4444",
+            },
+          ]}
+        >
           {Math.round(score)}
         </Text>
-        <Text className="text-xs text-gray-500">Balance Score</Text>
+        <Text style={styles.scoreLabel}>Balance Score</Text>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // ColorCodedFoodCard styles
+  card: {
+    marginBottom: 12,
+    overflow: "hidden",
+    borderRadius: 12,
+    backgroundColor: "#FFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cardContent: {
+    padding: 16,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  mealTypeBadge: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  mealTypeText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#4B5563",
+    textTransform: "capitalize",
+  },
+  colorLabel: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  colorLabelText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  nameContainer: {
+    marginBottom: 12,
+  },
+  foodName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+    marginBottom: 4,
+  },
+  serving: {
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  nutritionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+    paddingTop: 12,
+  },
+  nutritionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  nutritionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  nutritionValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginLeft: 4,
+  },
+  nutritionUnit: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginLeft: 2,
+  },
+  colorBar: {
+    height: 4,
+  },
+
+  // ColorDistributionBar styles
+  emptyState: {
+    borderRadius: 12,
+    backgroundColor: "#F9FAFB",
+    padding: 16,
+  },
+  emptyStateText: {
+    textAlign: "center",
+    fontSize: 14,
+    color: "#6B7280",
+  },
+  distributionCard: {
+    borderRadius: 12,
+    backgroundColor: "#FFF",
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  distributionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 12,
+  },
+  barContainer: {
+    height: 16,
+    flexDirection: "row",
+    overflow: "hidden",
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  legend: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  legendText: {
+    fontSize: 12,
+    color: "#4B5563",
+  },
+  scoreContainer: {
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+    paddingTop: 12,
+    marginTop: 12,
+  },
+  scoreValue: {
+    fontSize: 32,
+    fontWeight: "700",
+  },
+  scoreLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+});
