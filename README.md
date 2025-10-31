@@ -6,13 +6,13 @@
 
 ✅ **FULLY CONFIGURED - SUPABASE CONNECTED!**
 
-**Latest Update (2025-01-30):**
-- ✅ Fixed onboarding field name mismatches between AI extraction and validation
-- ✅ Fixed camera C++ exception by updating to correct expo-camera API (`takePicture` instead of `takePictureAsync`)
-- ✅ Fixed database schema mismatch - split onboarding save into `profiles` and `user_settings` tables
-- ✅ Fixed fasting being presented as a diet instead of an optional add-on to any diet
-- ✅ Added comprehensive debug logging to track onboarding flow
-- ✅ Mapped activity levels to correct database enum values (sedentary, lightly_active, etc.)
+**Latest Update (2025-01-31):**
+- ✅ **Enhanced Settings Screen** - Complete profile management with editable onboarding data
+- ✅ **ProfileUpdateService** - Automatic nutrition goal recalculation when physical metrics change
+- ✅ **Coach Instruction Leak Fix** - System prompts no longer appear in chat messages
+- ✅ **Unit Conversion** - Toggle between imperial (ft/lbs) and metric (cm/kg)
+- ✅ **Real-time Goal Updates** - Dashboard automatically reflects new nutrition targets
+- ✅ Previous fixes: Onboarding AI extraction, camera API, database schema, fasting diet flow
 - App now has full database connectivity and is ready to use. Access via: `exp://019a324a-fecc-732d-953a-8a341fb7f48c.tunnel.vibecodeapp.io`
 
 📄 **See [PRODUCTION_LAUNCH_COMPLETE.md](./PRODUCTION_LAUNCH_COMPLETE.md) for launch commands and checklist.**
