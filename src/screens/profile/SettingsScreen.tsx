@@ -487,6 +487,13 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
             'diet_type',
             'nutrition-outline'
           )}
+
+          <View style={[styles.infoBox, { marginTop: 12 }]}>
+            <Ionicons name="color-palette-outline" size={16} color={colors.primary} />
+            <Text variant="bodySmall" color={colors.textSecondary} style={styles.infoText}>
+              Your diet type affects food color ratings (🟢🟡🔴). Foods are personalized to match your chosen diet!
+            </Text>
+          </View>
         </Card>
 
         {/* Calculated Nutrition Targets Section */}
