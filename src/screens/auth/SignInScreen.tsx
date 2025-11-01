@@ -177,17 +177,17 @@ export const SignInScreen: React.FC = () => {
           {/* Features */}
           <View style={styles.featuresContainer}>
             <FeatureItem
-              icon="🎯"
+              icon="fitness"
               text="Personalized Goals"
               color={colors.textSecondary}
             />
             <FeatureItem
-              icon="🤖"
+              icon="chatbubble-ellipses"
               text="AI Coach"
               color={colors.textSecondary}
             />
             <FeatureItem
-              icon="📊"
+              icon="stats-chart"
               text="Track Progress"
               color={colors.textSecondary}
             />
@@ -218,7 +218,7 @@ export const SignInScreen: React.FC = () => {
 // Feature item component
 const FeatureItem: React.FC<{ icon: string; text: string; color: string }> = ({ icon, text, color }) => (
   <View style={featureStyles.container}>
-    <Text style={featureStyles.icon}>{icon}</Text>
+    <Ionicons name={icon as any} size={20} color={color} />
     <Text style={[featureStyles.text, { color }]}>{text}</Text>
   </View>
 );
@@ -228,9 +228,6 @@ const featureStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-  },
-  icon: {
-    fontSize: 20,
   },
   text: {
     fontSize: 14,
