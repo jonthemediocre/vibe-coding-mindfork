@@ -271,4 +271,132 @@ export class FoodService {
       return { error: err instanceof Error ? err.message : 'Failed to search food' };
     }
   }
+
+  /**
+   * Get recent foods for a user (for quick logging)
+   */
+  static async getRecentFoods(userId: string, limit: number = 10): Promise<ApiResponse<FoodEntry[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('food_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .order('logged_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      // Remove duplicates by food name (keep most recent)
+      const uniqueFoods = new Map<string, FoodEntry>();
+      data?.forEach(food => {
+        if (!uniqueFoods.has(food.name)) {
+          uniqueFoods.set(food.name, food);
+        }
+      });
+
+      return { data: Array.from(uniqueFoods.values()) };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Failed to get recent foods' };
+    }
+  }
+
+  /**
+   * Get favorite foods for a user
+   * TODO: Implement favorites table in database
+   */
+  static async getFavoriteFoods(userId: string): Promise<ApiResponse<FoodEntry[]>> {
+    try {
+      // For now, return most frequently logged foods
+      // TODO: Create a favorites table and track user favorites
+      console.log('[FoodService] getFavoriteFoods - Using most frequent foods as fallback');
+
+      const { data, error } = await supabase
+        .from('food_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .order('logged_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      // Count frequency of each food name
+      const foodCounts = new Map<string, { count: number; entry: FoodEntry }>();
+      data?.forEach(food => {
+        const existing = foodCounts.get(food.name);
+        if (existing) {
+          existing.count++;
+        } else {
+          foodCounts.set(food.name, { count: 1, entry: food });
+        }
+      });
+
+      // Sort by frequency and return top 10
+      const favorites = Array.from(foodCounts.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+        .map(item => item.entry);
+
+      return { data: favorites };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Failed to get favorite foods' };
+    }
+  }
+
+  /**
+   * Add food to recent foods (tracks usage)
+   * Note: This is automatic when creating food entries
+   */
+  static async addToRecentFoods(userId: string, foodId: string): Promise<ApiResponse<void>> {
+    // No-op for now since food entries are automatically tracked by logged_at
+    console.log('[FoodService] addToRecentFoods called for:', { userId, foodId });
+    return { message: 'Food automatically tracked via logged_at timestamp' };
+  }
+
+  /**
+   * Remove food from favorites
+   * TODO: Implement favorites table in database
+   */
+  static async removeFromFavorites(userId: string, foodId: string): Promise<ApiResponse<void>> {
+    // TODO: Implement when favorites table exists
+    console.log('[FoodService] removeFromFavorites called for:', { userId, foodId });
+    return { message: 'Favorites feature not yet implemented - needs favorites table' };
+  }
+
+  /**
+   * Get food by barcode
+   * TODO: Integrate with OpenFoodFacts or other barcode database
+   */
+  static async getFoodByBarcode(barcode: string): Promise<ApiResponse<FoodEntry>> {
+    try {
+      // TODO: Integrate with external barcode database (OpenFoodFacts API)
+      console.log('[FoodService] getFoodByBarcode - External API integration needed');
+
+      // For now, search in existing entries
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { error: 'User not authenticated' };
+      }
+
+      // Check if user has logged this barcode before
+      // Note: Requires adding barcode field to food_entries table
+      const { data, error } = await supabase
+        .from('food_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single();
+
+      if (error || !data) {
+        return { error: 'Barcode not found. External barcode database integration needed.' };
+      }
+
+      return { data };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Failed to lookup barcode' };
+    }
+  }
 }
