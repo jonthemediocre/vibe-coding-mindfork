@@ -8,7 +8,7 @@ import React, {
   type ReactNode,
 } from "react";
 import { Alert } from "react-native";
-import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import type { AuthSession as Session, AuthUser as SupabaseUser } from "@supabase/supabase-js";
 import { supabase, ensureSupabaseInitialized } from "@/lib/supabase";
 import { ENV } from "../config/env";
 import { logger } from "../utils/logger";

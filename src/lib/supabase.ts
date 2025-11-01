@@ -1,10 +1,10 @@
 import "react-native-url-polyfill/auto";
-import { createClient, type SupabaseClient as SupabaseJsClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Database } from "../types/supabase";
 import { ENV, ENV_VALIDATION } from "../config/env";
 
-const createSupabaseClient = () => {
+const initializeSupabase = () => {
   if (!ENV_VALIDATION.hasValidUrl || !ENV_VALIDATION.hasCriticalVars) {
     throw new Error("Supabase URL or anon key missing. Check EXPO_PUBLIC_SUPABASE_* variables.");
   }
@@ -21,13 +21,13 @@ const createSupabaseClient = () => {
 };
 
 // Initialize immediately to fail fast if env config is wrong - typed as Database
-export const supabase: SupabaseJsClient<Database> = createSupabaseClient();
+export const supabase = initializeSupabase();
 
-export const ensureSupabaseInitialized = async (): Promise<SupabaseJsClient<Database>> => {
+export const ensureSupabaseInitialized = async () => {
   return supabase;
 };
 
-export type SupabaseClient = SupabaseJsClient<Database>;
+export type { SupabaseClient };
 export const isSupabaseInitialized = () => !!supabase;
 export const isUsingMockData = () => false;
 
