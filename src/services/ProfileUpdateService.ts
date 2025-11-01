@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { calculateNutritionGoals } from '../utils/goalCalculations';
 import type { UserProfile, UserProfileUpdate } from '../types/profile';
 import type { Goal, ActivityLevel, DietType, Gender } from '../utils/goalCalculations';
+import { MetabolicAdaptationService } from './MetabolicAdaptationService';
 
 export interface ProfileUpdateResult {
   success: boolean;
@@ -113,6 +114,24 @@ export async function updateUserProfile(
         success: false,
         error: updateError?.message || 'Failed to update profile'
       };
+    }
+
+    // Update metabolic tracking if weight changed
+    if (updates.weight_kg !== undefined && updates.weight_kg !== currentProfile.weight_kg) {
+      try {
+        const weightLbs = updates.weight_kg * 2.20462;  // Convert kg to lbs
+        await MetabolicAdaptationService.logDailyData(
+          userId,
+          new Date().toISOString().split('T')[0],
+          weightLbs,
+          null,  // intake will be logged separately
+          null
+        );
+        console.log(`[ProfileUpdateService] ✅ Metabolic tracking updated with new weight: ${weightLbs.toFixed(1)} lbs`);
+      } catch (error) {
+        console.error('[ProfileUpdateService] Failed to update metabolic tracking:', error);
+        // Non-fatal - don't block profile update
+      }
     }
 
     return {

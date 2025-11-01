@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { CoachTestingService } from '../services/testing/CoachTestingService';
 import { FoodAnalyzerTestingService } from '../services/testing/FoodAnalyzerTestingService';
 import { ContinuousImprovementService } from '../services/testing/ContinuousImprovementService';
+import { MetabolicAdaptationService } from '../services/MetabolicAdaptationService';
 
 /**
  * Developer Tools Screen
@@ -311,6 +312,41 @@ export const DevToolsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             }}
             disabled={testRunning}
             variant="outline"
+            containerStyle={{ marginBottom: 12 }}
+          />
+
+          {/* Test Metabolic Adaptation */}
+          <Button
+            title={testRunning ? "⏳ Testing..." : "🔥 Test Metabolic Adaptation"}
+            onPress={async () => {
+              if (testRunning || !user?.id) return;
+              setTestRunning(true);
+              setTestResults('Checking for metabolic adaptation...');
+
+              try {
+                console.log('[DevTools] Testing metabolic adaptation...');
+                const result = await MetabolicAdaptationService.detectAdaptation(user.id);
+
+                if (result?.adapted) {
+                  const summary = `✅ Adaptation Detected!\n\nType: ${result.type}\nMagnitude: ${(result.magnitude * 100).toFixed(1)}%\nOld Calories: ${result.oldCalories}\nNew Calories: ${result.newCalories}\nConfidence: ${(result.confidence * 100).toFixed(0)}%\n\nCoach Explanation:\n${result.coachExplanation.substring(0, 200)}...`;
+                  setTestResults(summary);
+                  Alert.alert('Adaptation Detected!', summary);
+                } else {
+                  const summary = '❌ No Adaptation Detected\n\nNeed at least 3 weeks of consistent weight + food logging to detect metabolic adaptation.\n\nTip: Run the synthetic data script in the migration file to test with fake data.';
+                  setTestResults(summary);
+                  Alert.alert('No Adaptation', summary);
+                }
+              } catch (error: any) {
+                console.error('[DevTools] Metabolic adaptation test error:', error);
+                const errorMsg = `Error: ${error.message || String(error)}`;
+                setTestResults(errorMsg);
+                Alert.alert('Error', errorMsg);
+              } finally {
+                setTestRunning(false);
+              }
+            }}
+            disabled={testRunning || !user?.id}
+            variant="secondary"
             containerStyle={{ marginBottom: 12 }}
           />
 

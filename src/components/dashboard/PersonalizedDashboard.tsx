@@ -10,6 +10,7 @@ import { useProfile } from '../../contexts/ProfileContext';
 import { useFoodTracking, useFastingTimer } from '../../hooks';
 import { useNavigation } from '@react-navigation/native';
 import type { Goal } from '../../utils/goalCalculations';
+import { MetabolicTrendCard } from './MetabolicTrendCard';
 
 // Goal-specific dashboard configurations
 interface DashboardConfig {
@@ -391,6 +392,11 @@ export const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({
           </Card>
         </View>
       </View>
+
+      {/* Metabolic Trend (Weight + Adaptation) */}
+      {profile?.id && (
+        <MetabolicTrendCard userId={profile.id} />
+      )}
 
       {/* Personalized Coaching */}
       <Card elevation={1}>

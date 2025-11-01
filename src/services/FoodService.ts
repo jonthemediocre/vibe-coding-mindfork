@@ -9,6 +9,7 @@ import type {
 } from '../types/models';
 import { apiInterceptor } from '../utils/api-interceptor';
 import { FoodClassificationService } from './FoodClassificationService';
+import { MetabolicAdaptationService } from './MetabolicAdaptationService';
 
 type FoodEntryInsert = Database['public']['Tables']['food_entries']['Insert'];
 type FoodEntryUpdate = Database['public']['Tables']['food_entries']['Update'];
@@ -397,6 +398,51 @@ export class FoodService {
       return { data };
     } catch (err) {
       return { error: err instanceof Error ? err.message : 'Failed to lookup barcode' };
+    }
+  }
+
+  /**
+   * Update metabolic tracking with today's food intake
+   * Call this at the end of the day or when daily logging is complete
+   *
+   * @param userId - User's UUID
+   * @param profile - User's profile (for target calories)
+   */
+  static async updateMetabolicTracking(
+    userId: string,
+    profile?: { daily_calories?: number }
+  ): Promise<void> {
+    try {
+      // Get today's date
+      const today = new Date().toISOString().split('T')[0];
+
+      // Get today's food entries
+      const { data: todayStats } = await this.getDailyStats(userId, today);
+
+      if (!todayStats) {
+        console.log('[FoodService] No food entries for today - skipping metabolic tracking');
+        return;
+      }
+
+      // Calculate adherence score (0.0 to 1.0)
+      const targetCalories = profile?.daily_calories || 2000;
+      const actualCalories = todayStats.total_calories;
+      const adherenceScore = Math.min(1.0, actualCalories > 0 ? actualCalories / targetCalories : 0);
+
+      // Log to metabolic tracking
+      await MetabolicAdaptationService.logDailyData(
+        userId,
+        today,
+        null,  // weight will be logged separately
+        actualCalories,
+        adherenceScore
+      );
+
+      console.log(`[FoodService] ✅ Metabolic tracking updated: ${actualCalories} kcal, adherence ${(adherenceScore * 100).toFixed(0)}%`);
+
+    } catch (error) {
+      console.error('[FoodService] Failed to update metabolic tracking:', error);
+      // Non-fatal - don't throw
     }
   }
 }
