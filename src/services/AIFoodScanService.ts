@@ -311,21 +311,29 @@ export class AIFoodScanService {
       const base64Image = await this.imageUriToBase64(imageUri);
 
       // SECURITY: API key must come from environment variable, never hardcoded
-      const apiKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+      // Try Vibecode OpenAI key first, then fall back to OpenRouter
+      const vibecodeKey = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY;
+      const openRouterKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+
+      const apiKey = vibecodeKey || openRouterKey;
       if (!apiKey) {
-        throw new Error('OpenRouter API key not configured. Please set EXPO_PUBLIC_OPENROUTER_API_KEY environment variable.');
+        throw new Error('OpenAI API key not configured. Please set EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY or EXPO_PUBLIC_OPENROUTER_API_KEY environment variable.');
       }
 
-      // Import OpenAI client configured for OpenRouter
+      // Import OpenAI client
       const OpenAI = (await import('openai')).default;
-      const openai = new OpenAI({
-        apiKey,
-        baseURL: 'https://openrouter.ai/api/v1',
-        defaultHeaders: {
-          'HTTP-Referer': 'https://mindfork.app',
-          'X-Title': 'MindFork',
-        },
-      });
+
+      // Configure client based on which key is available
+      const openai = vibecodeKey
+        ? new OpenAI({ apiKey: vibecodeKey }) // Direct OpenAI
+        : new OpenAI({ // OpenRouter
+            apiKey: openRouterKey,
+            baseURL: 'https://openrouter.ai/api/v1',
+            defaultHeaders: {
+              'HTTP-Referer': 'https://mindfork.app',
+              'X-Title': 'MindFork',
+            },
+          });
 
       // STAGE 1: Identify all items in the image
       const itemsResult = await this.retryWithBackoff(async () => {
