@@ -1,5 +1,5 @@
 import "react-native-url-polyfill/auto";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient as SupabaseClientType } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Database } from "../types/supabase";
 import { ENV, ENV_VALIDATION } from "../config/env";
