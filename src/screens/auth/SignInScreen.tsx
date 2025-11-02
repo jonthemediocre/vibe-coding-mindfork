@@ -192,23 +192,6 @@ export const SignInScreen: React.FC = () => {
               color={colors.textSecondary}
             />
           </View>
-
-          {/* Development bypass */}
-          {ENV.BYPASS_AUTH && __DEV__ && (
-            <Card elevation={1} padding="md" style={styles.devCard}>
-              <Text variant="bodySmall" color={colors.textSecondary} style={styles.devLabel}>
-                Development Mode
-              </Text>
-              <Button
-                title="🚀 Bypass Auth"
-                variant="outline"
-                size="small"
-                onPress={() => bypassAuth()}
-                loading={isLoading}
-                containerStyle={styles.bypassButton}
-              />
-            </Card>
-          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
