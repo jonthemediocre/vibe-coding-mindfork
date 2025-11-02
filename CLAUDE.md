@@ -173,25 +173,97 @@ Be proactive in using the existing implementations provided.
 
 ### Mistake 5: Running Database Migrations
 
-When the user asks you to run a database migration, follow this process:
+## Running Supabase migrations programmatically
 
-**Environment Limitations - IMPORTANT:**
-- This Vibecode sandbox environment blocks ALL external database connections
-- PostgreSQL port (5432) is unreachable - both IPv4 and IPv6
-- Even Supabase CLI `db push` fails because it connects directly to the database port
-- Direct `pg` library connections are blocked
-- `psql` command is not available
+We run schema changes with the **Supabase CLI** in a non-interactive way.
 
-**What to Do:**
-1. Create migration file in `supabase/migrations/` directory with naming: `YYYYMMDDHHMMSS_description.sql`
-2. Provide user with manual instructions (only option that works)
+### Option A — Direct Postgres URL (fastest)
+- Keep `DATABASE_URL` in secrets (includes DB password).
+- Command:
+  ```bash
+  supabase migration up --db-url "$DATABASE_URL"
+  # or:
+  supabase db push --db-url "$DATABASE_URL"
+  ```
 
-**Manual Migration Instructions (Copy-Paste Template):**
+### Option B — Linked project (no raw DB URL in code)
+- Provide `SUPABASE_ACCESS_TOKEN` and `SB_PROJECT_REF`.
+- Commands:
+  ```bash
+  supabase link --project-ref "$SB_PROJECT_REF"
+  supabase db push
+  ```
+
+### ⚠️ Vibecode Sandbox Limitation
+
+In the Vibecode sandbox environment, outbound TCP connections to Postgres are **blocked** (ports **5432/6543**). The CLI cannot connect and will fail with "network unreachable" errors. **Do not attempt to run CLI migrations in this environment.**
+
+### How to Deploy Migrations from Vibecode Sandbox
+
+**Option 1: GitHub Actions (Recommended)**
+Use CI to run migrations outside the sandbox:
+
+```yaml
+# .github/workflows/supabase-migrate.yml
+name: Supabase DB Migrations
+on:
+  push:
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/**.sql"
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - name: Link project & push migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SB_PROJECT_REF: ${{ secrets.SB_PROJECT_REF }}
+        run: |
+          supabase link --project-ref "$SB_PROJECT_REF"
+          supabase db push
+```
+
+**Option 2: HTTP-only fallback (pg-meta)**
+If you cannot use CI, use the **pg-meta** `/query` endpoint to POST SQL over HTTPS:
+
+```javascript
+// Use pg-meta HTTP endpoint (service_role required)
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const migrationSQL = fs.readFileSync('supabase/migrations/your-migration.sql', 'utf8');
+
+const response = await fetch(`${supabaseUrl}/pg/meta/query`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${serviceRoleKey}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ query: migrationSQL })
+});
+
+if (!response.ok) {
+  throw new Error(`Migration failed: ${await response.text()}`);
+}
+```
+
+**⚠️ Important caveats for pg-meta approach:**
+- Requires `service_role` key (privileged access)
+- Bypasses migration history tracking
+- You must still commit the SQL to `supabase/migrations/` for consistency
+- Consider timeouts for large migrations
+- Prefer the CI approach whenever possible
+
+**Option 3: Manual execution (Simplest)**
+For one-off migrations or when other options aren't available:
+
 ```
 The migration file is ready at: supabase/migrations/[filename].sql
 
 To run the migration:
-1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/[project-ref]/sql/new
+1. Go to: https://supabase.com/dashboard/project/[project-ref]/sql/new
 2. Copy the contents of the migration file
 3. Paste into the SQL Editor
 4. Click "Run"
@@ -200,20 +272,22 @@ The migration will create:
 - [List what the migration does]
 ```
 
-**Why Programmatic Execution Doesn't Work:**
-- ❌ `supabase db push --db-url` → Network unreachable (needs port 5432)
-- ❌ `pg` library + password → Network blocked
-- ❌ `psql` command → Not installed + network blocked
-- ❌ Supabase Management API → Requires different auth token (not service_role key)
-- ❌ PostgREST/REST API → Cannot execute raw DDL SQL
+### Migration File Structure
 
-**Note for Future Reference:**
-Outside this sandbox (local machine, CI/CD), Supabase CLI works perfectly:
-```javascript
-const { spawn } = require('child_process');
-const dbUrl = `postgresql://postgres:${password}@db.${ref}.supabase.co:5432/postgres`;
-spawn('npx', ['supabase', 'db', 'push', '--db-url', dbUrl], { stdio: 'inherit' });
-```
+- **Location:** `supabase/migrations/` directory
+- **Naming:** `YYYYMMDDHHMMSS_description.sql` (timestamp in UTC)
+- **Example:** `20250102120000_add_recipes_tables.sql`
+
+### Security Best Practices
+
+- Never commit secrets (DATABASE_URL, SUPABASE_ACCESS_TOKEN, service_role keys)
+- Store secrets in CI secret manager or .env (gitignored)
+- Use separate secrets per environment (dev/staging/prod)
+- Gate production migrations via pull request approval
+
+### Why CLI Fails in This Sandbox
+
+The Supabase CLI connects directly to Postgres via TCP (ports 5432/6543 through Supavisor/PgBouncer). The Vibecode sandbox blocks outbound TCP to these ports for security. CI runners, local dev machines, and production servers typically allow these connections.
 
 **Reference:** [Supabase Database Migrations Docs](https://supabase.com/docs/guides/deployment/database-migrations)
 
