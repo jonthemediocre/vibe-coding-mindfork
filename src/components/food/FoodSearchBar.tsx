@@ -46,6 +46,11 @@ export const FoodSearchBar: React.FC<FoodSearchBarProps> = ({
     setQuery('');
     setShowResults(false);
     clearResults();
+    Keyboard.dismiss();
+  };
+
+  const handleSubmitEditing = () => {
+    Keyboard.dismiss();
   };
 
   const renderFoodItem = ({ item }: { item: UnifiedFood }) => (
@@ -100,13 +105,21 @@ export const FoodSearchBar: React.FC<FoodSearchBarProps> = ({
           placeholderTextColor={colors.textSecondary}
           value={query}
           onChangeText={handleQueryChange}
+          onSubmitEditing={handleSubmitEditing}
+          returnKeyType="search"
+          blurOnSubmit={false}
           autoFocus={autoFocus}
           autoCapitalize="none"
           autoCorrect={false}
         />
         {isSearching && <ActivityIndicator size="small" color={colors.primary} />}
         {query.length > 0 && !isSearching && (
-          <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
+          <TouchableOpacity
+            onPress={handleClear}
+            style={styles.clearButton}
+            accessibilityLabel="Clear search"
+            accessibilityRole="button"
+          >
             <Text variant="body">✕</Text>
           </TouchableOpacity>
         )}

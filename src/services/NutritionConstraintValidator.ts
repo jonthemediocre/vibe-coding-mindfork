@@ -147,7 +147,7 @@ export class NutritionConstraintValidator {
       wasCorrect = true;
     }
 
-    return { corrected, validation, wasCorrect };
+    return { corrected, validation, wascorrected: wasCorrect };
   }
 
   /**

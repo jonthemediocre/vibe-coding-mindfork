@@ -148,7 +148,7 @@ const FoodScreen = () => {
 
 export const Example5_MultipleScreens = () => {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator id={undefined}>
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Food" component={FoodScreen} />
     </Tab.Navigator>
