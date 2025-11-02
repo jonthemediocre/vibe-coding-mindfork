@@ -15,13 +15,18 @@ import type { CreateFoodEntryInput } from '../types/models';
  * @returns CreateFoodEntryInput suitable for logging food entries
  */
 export const mapUnifiedFoodToEntry = (food: UnifiedFood): CreateFoodEntryInput => ({
-  name: food.name,
-  serving: `${food.serving_size} ${food.serving_unit}`,
+  food_name: food.name,
+  serving_size: `${food.serving_size} ${food.serving_unit}`,
   calories: Math.round(food.calories_per_serving),
-  protein: Math.round(food.protein_g ?? 0),
-  carbs: Math.round(food.carbs_g ?? 0),
-  fat: Math.round(food.fat_g ?? 0),
-  fiber: Math.round(food.fiber_g ?? 0),
+  protein_g: Math.round(food.protein_g ?? 0),
+  carbs_g: Math.round(food.carbs_g ?? 0),
+  fat_g: Math.round(food.fat_g ?? 0),
+  fiber_g: Math.round(food.fiber_g ?? 0),
+  sodium_mg: Math.round(food.sodium_mg ?? 0),
+  sugar_g: null,
+  meal_type: null,
+  photo_url: null,
+  consumed_at: new Date().toISOString(),
 });
 
 /**
@@ -31,13 +36,18 @@ export const mapUnifiedFoodToEntry = (food: UnifiedFood): CreateFoodEntryInput =
  * @returns CreateFoodEntryInput suitable for re-logging
  */
 export const mapRecentFoodToEntry = (food: RecentFood): CreateFoodEntryInput => ({
-  name: food.food_name,
-  serving: `${food.serving_size ?? 1} ${food.serving_unit ?? 'serving'}`,
+  food_name: food.food_name,
+  serving_size: `${food.serving_size ?? 1} ${food.serving_unit ?? 'serving'}`,
   calories: food.calories,
-  protein: food.protein ?? 0,
-  carbs: food.carbs ?? 0,
-  fat: food.fat ?? 0,
-  fiber: food.fiber ?? 0,
+  protein_g: food.protein ?? 0,
+  carbs_g: food.carbs ?? 0,
+  fat_g: food.fat ?? 0,
+  fiber_g: food.fiber ?? 0,
+  sodium_mg: null,
+  sugar_g: null,
+  meal_type: null,
+  photo_url: null,
+  consumed_at: new Date().toISOString(),
 });
 
 /**
@@ -47,13 +57,18 @@ export const mapRecentFoodToEntry = (food: RecentFood): CreateFoodEntryInput => 
  * @returns CreateFoodEntryInput suitable for logging
  */
 export const mapFavoriteFoodToEntry = (food: FavoriteFood): CreateFoodEntryInput => ({
-  name: food.food_name,
-  serving: `${food.serving_size} ${food.serving_unit}`,
+  food_name: food.food_name,
+  serving_size: `${food.serving_size} ${food.serving_unit}`,
   calories: food.calories,
-  protein: food.protein,
-  carbs: food.carbs,
-  fat: food.fat,
-  fiber: food.fiber,
+  protein_g: food.protein,
+  carbs_g: food.carbs,
+  fat_g: food.fat,
+  fiber_g: food.fiber,
+  sodium_mg: null,
+  sugar_g: null,
+  meal_type: null,
+  photo_url: null,
+  consumed_at: new Date().toISOString(),
 });
 
 /**
@@ -65,9 +80,9 @@ export const mapFavoriteFoodToEntry = (food: FavoriteFood): CreateFoodEntryInput
 export const formatMacros = (entry: CreateFoodEntryInput): string => {
   const parts: string[] = [];
 
-  if (entry.protein !== undefined) parts.push(`P: ${entry.protein}g`);
-  if (entry.carbs !== undefined) parts.push(`C: ${entry.carbs}g`);
-  if (entry.fat !== undefined) parts.push(`F: ${entry.fat}g`);
+  if (entry.protein_g !== undefined && entry.protein_g !== null) parts.push(`P: ${entry.protein_g}g`);
+  if (entry.carbs_g !== undefined && entry.carbs_g !== null) parts.push(`C: ${entry.carbs_g}g`);
+  if (entry.fat_g !== undefined && entry.fat_g !== null) parts.push(`F: ${entry.fat_g}g`);
 
   return parts.join(' | ');
 };
@@ -85,5 +100,5 @@ export const formatFoodEntryForConfirmation = (
 ): string => {
   const brandText = brand ? ` (${brand})` : '';
   const macros = formatMacros(entry);
-  return `${entry.name}${brandText}\n${entry.calories} cal | ${macros}`;
+  return `${entry.food_name}${brandText}\n${entry.calories} cal | ${macros}`;
 };

@@ -28,7 +28,7 @@ export class FoodService {
         .from('food_entries')
         .select('*')
         .eq('user_id', userId)
-        .order('logged_at', { ascending: false });
+        .order('consumed_at', { ascending: false });
 
       if (options?.date) {
         const startOfDay = new Date(options.date);
@@ -37,8 +37,8 @@ export class FoodService {
         endOfDay.setHours(23, 59, 59, 999);
 
         query = query
-          .gte('logged_at', startOfDay.toISOString())
-          .lte('logged_at', endOfDay.toISOString());
+          .gte('consumed_at', startOfDay.toISOString())
+          .lte('consumed_at', endOfDay.toISOString());
       }
 
       if (options?.limit) {
@@ -83,20 +83,22 @@ export class FoodService {
         try {
           const entry: FoodEntryInsert = {
             user_id: userId,
-            name: input.name,
-            serving: input.serving,
+            food_name: input.food_name,
+            serving_size: input.serving_size,
             calories: input.calories,
-            protein: input.protein,
-            carbs: input.carbs,
-            fat: input.fat,
-            fiber: input.fiber,
+            protein_g: input.protein_g,
+            carbs_g: input.carbs_g,
+            fat_g: input.fat_g,
+            fiber_g: input.fiber_g,
+            sodium_mg: input.sodium_mg,
+            sugar_g: input.sugar_g,
             meal_type: input.meal_type,
-            logged_at: new Date().toISOString(),
+            photo_url: input.photo_url,
+            consumed_at: input.consumed_at || new Date().toISOString(),
           };
 
           const { data, error } = await supabase
             .from('food_entries')
-            // @ts-ignore - Supabase type inference issue
             .insert(entry)
             .select()
             .single<FoodEntry>();
@@ -125,7 +127,6 @@ export class FoodService {
 
       const updateData: FoodEntryUpdate = {
         ...updates,
-        updated_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
@@ -193,10 +194,10 @@ export class FoodService {
 
       entries.forEach((entry) => {
         stats.total_calories += entry.calories || 0;
-        stats.total_protein += entry.protein || 0;
-        stats.total_carbs += entry.carbs || 0;
-        stats.total_fat += entry.fat || 0;
-        stats.total_fiber += entry.fiber || 0;
+        stats.total_protein += entry.protein_g || 0;
+        stats.total_carbs += entry.carbs_g || 0;
+        stats.total_fat += entry.fat_g || 0;
+        stats.total_fiber += entry.fiber_g || 0;
       });
 
       return { data: stats };
@@ -289,7 +290,7 @@ export class FoodService {
         .from('food_entries')
         .select('*')
         .eq('user_id', userId)
-        .order('logged_at', { ascending: false })
+        .order('consumed_at', { ascending: false })
         .limit(limit);
 
       if (error) {
@@ -299,8 +300,8 @@ export class FoodService {
       // Remove duplicates by food name (keep most recent)
       const uniqueFoods = new Map<string, FoodEntry>();
       data?.forEach(food => {
-        if (!uniqueFoods.has(food.name)) {
-          uniqueFoods.set(food.name, food);
+        if (!uniqueFoods.has(food.food_name)) {
+          uniqueFoods.set(food.food_name, food);
         }
       });
 
@@ -324,7 +325,7 @@ export class FoodService {
         .from('food_entries')
         .select('*')
         .eq('user_id', userId)
-        .order('logged_at', { ascending: false })
+        .order('consumed_at', { ascending: false })
         .limit(50);
 
       if (error) {
@@ -334,11 +335,11 @@ export class FoodService {
       // Count frequency of each food name
       const foodCounts = new Map<string, { count: number; entry: FoodEntry }>();
       data?.forEach(food => {
-        const existing = foodCounts.get(food.name);
+        const existing = foodCounts.get(food.food_name);
         if (existing) {
           existing.count++;
         } else {
-          foodCounts.set(food.name, { count: 1, entry: food });
+          foodCounts.set(food.food_name, { count: 1, entry: food });
         }
       });
 
@@ -404,14 +405,13 @@ export class FoodService {
           user_id: '', // Will be set when logged
           food_name: unified.name,
           calories: unified.calories_per_serving,
-          protein: unified.protein_g,
-          carbs: unified.carbs_g,
-          fat: unified.fat_g,
-          fiber: unified.fiber_g || 0,
-          logged_at: new Date().toISOString(),
+          protein_g: unified.protein_g,
+          carbs_g: unified.carbs_g,
+          fat_g: unified.fat_g,
+          fiber_g: unified.fiber_g || 0,
+          consumed_at: new Date().toISOString(),
           meal_type: 'snack',
-          serving_size: unified.serving_size,
-          serving_unit: unified.serving_unit
+          serving_size: `${unified.serving_size} ${unified.serving_unit}`
         };
 
         // TODO: Optionally save to local database for faster future lookups

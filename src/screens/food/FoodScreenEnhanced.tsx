@@ -22,9 +22,9 @@ import { showAlert } from '../../utils/alerts';
 type TabType = 'camera' | 'search' | 'recent' | 'favorites';
 
 const QUICK_ADD_ITEMS: CreateFoodEntryInput[] = [
-  { name: 'Protein shake', serving: '1 bottle', calories: 190, protein: 25, carbs: 10, fat: 3 },
-  { name: 'Veggie salad', serving: '1 bowl', calories: 240, protein: 8, carbs: 30, fat: 12 },
-  { name: 'Greek yogurt', serving: '1 cup', calories: 130, protein: 15, carbs: 12, fat: 4 },
+  { food_name: 'Protein shake', serving_size: '1 bottle', calories: 190, protein_g: 25, carbs_g: 10, fat_g: 3 },
+  { food_name: 'Veggie salad', serving_size: '1 bowl', calories: 240, protein_g: 8, carbs_g: 30, fat_g: 12 },
+  { food_name: 'Greek yogurt', serving_size: '1 cup', calories: 130, protein_g: 15, carbs_g: 12, fat_g: 4 },
 ];
 
 export const FoodScreen: React.FC = () => {
@@ -90,7 +90,7 @@ export const FoodScreen: React.FC = () => {
   };
 
   const handleQuickAdd = async (item: CreateFoodEntryInput) => {
-    setAddingQuickItem(item.name);
+    setAddingQuickItem(item.food_name);
     const success = await addFoodEntry(item);
     setAddingQuickItem(null);
 
@@ -111,7 +111,7 @@ export const FoodScreen: React.FC = () => {
         const success = await addFoodEntry(foodData);
         if (success) {
           await FoodService.addToRecentFoods(foodData);
-          showAlert.success('Success', `Added ${foodData.name} - ${foodData.calories} kcal`);
+          showAlert.success('Success', `Added ${foodData.food_name} - ${foodData.calories} kcal`);
         } else if (error) {
           showAlert.error('Error', error);
           clearError();
@@ -124,23 +124,23 @@ export const FoodScreen: React.FC = () => {
 
   const handleBarcodeScanned = (food: UnifiedFood) => {
     const foodEntry: CreateFoodEntryInput = {
-      name: food.name,
-      serving: `${food.serving_size} ${food.serving_unit}`,
+      food_name: food.name,
+      serving_size: `${food.serving_size} ${food.serving_unit}`,
       calories: Math.round(food.calories_per_serving),
-      protein: Math.round(food.protein_g),
-      carbs: Math.round(food.carbs_g),
-      fat: Math.round(food.fat_g),
-      fiber: Math.round(food.fiber_g),
+      protein_g: Math.round(food.protein_g),
+      carbs_g: Math.round(food.carbs_g),
+      fat_g: Math.round(food.fat_g),
+      fiber_g: Math.round(food.fiber_g),
     };
 
     showAlert.confirm(
       'Add Food',
-      `${food.name}\n${foodEntry.calories} cal | P: ${foodEntry.protein}g | C: ${foodEntry.carbs}g | F: ${foodEntry.fat}g`,
+      `${food.name}\n${foodEntry.calories} cal | P: ${foodEntry.protein_g}g | C: ${foodEntry.carbs_g}g | F: ${foodEntry.fat_g}g`,
       async () => {
         const success = await addFoodEntry(foodEntry);
         if (success) {
           await FoodService.addToRecentFoods(foodEntry);
-          showAlert.success('Success', `Added ${foodEntry.name}`);
+          showAlert.success('Success', `Added ${foodEntry.food_name}`);
         }
       }
     );
@@ -148,23 +148,23 @@ export const FoodScreen: React.FC = () => {
 
   const handleFoodSearchSelected = (food: UnifiedFood) => {
     const foodEntry: CreateFoodEntryInput = {
-      name: food.name,
-      serving: `${food.serving_size} ${food.serving_unit}`,
+      food_name: food.name,
+      serving_size: `${food.serving_size} ${food.serving_unit}`,
       calories: Math.round(food.calories_per_serving),
-      protein: Math.round(food.protein_g),
-      carbs: Math.round(food.carbs_g),
-      fat: Math.round(food.fat_g),
-      fiber: Math.round(food.fiber_g),
+      protein_g: Math.round(food.protein_g),
+      carbs_g: Math.round(food.carbs_g),
+      fat_g: Math.round(food.fat_g),
+      fiber_g: Math.round(food.fiber_g),
     };
 
     showAlert.confirm(
       'Add Food',
-      `${food.name}${food.brand ? ` (${food.brand})` : ''}\n${foodEntry.calories} cal | P: ${foodEntry.protein}g | C: ${foodEntry.carbs}g | F: ${foodEntry.fat}g`,
+      `${food.name}${food.brand ? ` (${food.brand})` : ''}\n${foodEntry.calories} cal | P: ${foodEntry.protein_g}g | C: ${foodEntry.carbs_g}g | F: ${foodEntry.fat_g}g`,
       async () => {
         const success = await addFoodEntry(foodEntry);
         if (success) {
           await FoodService.addToRecentFoods(foodEntry);
-          showAlert.success('Success', `Added ${foodEntry.name}`);
+          showAlert.success('Success', `Added ${foodEntry.food_name}`);
         }
       }
     );
@@ -172,37 +172,37 @@ export const FoodScreen: React.FC = () => {
 
   const handleAddRecentFood = async (food: RecentFood) => {
     const foodEntry: CreateFoodEntryInput = {
-      name: food.food_name,
-      serving: `${food.serving_size} ${food.serving_unit}`,
+      food_name: food.food_name,
+      serving_size: `${food.serving_size} ${food.serving_unit}`,
       calories: food.calories,
-      protein: food.protein,
-      carbs: food.carbs,
-      fat: food.fat,
-      fiber: food.fiber,
+      protein_g: food.protein,
+      carbs_g: food.carbs,
+      fat_g: food.fat,
+      fiber_g: food.fiber,
     };
 
     const success = await addFoodEntry(foodEntry);
     if (success) {
       await FoodService.addToRecentFoods(foodEntry);
-      showAlert.success('Success', `Added ${foodEntry.name}`);
+      showAlert.success('Success', `Added ${foodEntry.food_name}`);
     }
   };
 
   const handleAddFavoriteFood = async (food: FavoriteFood) => {
     const foodEntry: CreateFoodEntryInput = {
-      name: food.food_name,
-      serving: `${food.serving_size} ${food.serving_unit}`,
+      food_name: food.food_name,
+      serving_size: `${food.serving_size} ${food.serving_unit}`,
       calories: food.calories,
-      protein: food.protein,
-      carbs: food.carbs,
-      fat: food.fat,
-      fiber: food.fiber,
+      protein_g: food.protein,
+      carbs_g: food.carbs,
+      fat_g: food.fat,
+      fiber_g: food.fiber,
     };
 
     const success = await addFoodEntry(foodEntry);
     if (success) {
       await FoodService.addToRecentFoods(foodEntry);
-      showAlert.success('Success', `Added ${foodEntry.name}`);
+      showAlert.success('Success', `Added ${foodEntry.food_name}`);
     }
   };
 
@@ -334,12 +334,12 @@ export const FoodScreen: React.FC = () => {
             <View style={styles.quickRow}>
               {QUICK_ADD_ITEMS.map((item) => (
                 <Button
-                  key={item.name}
-                  title={item.name}
+                  key={item.food_name}
+                  title={item.food_name}
                   size="small"
                   variant="outline"
                   onPress={() => handleQuickAdd(item)}
-                  loading={addingQuickItem === item.name}
+                  loading={addingQuickItem === item.food_name}
                   containerStyle={styles.quickButton}
                 />
               ))}
@@ -474,13 +474,13 @@ export const FoodScreen: React.FC = () => {
             renderItem={({ item }) => (
               <View style={styles.row}>
                 <View style={{ flex: 1 }}>
-                  <Text variant="bodyLarge">{item.name}</Text>
+                  <Text variant="bodyLarge">{item.food_name}</Text>
                   <Text variant="bodySmall" color={colors.textSecondary}>
-                    {item.serving}
+                    {item.serving_size}
                   </Text>
-                  {item.protein && (
+                  {item.protein_g && (
                     <Text variant="caption" color={colors.textSecondary}>
-                      P: {item.protein}g | C: {item.carbs}g | F: {item.fat}g
+                      P: {item.protein_g}g | C: {item.carbs_g}g | F: {item.fat_g}g
                     </Text>
                   )}
                 </View>

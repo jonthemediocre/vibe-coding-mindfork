@@ -7,22 +7,19 @@ import type { DietColor } from './supabase';
 export interface FoodEntry {
   id: string;
   user_id: string;
-  name: string;
-  serving: string;
-  calories: number;
-  protein?: number;
-  carbs?: number;
-  fat?: number;
-  fiber?: number;
-  meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  diet_color?: DietColor | null;
-  tags?: string[] | null;
-  food_category?: string | null;
-  ai_classification_confidence?: number | null;
-  photo_url?: string;
-  logged_at: string;
+  food_name: string;
+  serving_size: string | null;
+  calories: number | null;
+  protein_g?: number | null;
+  carbs_g?: number | null;
+  fat_g?: number | null;
+  fiber_g?: number | null;
+  sodium_mg?: number | null;
+  sugar_g?: number | null;
+  meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null;
+  photo_url?: string | null;
+  consumed_at: string;
   created_at: string;
-  updated_at?: string;
 }
 
 export interface FastingSession {
@@ -164,14 +161,18 @@ export interface PaginatedResponse<T> {
 
 // Form types
 export interface CreateFoodEntryInput {
-  name: string;
-  serving: string;
-  calories: number;
-  protein?: number;
-  carbs?: number;
-  fat?: number;
-  fiber?: number;
-  meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  food_name: string;
+  serving_size: string | null;
+  calories: number | null;
+  protein_g?: number | null;
+  carbs_g?: number | null;
+  fat_g?: number | null;
+  fiber_g?: number | null;
+  sodium_mg?: number | null;
+  sugar_g?: number | null;
+  meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null;
+  photo_url?: string | null;
+  consumed_at?: string;
 }
 
 export interface UpdateFoodEntryInput extends Partial<CreateFoodEntryInput> {

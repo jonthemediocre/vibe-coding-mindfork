@@ -561,13 +561,13 @@ Return ONLY valid JSON in this exact format:
     if (!analysis) return null;
 
     return {
-      name: analysis.name,
-      serving: analysis.serving,
+      food_name: analysis.name,
+      serving_size: analysis.serving,
       calories: analysis.calories,
-      protein: analysis.protein,
-      carbs: analysis.carbs,
-      fat: analysis.fat,
-      fiber: analysis.fiber,
+      protein_g: analysis.protein,
+      carbs_g: analysis.carbs,
+      fat_g: analysis.fat,
+      fiber_g: analysis.fiber,
     };
   }
 
@@ -582,13 +582,13 @@ Return ONLY valid JSON in this exact format:
     if (!analysis) return null;
 
     return {
-      name: analysis.name,
-      serving: analysis.serving,
+      food_name: analysis.name,
+      serving_size: analysis.serving,
       calories: analysis.calories,
-      protein: analysis.protein,
-      carbs: analysis.carbs,
-      fat: analysis.fat,
-      fiber: analysis.fiber,
+      protein_g: analysis.protein,
+      carbs_g: analysis.carbs,
+      fat_g: analysis.fat,
+      fiber_g: analysis.fiber,
     };
   }
 

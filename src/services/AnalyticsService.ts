@@ -65,9 +65,9 @@ export class AnalyticsService {
         .from('food_entries')
         .select('*')
         .eq('user_id', userId)
-        .gte('logged_at', startDate.toISOString())
-        .lte('logged_at', endDate.toISOString())
-        .order('logged_at', { ascending: true });
+        .gte('consumed_at', startDate.toISOString())
+        .lte('consumed_at', endDate.toISOString())
+        .order('consumed_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching food entries:', error);
@@ -127,7 +127,7 @@ export class AnalyticsService {
     const dailyMap = new Map<string, DailyNutritionData>();
 
     entries.forEach((entry) => {
-      const date = new Date(entry.logged_at).toISOString().split('T')[0];
+      const date = new Date(entry.consumed_at).toISOString().split('T')[0];
 
       if (!dailyMap.has(date)) {
         dailyMap.set(date, {
@@ -143,10 +143,10 @@ export class AnalyticsService {
 
       const day = dailyMap.get(date)!;
       day.calories += entry.calories || 0;
-      day.protein += entry.protein || 0;
-      day.carbs += entry.carbs || 0;
-      day.fat += entry.fat || 0;
-      day.fiber += entry.fiber || 0;
+      day.protein += entry.protein_g || 0;
+      day.carbs += entry.carbs_g || 0;
+      day.fat += entry.fat_g || 0;
+      day.fiber += entry.fiber_g || 0;
       day.mealCount += 1;
     });
 
