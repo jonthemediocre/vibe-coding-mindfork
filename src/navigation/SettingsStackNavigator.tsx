@@ -2,7 +2,6 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SettingsScreen } from '../screens/profile/SettingsScreen';
 import { DevToolsScreen } from '../screens/DevToolsScreen';
-import MigrationCheckScreen from '../screens/MigrationCheckScreen';
 import { useTheme } from '../app-components/components/ThemeProvider';
 import { ThemeToggle } from '../components/ThemeToggle';
 
@@ -39,13 +38,6 @@ export function SettingsStackNavigator() {
         component={DevToolsScreen}
         options={{
           headerTitle: 'Developer Tools',
-        }}
-      />
-      <Stack.Screen
-        name="MigrationCheck"
-        component={MigrationCheckScreen}
-        options={{
-          headerTitle: 'Database Migration',
         }}
       />
     </Stack.Navigator>
