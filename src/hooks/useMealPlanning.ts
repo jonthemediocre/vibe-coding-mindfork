@@ -195,7 +195,7 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
     try {
       // Find the meal to get its date for macro refresh
       const meal = mealPlan.find(m => m.id === mealId);
-      const mealDate = meal?.planned_date;
+      const mealDate = meal?.date;
 
       const { error: removeError } = await MealPlanningService.removeMealFromSlot(
         user.id,
@@ -240,7 +240,7 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
 
     try {
       const meal = mealPlan.find(m => m.id === mealId);
-      const mealDate = meal?.planned_date;
+      const mealDate = meal?.date;
 
       const { data, error: updateError } = await MealPlanningService.updateMeal(
         user.id,
@@ -286,14 +286,14 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
    * Get all meals for a specific date
    */
   const getMealsForDate = useCallback((date: string): MealPlanEntry[] => {
-    return mealPlan.filter(meal => meal.planned_date === date);
+    return mealPlan.filter(meal => meal.date === date);
   }, [mealPlan]);
 
   /**
    * Get meals for a specific slot (date + meal type)
    */
   const getMealsForSlot = useCallback((date: string, mealType: string): MealPlanEntry[] => {
-    return mealPlan.filter(meal => meal.planned_date === date && meal.meal_type === mealType);
+    return mealPlan.filter(meal => meal.date === date && meal.meal_type === mealType);
   }, [mealPlan]);
 
   /**

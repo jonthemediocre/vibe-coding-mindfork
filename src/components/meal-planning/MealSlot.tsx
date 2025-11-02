@@ -158,10 +158,10 @@ const MealItem: React.FC<{
           <View style={[styles.mealDot, { backgroundColor: color }]} />
           <View style={styles.mealDetails}>
             <Text style={[styles.mealName, { color: colors.text }]} numberOfLines={1}>
-              {meal.meal_name}
+              {meal.notes || (meal.recipe_id ? 'Recipe Meal' : meal.food_entry_id ? 'Food Entry' : 'Meal')}
             </Text>
             <Text style={[styles.mealServings, { color: colors.textSecondary }]}>
-              {meal.servings} serving{(meal.servings || 1) > 1 ? 's' : ''}
+              {meal.servings || 1} serving{(meal.servings || 1) > 1 ? 's' : ''}
             </Text>
           </View>
         </View>

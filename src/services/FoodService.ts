@@ -335,41 +335,35 @@ export class FoodService {
 
   /**
    * Get favorite foods for a user
-   * TODO: Implement favorites table in database
+   * Queries the favorite_foods table for user's saved favorites
    */
   static async getFavoriteFoods(userId: string): Promise<ApiResponse<FoodEntry[]>> {
     try {
-      // For now, return most frequently logged foods
-      // TODO: Create a favorites table and track user favorites
-      console.log('[FoodService] getFavoriteFoods - Using most frequent foods as fallback');
-
       const { data, error } = await supabase
-        .from('food_entries')
+        .from('favorite_foods')
         .select('*')
         .eq('user_id', userId)
-        .order('consumed_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
 
       if (error) {
         return { error: error.message };
       }
 
-      // Count frequency of each food name
-      const foodCounts = new Map<string, { count: number; entry: FoodEntry }>();
-      data?.forEach(food => {
-        const existing = foodCounts.get(food.food_name);
-        if (existing) {
-          existing.count++;
-        } else {
-          foodCounts.set(food.food_name, { count: 1, entry: food });
-        }
-      });
-
-      // Sort by frequency and return top 10
-      const favorites = Array.from(foodCounts.values())
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10)
-        .map(item => item.entry);
+      // Convert favorite_foods format to FoodEntry format
+      const favorites: FoodEntry[] = (data || []).map(fav => ({
+        id: fav.id,
+        user_id: fav.user_id,
+        food_name: fav.food_name,
+        serving_size: `${fav.serving_size} ${fav.serving_unit}`,
+        calories: fav.calories,
+        protein_g: fav.protein,
+        carbs_g: fav.carbs,
+        fat_g: fav.fat,
+        fiber_g: fav.fiber,
+        consumed_at: fav.created_at,
+        created_at: fav.created_at,
+        meal_type: 'snack', // Default, will be set when logging
+      }));
 
       return { data: favorites };
     } catch (err) {
@@ -378,23 +372,83 @@ export class FoodService {
   }
 
   /**
+   * Add food entry to favorites
+   * Stores the food in favorite_foods table for quick access
+   */
+  static async addToFavorites(userId: string, foodEntry: FoodEntry): Promise<ApiResponse<void>> {
+    try {
+      // Check if already favorited
+      const { data: existing } = await supabase
+        .from('favorite_foods')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('food_name', foodEntry.food_name)
+        .maybeSingle();
+
+      if (existing) {
+        return { message: 'Food already in favorites' };
+      }
+
+      // Parse serving size (e.g., "100 g" -> 100 and "g")
+      const servingSizeMatch = foodEntry.serving_size?.match(/^([\d.]+)\s*(.*)$/);
+      const servingSize = servingSizeMatch ? parseFloat(servingSizeMatch[1]) : 1;
+      const servingUnit = servingSizeMatch ? servingSizeMatch[2] || 'serving' : 'serving';
+
+      // Add to favorites
+      const { error } = await supabase
+        .from('favorite_foods')
+        .insert({
+          user_id: userId,
+          food_name: foodEntry.food_name,
+          calories: foodEntry.calories || 0,
+          protein: foodEntry.protein_g || 0,
+          carbs: foodEntry.carbs_g || 0,
+          fat: foodEntry.fat_g || 0,
+          fiber: foodEntry.fiber_g || 0,
+          serving_size: servingSize,
+          serving_unit: servingUnit,
+        });
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { message: 'Added to favorites successfully' };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Failed to add to favorites' };
+    }
+  }
+
+  /**
    * Add food to recent foods (tracks usage)
    * Note: This is automatic when creating food entries
    */
   static async addToRecentFoods(userId: string, foodId: string): Promise<ApiResponse<void>> {
-    // No-op for now since food entries are automatically tracked by logged_at
+    // No-op for now since food entries are automatically tracked by consumed_at
     console.log('[FoodService] addToRecentFoods called for:', { userId, foodId });
-    return { message: 'Food automatically tracked via logged_at timestamp' };
+    return { message: 'Food automatically tracked via consumed_at timestamp' };
   }
 
   /**
    * Remove food from favorites
-   * TODO: Implement favorites table in database
+   * Deletes the food from favorite_foods table
    */
-  static async removeFromFavorites(userId: string, foodId: string): Promise<ApiResponse<void>> {
-    // TODO: Implement when favorites table exists
-    console.log('[FoodService] removeFromFavorites called for:', { userId, foodId });
-    return { message: 'Favorites feature not yet implemented - needs favorites table' };
+  static async removeFromFavorites(userId: string, foodName: string): Promise<ApiResponse<void>> {
+    try {
+      const { error } = await supabase
+        .from('favorite_foods')
+        .delete()
+        .eq('user_id', userId)
+        .eq('food_name', foodName);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { message: 'Removed from favorites successfully' };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Failed to remove from favorites' };
+    }
   }
 
   /**
