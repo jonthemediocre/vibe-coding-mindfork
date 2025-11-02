@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { Pedometer } from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { StepTrackingService } from '../services/StepTrackingService';
 
 export interface UseStepCounterResult {
@@ -38,6 +39,7 @@ const AVERAGE_WEIGHT_LBS = 150;
  */
 export const useStepCounter = (): UseStepCounterResult => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [steps, setSteps] = useState(0);
   const [dailyGoal, setDailyGoal] = useState(DEFAULT_DAILY_GOAL);
   const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
@@ -49,12 +51,15 @@ export const useStepCounter = (): UseStepCounterResult => {
 
   /**
    * Calculate calories burned from steps
-   * Formula: steps × 0.04 (adjustable by weight)
+   * Formula: steps × 0.04 × (user_weight_kg / 70)
+   * More accurate calculation using actual user weight
    */
-  const calculateCalories = useCallback((stepCount: number): number => {
-    // TODO: Get user weight from profile for more accurate calculation
-    // For now, use average weight
-    return Math.round(stepCount * CALORIES_PER_STEP);
+  const calculateCalories = useCallback((stepCount: number, weightKg?: number): number => {
+    const effectiveWeight = weightKg || (AVERAGE_WEIGHT_LBS * 0.453592); // Convert lbs to kg if no weight provided
+    const baseCaloriesPerStep = 0.04;
+    // Adjust calories based on weight relative to 70kg reference
+    const adjustedCalories = stepCount * baseCaloriesPerStep * (effectiveWeight / 70);
+    return Math.round(adjustedCalories);
   }, []);
 
   /**
@@ -116,7 +121,7 @@ export const useStepCounter = (): UseStepCounterResult => {
             await StepTrackingService.saveSteps(
               user.id,
               stepCount,
-              calculateCalories(stepCount),
+              calculateCalories(stepCount, profile?.weight_kg),
               new Date(storedDate)
             );
           }
@@ -164,7 +169,7 @@ export const useStepCounter = (): UseStepCounterResult => {
       const response = await StepTrackingService.saveSteps(
         user.id,
         steps,
-        calculateCalories(steps)
+        calculateCalories(steps, profile?.weight_kg)
       );
 
       if (!response.error) {
@@ -280,7 +285,7 @@ export const useStepCounter = (): UseStepCounterResult => {
   }, [steps, user?.id, saveTodaySteps]);
 
   const progress = dailyGoal > 0 ? Math.min((steps / dailyGoal) * 100, 100) : 0;
-  const caloriesBurned = calculateCalories(steps);
+  const caloriesBurned = calculateCalories(steps, profile?.weight_kg);
 
   return {
     steps,
