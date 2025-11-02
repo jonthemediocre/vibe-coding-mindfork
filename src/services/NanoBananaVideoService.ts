@@ -392,6 +392,7 @@ async function generateVideoFrames(
   for (const scene of template.scenes) {
     const framePrompt = buildScenePrompt(scene, config);
     const frameUrl = await generateImage(framePrompt, {
+      // Using 1024x1536 (closest to 1080x1920 standard) until API supports 1080p
       size: template.aspectRatio === '9:16' ? '1024x1536' : '1024x1024',
       quality: 'high',
     });

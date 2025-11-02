@@ -13,6 +13,7 @@ import { AIFoodScanService } from '../../services/AIFoodScanService';
 import { FoodService } from '../../services/FoodService';
 import { BarcodeScannerModal } from '../../components/food/BarcodeScanner';
 import { FoodSearchBar } from '../../components/food/FoodSearchBar';
+import { EmptyRecentFoodsState, EmptyFavoritesState } from '../../components/EmptyState';
 import type { CreateFoodEntryInput } from '../../types/models';
 import type { UnifiedFood, FavoriteFood, RecentFood } from '../../types/food';
 import { useAuth } from '../../contexts/AuthContext';
@@ -377,9 +378,7 @@ export const FoodScreen: React.FC = () => {
           {loadingRecent ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : recentFoods.length === 0 ? (
-            <Text variant="body" color={colors.textSecondary} align="center" style={{ padding: 20 }}>
-              No recent foods yet
-            </Text>
+            <EmptyRecentFoodsState />
           ) : (
             <FlatList
               data={recentFoods}
@@ -418,9 +417,7 @@ export const FoodScreen: React.FC = () => {
           {loadingFavorites ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : favoriteFoods.length === 0 ? (
-            <Text variant="body" color={colors.textSecondary} align="center" style={{ padding: 20 }}>
-              No favorite foods yet. Star your favorite foods to add them here!
-            </Text>
+            <EmptyFavoritesState />
           ) : (
             <FlatList
               data={favoriteFoods}
