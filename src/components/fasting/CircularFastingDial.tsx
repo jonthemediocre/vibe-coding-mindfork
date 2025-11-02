@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Pressable, Animated, PanResponder } from 'react-native';
+import { View, StyleSheet, Pressable, Animated, PanResponder, LayoutChangeEvent } from 'react-native';
 import { Text } from 'react-native';
 import Svg, { Circle, Line, Text as SvgText, G, Path } from 'react-native-svg';
 
@@ -67,13 +67,14 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const radius = size * 0.35;
   const handleRadius = 14;
   const [draggingHandle, setDraggingHandle] = useState<'start' | 'end' | null>(null);
-  const [componentLayout, setComponentLayout] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<View>(null);
+  const layoutRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
   // Convert touch position (screen coordinates) to hour
   const positionToHour = (screenX: number, screenY: number): number => {
     // Convert screen coordinates to component-relative coordinates
-    const localX = screenX - componentLayout.x;
-    const localY = screenY - componentLayout.y;
+    const localX = screenX - layoutRef.current.x;
+    const localY = screenY - layoutRef.current.y;
 
     // Calculate relative to center
     const dx = localX - center;
@@ -87,38 +88,64 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   };
 
   // Create pan responder for start handle
-  const startPanResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => interactive,
-    onMoveShouldSetPanResponder: () => interactive,
-    onPanResponderGrant: () => {
-      setDraggingHandle('start');
-    },
-    onPanResponderMove: (_, gestureState) => {
-      if (!interactive || !onStartChange) return;
-      const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
-      onStartChange(newHour);
-    },
-    onPanResponderRelease: () => {
-      setDraggingHandle(null);
-    },
-  });
+  const startPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => {
+        console.log('[FastingDial] Start handle touched, interactive:', interactive);
+        return interactive;
+      },
+      onMoveShouldSetPanResponder: () => interactive,
+      onPanResponderGrant: (evt) => {
+        console.log('[FastingDial] Start handle pan granted');
+        setDraggingHandle('start');
+        // Measure to get absolute screen position
+        containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
+          console.log('[FastingDial] Container measured:', { pageX, pageY, width, height });
+          layoutRef.current = { x: pageX, y: pageY, width, height };
+        });
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (!interactive || !onStartChange) return;
+        const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
+        console.log('[FastingDial] Start handle moved to hour:', newHour);
+        onStartChange(newHour);
+      },
+      onPanResponderRelease: () => {
+        console.log('[FastingDial] Start handle released');
+        setDraggingHandle(null);
+      },
+    })
+  ).current;
 
   // Create pan responder for end handle
-  const endPanResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => interactive,
-    onMoveShouldSetPanResponder: () => interactive,
-    onPanResponderGrant: () => {
-      setDraggingHandle('end');
-    },
-    onPanResponderMove: (_, gestureState) => {
-      if (!interactive || !onEndChange) return;
-      const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
-      onEndChange(newHour);
-    },
-    onPanResponderRelease: () => {
-      setDraggingHandle(null);
-    },
-  });
+  const endPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => {
+        console.log('[FastingDial] End handle touched, interactive:', interactive);
+        return interactive;
+      },
+      onMoveShouldSetPanResponder: () => interactive,
+      onPanResponderGrant: (evt) => {
+        console.log('[FastingDial] End handle pan granted');
+        setDraggingHandle('end');
+        // Measure to get absolute screen position
+        containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
+          console.log('[FastingDial] Container measured:', { pageX, pageY, width, height });
+          layoutRef.current = { x: pageX, y: pageY, width, height };
+        });
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (!interactive || !onEndChange) return;
+        const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
+        console.log('[FastingDial] End handle moved to hour:', newHour);
+        onEndChange(newHour);
+      },
+      onPanResponderRelease: () => {
+        console.log('[FastingDial] End handle released');
+        setDraggingHandle(null);
+      },
+    })
+  ).current;
 
   // Calculate angles (0° = 12 o'clock, clockwise)
   const hourToAngle = (hour: number) => {
@@ -235,11 +262,8 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
 
   return (
     <View
+      ref={containerRef}
       style={[styles.container, { width: size, height: size }]}
-      onLayout={(event) => {
-        const { x, y } = event.nativeEvent.layout;
-        setComponentLayout({ x, y });
-      }}
     >
       <Svg width={size} height={size}>
         {/* Outer circle (clock face) */}
