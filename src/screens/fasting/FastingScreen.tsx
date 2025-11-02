@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, StyleSheet, Switch, Alert, ActivityIndicator } from "react-native";
 import { Screen, Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
 import { useFastingTimer } from "../../hooks";
+import { CircularFastingDial } from "../../components/fasting/CircularFastingDial";
 
 const FASTING_PRESETS = [
   { id: "16-8", label: "16 : 8", fastingHours: 16 },
@@ -132,17 +133,37 @@ export const FastingScreen: React.FC = () => {
         </Card>
       )}
 
+      {/* BEAUTIFUL CIRCULAR FASTING DIAL - 24-hour clock face */}
+      <Card elevation={2} style={styles.dialCard}>
+        <CircularFastingDial
+          fastingStartHour={20}
+          fastingEndHour={(20 + (activeSession?.target_duration_hours || selectedPreset.fastingHours)) % 24}
+          currentTime={new Date()}
+          size={280}
+          interactive={!activeSession}
+          elapsedHours={activeSession ? elapsedHours : undefined}
+        />
+
+        {activeSession && (
+          <View style={styles.statusBadge}>
+            <Text variant="bodySmall" style={styles.statusText}>
+              🟢 Fasting in progress
+            </Text>
+            <Text variant="caption" color={colors.textSecondary}>
+              {Math.round(progress)}% complete
+            </Text>
+          </View>
+        )}
+      </Card>
+
       {activeSession ? (
-        <Card elevation={2}>
-          <Text variant="titleSmall">Active Fast</Text>
+        <Card elevation={1}>
+          <Text variant="titleSmall">Time Elapsed</Text>
           <Text variant="headingLarge" style={styles.currentPreset}>
             {formatTime(elapsedHours)}
           </Text>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%`, backgroundColor: colors.primary }]} />
-          </View>
-          <Text variant="body" color={colors.textSecondary} style={{ marginTop: 8 }}>
-            Target: {activeSession.target_duration_hours}h ({Math.round(progress)}% complete)
+          <Text variant="body" color={colors.textSecondary} style={{ marginTop: 4 }}>
+            Target: {activeSession.target_duration_hours}h
           </Text>
           <View style={styles.buttonRow}>
             <Button
@@ -160,10 +181,10 @@ export const FastingScreen: React.FC = () => {
           </View>
         </Card>
       ) : (
-        <Card elevation={2}>
-          <Text variant="titleSmall">Start New Fast</Text>
+        <Card elevation={1}>
+          <Text variant="titleSmall">Ready to Start</Text>
           <Text variant="headingMedium" style={styles.currentPreset}>
-            {selectedPreset.label} window
+            {selectedPreset.label} Fast
           </Text>
           <Text variant="body" color={colors.textSecondary}>
             Eating window: {windowText}
@@ -237,6 +258,23 @@ const createStyles = () =>
     },
     heading: {
       marginBottom: 16,
+    },
+    dialCard: {
+      marginBottom: 16,
+      alignItems: "center",
+      paddingVertical: 20,
+    },
+    statusBadge: {
+      marginTop: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: "#F0FDF4",
+      borderRadius: 12,
+      alignItems: "center",
+    },
+    statusText: {
+      color: "#15803D",
+      fontWeight: "600",
     },
     currentPreset: {
       marginVertical: 10,
