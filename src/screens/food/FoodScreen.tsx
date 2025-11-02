@@ -1,22 +1,30 @@
-import React, { useState, useEffect } from "react";
-import { View, FlatList, StyleSheet, Alert, ActivityIndicator } from "react-native";
-import { Screen, Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
+import React, { useState } from "react";
+import {
+  View,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  Modal,
+  TextInput as RNTextInput,
+} from "react-native";
+import { Screen, Text, useThemeColors } from "../../ui";
 import { useFoodTracking } from "../../hooks";
 import { useAuth } from "../../contexts/AuthContext";
-import { AIFoodScanService } from "../../services/AIFoodScanService";
-import { FoodClassificationService } from "../../services/FoodClassificationService";
-import { ColorCodedFoodCard, ColorDistributionBar } from "../../components/food/ColorCodedFoodCard";
+import { useProfile } from "../../contexts/ProfileContext";
+import { useTheme } from "../../app-components/components/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
 import type { CreateFoodEntryInput } from "../../types/models";
 
-const QUICK_ADD_ITEMS: CreateFoodEntryInput[] = [
-  { food_name: "Protein shake", serving_size: "1 bottle", calories: 190, protein_g: 25, carbs_g: 10, fat_g: 3 },
-  { food_name: "Veggie salad", serving_size: "1 bowl", calories: 240, protein_g: 8, carbs_g: 30, fat_g: 12 },
-  { food_name: "Greek yogurt", serving_size: "1 cup", calories: 130, protein_g: 15, carbs_g: 12, fat_g: 4 },
-];
+const MEAL_TIMES = ["Breakfast", "Lunch", "Dinner", "Snacks"];
 
 export const FoodScreen: React.FC = () => {
   const colors = useThemeColors();
-  const styles = useThemedStyles(createStyles);
+  const { isDark } = useTheme();
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  const navigation = useNavigation();
   const {
     entries,
     dailyStats,
@@ -27,67 +35,71 @@ export const FoodScreen: React.FC = () => {
     clearError,
   } = useFoodTracking();
 
-  const [addingQuickItem, setAddingQuickItem] = useState<string | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
-  const handleQuickAdd = async (item: CreateFoodEntryInput) => {
-    setAddingQuickItem(item.food_name);
-    const success = await addFoodEntry(item);
-    setAddingQuickItem(null);
+  // Calculate remaining calories
+  const goalCalories = profile?.daily_calories || 2000;
+  const consumedCalories = dailyStats?.total_calories || 0;
+  const remainingCalories = goalCalories - consumedCalories;
+  const progress = (consumedCalories / goalCalories) * 100;
 
-    if (!success && error) {
-      Alert.alert("Error", error);
-      clearError();
-    }
+  // Group entries by meal type
+  const entriesByMeal = entries.reduce(
+    (acc, entry) => {
+      const mealType = entry.meal_type || "snack";
+      if (!acc[mealType]) acc[mealType] = [];
+      acc[mealType].push(entry);
+      return acc;
+    },
+    {} as Record<string, typeof entries>
+  );
+
+  const handleAddFood = () => {
+    setShowAddModal(true);
   };
 
-  const handleScanFood = async () => {
-    setIsScanning(true);
-    try {
-      const foodData = await AIFoodScanService.scanFoodImage();
-
-      if (foodData) {
-        const success = await addFoodEntry(foodData);
-        if (success) {
-          Alert.alert("Success", `Added ${foodData.food_name} - ${foodData.calories} kcal`);
-        } else if (error) {
-          Alert.alert("Error", error);
-          clearError();
-        }
-      }
-    } finally {
-      setIsScanning(false);
-    }
+  const handleScanFood = () => {
+    setShowAddModal(false);
+    navigation.navigate("FoodScanner" as never);
   };
 
-  const handleDelete = async (entryId: string) => {
-    Alert.alert(
-      "Delete Entry",
-      "Are you sure you want to delete this food entry?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            const success = await deleteFoodEntry(entryId);
-            if (!success && error) {
-              Alert.alert("Error", error);
-              clearError();
-            }
-          },
-        },
-      ]
-    );
+  const handleSearchFood = () => {
+    setShowAddModal(false);
+    navigation.navigate("FoodSearch" as never);
   };
 
-  if (isLoading && !entries.length) {
+  const handleQuickAdd = () => {
+    setShowAddModal(false);
+    navigation.navigate("QuickAdd" as never);
+  };
+
+  const handleDeleteEntry = async (entryId: string) => {
+    await deleteFoodEntry(entryId);
+    setShowDeleteConfirm(null);
+  };
+
+  const getMealIcon = (mealType: string) => {
+    const icons: Record<string, any> = {
+      breakfast: "sunny",
+      lunch: "restaurant",
+      dinner: "moon",
+      snack: "fast-food",
+    };
+    return icons[mealType] || "fast-food";
+  };
+
+  const getMealCalories = (mealType: string) => {
+    return entriesByMeal[mealType]?.reduce((sum, e) => sum + (e.calories || 0), 0) || 0;
+  };
+
+  if (isLoading && entries.length === 0) {
     return (
       <Screen>
-        <View style={styles.loadingContainer}>
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text variant="body" style={styles.loadingText}>
-            Loading your food entries...
+          <Text className="mt-4 text-gray-600 dark:text-gray-400">
+            Loading food entries...
           </Text>
         </View>
       </Screen>
@@ -95,181 +107,397 @@ export const FoodScreen: React.FC = () => {
   }
 
   return (
-    <Screen scrollable contentContainerStyle={styles.container}>
-      <Text variant="headingSmall" style={styles.heading}>
-        Food tracking
-      </Text>
-
-      {error && (
-        <Card elevation={1} style={{ backgroundColor: colors.error, marginBottom: 12 }}>
-          <Text variant="body" color="#FFF">
-            {error}
+    <Screen>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View className="px-5 py-6">
+          <Text className="text-3xl font-bold text-gray-900 dark:text-white">
+            Food
           </Text>
-          <Button
-            title="Dismiss"
-            variant="ghost"
-            size="small"
-            onPress={clearError}
-            containerStyle={styles.errorButton}
-          />
-        </Card>
-      )}
-
-      <Card elevation={2}>
-        <Text variant="titleSmall">Today&apos;s total</Text>
-        <Text variant="headingSmall" style={styles.totalText}>
-          {dailyStats?.total_calories || 0} kcal
-        </Text>
-        <View style={styles.macroRow}>
-          <View style={styles.macroItem}>
-            <Text variant="bodySmall" color={colors.textSecondary}>
-              Protein
-            </Text>
-            <Text variant="body">{Math.round(dailyStats?.total_protein || 0)}g</Text>
-          </View>
-          <View style={styles.macroItem}>
-            <Text variant="bodySmall" color={colors.textSecondary}>
-              Carbs
-            </Text>
-            <Text variant="body">{Math.round(dailyStats?.total_carbs || 0)}g</Text>
-          </View>
-          <View style={styles.macroItem}>
-            <Text variant="bodySmall" color={colors.textSecondary}>
-              Fat
-            </Text>
-            <Text variant="body">{Math.round(dailyStats?.total_fat || 0)}g</Text>
-          </View>
+          <Text className="text-base text-gray-600 dark:text-gray-400 mt-1">
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </Text>
         </View>
-        <Text variant="body" color={colors.textSecondary} style={{ marginTop: 8 }}>
-          Stay between 1,900 – 2,100 kcal for your goal.
-        </Text>
-      </Card>
 
-      <View>
-        <Text variant="titleSmall" style={styles.sectionTitle}>
-          Quick add
-        </Text>
-        <View style={styles.quickRow}>
-          {QUICK_ADD_ITEMS.map((item) => (
-            <Button
-              key={item.food_name}
-              title={item.food_name}
-              size="small"
-              variant="outline"
-              onPress={() => handleQuickAdd(item)}
-              loading={addingQuickItem === item.food_name}
-              containerStyle={styles.quickButton}
-            />
-          ))}
+        {/* Calorie Progress Card */}
+        <View className="px-5 mb-6">
+          <LinearGradient
+            colors={
+              remainingCalories >= 0
+                ? isDark
+                  ? ["#065F46", "#047857"]
+                  : ["#D1FAE5", "#A7F3D0"]
+                : isDark
+                ? ["#991B1B", "#B91C1C"]
+                : ["#FEE2E2", "#FECACA"]
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              borderRadius: 20,
+              padding: 24,
+            }}
+          >
+            <View className="flex-row justify-between items-center mb-4">
+              <View>
+                <Text
+                  className={`text-sm font-semibold mb-1 ${
+                    isDark
+                      ? remainingCalories >= 0
+                        ? "text-green-300"
+                        : "text-red-300"
+                      : remainingCalories >= 0
+                      ? "text-green-800"
+                      : "text-red-800"
+                  }`}
+                >
+                  {remainingCalories >= 0 ? "REMAINING" : "OVER GOAL"}
+                </Text>
+                <Text
+                  className={`text-5xl font-bold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {Math.abs(remainingCalories)}
+                </Text>
+                <Text
+                  className={`text-base ${
+                    isDark
+                      ? remainingCalories >= 0
+                        ? "text-green-200"
+                        : "text-red-200"
+                      : remainingCalories >= 0
+                      ? "text-green-700"
+                      : "text-red-700"
+                  }`}
+                >
+                  calories
+                </Text>
+              </View>
+              <View className="items-end">
+                <Text
+                  className={`text-base ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  {consumedCalories} / {goalCalories}
+                </Text>
+                <Text
+                  className={`text-sm ${
+                    isDark ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  consumed
+                </Text>
+              </View>
+            </View>
+
+            {/* Progress bar */}
+            <View className="h-3 bg-white/20 rounded-full overflow-hidden">
+              <View
+                className={`h-full ${
+                  remainingCalories >= 0 ? "bg-white" : "bg-red-500"
+                } rounded-full`}
+                style={{ width: `${Math.min(100, progress)}%` }}
+              />
+            </View>
+
+            {/* Macros */}
+            <View className="flex-row justify-around mt-6 pt-6 border-t border-white/20">
+              <View className="items-center">
+                <Text
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {Math.round(dailyStats?.total_protein || 0)}g
+                </Text>
+                <Text
+                  className={`text-xs mt-1 ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Protein
+                </Text>
+              </View>
+              <View className="items-center">
+                <Text
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {Math.round(dailyStats?.total_carbs || 0)}g
+                </Text>
+                <Text
+                  className={`text-xs mt-1 ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Carbs
+                </Text>
+              </View>
+              <View className="items-center">
+                <Text
+                  className={`text-2xl font-bold ${
+                    isDark ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  {Math.round(dailyStats?.total_fat || 0)}g
+                </Text>
+                <Text
+                  className={`text-xs mt-1 ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Fat
+                </Text>
+              </View>
+            </View>
+          </LinearGradient>
         </View>
+
+        {/* Meals */}
+        <View className="px-5">
+          {MEAL_TIMES.map((mealTime) => {
+            const mealType = mealTime.toLowerCase();
+            const mealEntries = entriesByMeal[mealType] || [];
+            const mealCalories = getMealCalories(mealType);
+
+            return (
+              <View key={mealTime} className="mb-6">
+                <View className="flex-row items-center justify-between mb-3">
+                  <View className="flex-row items-center">
+                    <Ionicons
+                      name={getMealIcon(mealType)}
+                      size={24}
+                      color={isDark ? "#9CA3AF" : "#6B7280"}
+                    />
+                    <Text className="text-xl font-bold text-gray-900 dark:text-white ml-2">
+                      {mealTime}
+                    </Text>
+                    {mealCalories > 0 && (
+                      <Text className="text-sm text-gray-600 dark:text-gray-400 ml-3">
+                        {mealCalories} cal
+                      </Text>
+                    )}
+                  </View>
+                  <Pressable
+                    onPress={handleAddFood}
+                    className="p-2"
+                  >
+                    <Ionicons
+                      name="add-circle"
+                      size={28}
+                      color={isDark ? "#A78BFA" : "#8B5CF6"}
+                    />
+                  </Pressable>
+                </View>
+
+                {mealEntries.length > 0 ? (
+                  <View className="gap-2">
+                    {mealEntries.map((entry) => (
+                      <Pressable
+                        key={entry.id}
+                        onLongPress={() => setShowDeleteConfirm(entry.id)}
+                        className="bg-white dark:bg-gray-800 rounded-xl p-4 flex-row justify-between items-center border border-gray-200 dark:border-gray-700"
+                      >
+                        <View className="flex-1">
+                          <Text className="text-base font-semibold text-gray-900 dark:text-white">
+                            {entry.food_name}
+                          </Text>
+                          {entry.serving_size && (
+                            <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {entry.serving_size}
+                            </Text>
+                          )}
+                        </View>
+                        <View className="items-end">
+                          <Text className="text-lg font-bold text-gray-900 dark:text-white">
+                            {entry.calories || 0}
+                          </Text>
+                          <Text className="text-xs text-gray-600 dark:text-gray-400">
+                            cal
+                          </Text>
+                        </View>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : (
+                  <Pressable
+                    onPress={handleAddFood}
+                    className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 items-center border-2 border-dashed border-gray-300 dark:border-gray-600"
+                  >
+                    <Ionicons
+                      name="add"
+                      size={32}
+                      color={isDark ? "#6B7280" : "#9CA3AF"}
+                    />
+                    <Text className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                      Add food
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
+            );
+          })}
+        </View>
+
+        {error && (
+          <View className="mx-5 mb-6 bg-red-100 dark:bg-red-900/30 rounded-2xl p-4">
+            <Text className="text-red-800 dark:text-red-200 text-sm">
+              {error}
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Floating Add Button */}
+      <View className="absolute bottom-6 right-6">
+        <Pressable
+          onPress={handleAddFood}
+          className="bg-purple-500 rounded-full w-16 h-16 items-center justify-center shadow-lg"
+        >
+          <Ionicons name="add" size={32} color="white" />
+        </Pressable>
       </View>
 
-      <Card elevation={1}>
-        <Text variant="titleSmall" style={styles.sectionTitle}>
-          Recent entries ({entries.length})
-        </Text>
-        {entries.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text variant="body" color={colors.textSecondary} align="center">
-              No food entries yet today.{"\n"}Add your first meal above!
-            </Text>
+      {/* Add Food Modal */}
+      <Modal
+        visible={showAddModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View
+            className="bg-white dark:bg-gray-900 rounded-t-3xl px-6 py-6"
+          >
+            <View className="flex-row items-center justify-between mb-6">
+              <Text className="text-2xl font-bold text-gray-900 dark:text-white">
+                Add Food
+              </Text>
+              <Pressable onPress={() => setShowAddModal(false)}>
+                <Ionicons
+                  name="close"
+                  size={28}
+                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                />
+              </Pressable>
+            </View>
+
+            <View className="gap-3">
+              <Pressable
+                onPress={handleScanFood}
+                className="bg-purple-500 rounded-2xl p-5 flex-row items-center"
+              >
+                <Ionicons name="camera" size={28} color="white" />
+                <View className="ml-4 flex-1">
+                  <Text className="text-lg font-bold text-white">
+                    Scan Food
+                  </Text>
+                  <Text className="text-sm text-purple-100 mt-1">
+                    Take a photo to analyze
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={24} color="white" />
+              </Pressable>
+
+              <Pressable
+                onPress={handleSearchFood}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-5 flex-row items-center border border-gray-200 dark:border-gray-700"
+              >
+                <Ionicons
+                  name="search"
+                  size={28}
+                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                />
+                <View className="ml-4 flex-1">
+                  <Text className="text-lg font-bold text-gray-900 dark:text-white">
+                    Search Foods
+                  </Text>
+                  <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    380,000+ verified foods
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                />
+              </Pressable>
+
+              <Pressable
+                onPress={handleQuickAdd}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-5 flex-row items-center border border-gray-200 dark:border-gray-700"
+              >
+                <Ionicons
+                  name="flash"
+                  size={28}
+                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                />
+                <View className="ml-4 flex-1">
+                  <Text className="text-lg font-bold text-gray-900 dark:text-white">
+                    Quick Add
+                  </Text>
+                  <Text className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Enter calories manually
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                />
+              </Pressable>
+            </View>
           </View>
-        ) : (
-          <FlatList
-            data={entries}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-            renderItem={({ item }) => (
-              <ColorCodedFoodCard
-                name={item.food_name}
-                serving={item.serving_size}
-                calories={item.calories}
-                protein={item.protein_g || 0}
-                carbs={item.carbs_g || 0}
-                fat={item.fat_g || 0}
-                mealType={item.meal_type}
-                onPress={() => handleDelete(item.id)}
-                showColorLabel={true}
-              />
-            )}
-          />
-        )}
-        <Button
-          title="📸 Scan Food with AI"
-          variant="primary"
-          onPress={handleScanFood}
-          loading={isScanning}
-          containerStyle={styles.scanButton}
-        />
-      </Card>
+        </View>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={showDeleteConfirm !== null}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowDeleteConfirm(null)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-sm">
+            <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+              Delete Entry?
+            </Text>
+            <Text className="text-base text-gray-600 dark:text-gray-400 mb-6 text-center">
+              This action cannot be undone.
+            </Text>
+            <View className="gap-3">
+              <Pressable
+                onPress={() => showDeleteConfirm && handleDeleteEntry(showDeleteConfirm)}
+                className="bg-red-500 rounded-2xl py-4 items-center"
+              >
+                <Text className="text-white text-lg font-bold">Delete</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setShowDeleteConfirm(null)}
+                className="bg-gray-200 dark:bg-gray-700 rounded-2xl py-4 items-center"
+              >
+                <Text className="text-gray-900 dark:text-white text-base font-semibold">
+                  Cancel
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 };
 
-const createStyles = () =>
-  StyleSheet.create({
-    container: {
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    loadingText: {
-      marginTop: 16,
-    },
-    heading: {
-      marginBottom: 16,
-    },
-    totalText: {
-      marginVertical: 8,
-    },
-    macroRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      marginTop: 12,
-    },
-    macroItem: {
-      alignItems: "center",
-    },
-    sectionTitle: {
-      marginBottom: 8,
-    },
-    quickRow: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      marginHorizontal: -4,
-    },
-    quickButton: {
-      marginHorizontal: 4,
-      marginBottom: 8,
-    },
-    separator: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: "rgba(0,0,0,0.08)",
-      marginVertical: 12,
-    },
-    row: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "flex-start",
-    },
-    entryRight: {
-      alignItems: "flex-end",
-    },
-    scanButton: {
-      marginTop: 16,
-    },
-    emptyState: {
-      paddingVertical: 32,
-    },
-    errorButton: {
-      marginTop: 8,
-    },
-  });
-
 export default FoodScreen;
-
