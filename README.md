@@ -6,7 +6,13 @@
 
 🚀 **99% PRODUCTION READY - VERIFIED DATABASE INTEGRATION COMPLETE!**
 
-**Latest Update (2025-11-02 - AI FOOD SCANNING FIXED + SETTINGS SAVE FIXED):**
+**Latest Update (2025-11-02 - COACH AI + FOOD SCANNING + SETTINGS ALL FIXED):**
+- 🎉 **AI COACH NOW WORKING PROPERLY!** - No more prompt leakage
+- 🔧 **Root Cause** - Edge Function 'ai-coach' was broken/non-existent
+- ✅ **Direct OpenAI Integration** - Bypasses broken Edge Function, calls OpenAI directly
+- ✅ **System Prompt Separation** - Coach personality/context now in system role (not user message!)
+- ✅ **Brief Responses** - Max 200 tokens, 2-3 sentences, natural conversation
+- 💬 **Say "hi" → Get proper greeting** - No more template dumps!
 - 🎉 **AI FOOD SCANNING NOW WORKING!** - Fixed multiple critical bugs
 - 🔧 **Root Cause #1** - OpenRouter account had insufficient credits (402 error) - RESOLVED ✅
 - 🔧 **Root Cause #2** - Model name mismatch: OpenRouter needs `openai/gpt-4o-2024-11-20` prefix - FIXED ✅

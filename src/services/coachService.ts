@@ -47,52 +47,64 @@ export class CoachService {
         const coach = getCoachById(coachId);
         const coachPersonality = coach?.personality || 'supportive';
 
-        // Generate personalized prompt if context is provided
-        let enhancedMessage = message;
+        // Generate system prompt (NOT included in user message!)
+        let systemPrompt = '';
         if (context) {
-          enhancedMessage = CoachContextService.generateCoachPrompt(
+          systemPrompt = CoachContextService.generateCoachPrompt(
             context,
             coachPersonality,
-            message
+            '' // Empty user message for system prompt
           );
         }
 
-        // WELLNESS POSITIONING: Validate context before sending to external AI
-        let safeContext = undefined;
-        if (context) {
-          // Commented out HIPAA validation for now
-          // const validation = HIPAAComplianceService.validateForExternalService(context, 'supabase-ai');
-          // if (!validation.canSend) {
-          //   console.error('HIPAA violation prevented:', validation.issues);
-          //   HIPAAComplianceService.reportHIPAAIncident({
-          //     type: 'wellness_boundary_violation',
-          //     description: 'Attempted to send medical terminology to external AI service',
-          //     severity: 'critical',
-          //   });
-          //   throw new Error('Cannot send medical information to AI service');
-          // }
-
-          safeContext = {
-            primary_goal: context.userGoals.primary_goal,
-            diet_type: context.userGoals.diet_type,
-            current_progress: context.currentProgress,
-            restrictions: context.restrictions,
-          };
+        // Use direct OpenAI/Vibecode API since Edge Function is broken
+        const apiKey = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY || process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+        if (!apiKey) {
+          throw new Error('No AI API key configured');
         }
 
-        // Call Edge Function for AI response with HIPAA-safe context
-        const { data, error } = await supabase.functions.invoke('ai-coach', {
-          body: {
-            coach_id: coachId,
-            message: enhancedMessage,
-            user_id: user.id,
-            context: safeContext,
-            disclaimer: 'This is wellness coaching only. Consult healthcare providers for health concerns.',
-          }
+        const OpenAI = (await import('openai')).default;
+        const openai = new OpenAI({
+          apiKey: process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY || process.env.EXPO_PUBLIC_OPENROUTER_API_KEY,
+          ...(process.env.EXPO_PUBLIC_OPENROUTER_API_KEY && !process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY ? {
+            baseURL: 'https://openrouter.ai/api/v1',
+            defaultHeaders: {
+              'HTTP-Referer': 'https://mindfork.app',
+              'X-Title': 'MindFork',
+            },
+          } : {})
         });
 
-        if (error) throw error;
-        return data;
+        const modelName = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY
+          ? 'gpt-4o-mini'
+          : 'openai/gpt-4o-mini';
+
+        const response = await openai.chat.completions.create({
+          model: modelName,
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt || `You are ${coach?.name}, a ${coachPersonality} health and wellness coach. Keep responses brief, supportive, and personalized. Use 2-3 sentences max.`
+            },
+            {
+              role: 'user',
+              content: message
+            }
+          ],
+          max_tokens: 200,
+          temperature: 0.7,
+        });
+
+        const aiResponse = response.choices[0]?.message?.content || 'I apologize, I could not generate a response.';
+
+        return {
+          id: `${Date.now()}`,
+          coach_id: coachId,
+          user_id: user.id,
+          message: message,
+          response: aiResponse,
+          created_at: new Date().toISOString()
+        };
       },
       () => this.getMockResponse(coachId, message, context)
     );
