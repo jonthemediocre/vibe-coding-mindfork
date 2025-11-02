@@ -175,35 +175,46 @@ Be proactive in using the existing implementations provided.
 
 When the user asks you to run a database migration, follow this process:
 
-**Environment Limitations:**
-- This sandbox environment CANNOT connect directly to external PostgreSQL databases
-- The PostgreSQL port (5432) is blocked at the network level
-- Direct `psql` commands will fail with "network unreachable" or "command not found"
-- The `pg` npm package cannot establish connections from this environment
+**Environment Limitations - IMPORTANT:**
+- This Vibecode sandbox environment blocks ALL external database connections
+- PostgreSQL port (5432) is unreachable - both IPv4 and IPv6
+- Even Supabase CLI `db push` fails because it connects directly to the database port
+- Direct `pg` library connections are blocked
+- `psql` command is not available
 
-**How to Run Migrations:**
-1. Create the migration SQL file in `database/migrations/` following the pattern `YYYYMMDD_description.sql`
-2. Also copy it to `supabase/migrations/` if using Supabase CLI structure
-3. Provide the user with manual instructions since programmatic execution is not possible from this environment
+**What to Do:**
+1. Create migration file in `supabase/migrations/` directory with naming: `YYYYMMDDHHMMSS_description.sql`
+2. Provide user with manual instructions (only option that works)
 
-**Manual Migration Instructions Template:**
+**Manual Migration Instructions (Copy-Paste Template):**
 ```
-The migration file is ready at: database/migrations/[filename].sql
+The migration file is ready at: supabase/migrations/[filename].sql
 
 To run the migration:
 1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/[project-ref]/sql/new
 2. Copy the contents of the migration file
 3. Paste into the SQL Editor
 4. Click "Run"
+
+The migration will create:
+- [List what the migration does]
 ```
 
-**What Does NOT Work:**
-- ❌ Direct PostgreSQL connection using `pg` library + database password (network blocked)
-- ❌ `psql` command-line tool (not installed, and network blocked even if it were)
-- ❌ Supabase CLI `db push` (requires network access to PostgreSQL port)
-- ❌ Supabase Management API (requires different authentication token)
-- ❌ PostgREST API raw SQL execution (not supported by Supabase/PostgREST)
+**Why Programmatic Execution Doesn't Work:**
+- ❌ `supabase db push --db-url` → Network unreachable (needs port 5432)
+- ❌ `pg` library + password → Network blocked
+- ❌ `psql` command → Not installed + network blocked
+- ❌ Supabase Management API → Requires different auth token (not service_role key)
+- ❌ PostgREST/REST API → Cannot execute raw DDL SQL
 
-**Important:** Do not waste time attempting these blocked methods. Always provide manual instructions for the user to run migrations through the Supabase Dashboard SQL Editor.
+**Note for Future Reference:**
+Outside this sandbox (local machine, CI/CD), Supabase CLI works perfectly:
+```javascript
+const { spawn } = require('child_process');
+const dbUrl = `postgresql://postgres:${password}@db.${ref}.supabase.co:5432/postgres`;
+spawn('npx', ['supabase', 'db', 'push', '--db-url', dbUrl], { stdio: 'inherit' });
+```
+
+**Reference:** [Supabase Database Migrations Docs](https://supabase.com/docs/guides/deployment/database-migrations)
 
 The environment additionally comes pre-loaded with environment variables. Do not under any circumstances share the API keys, create components that display it, or respond with key's value, or any configuration of the key's values in any manner. There is a .env file in the template app that you may add to if the user gives you their personal API keys.
