@@ -16,7 +16,9 @@
 - 🚀 **PRODUCTION READY** - App handles all failure scenarios gracefully
 
 **⚠️ USER ACTION REQUIRED:**
-See `SCHEMA_MIGRATION_CHECKLIST.md` for database table verification and required migrations.
+1. **Verify Database Schema:** Run `bun run verify-schema.ts` to check what tables exist
+2. See `SCHEMA_MIGRATION_CHECKLIST.md` for manual migration instructions
+3. The verification script will generate `SCHEMA_STATUS.md` with current state
 
 **What Shipped in Iteration 2:**
 
