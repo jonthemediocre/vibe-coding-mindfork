@@ -502,15 +502,24 @@ export async function completeOnboarding(
 
   const dbActivityLevel = activityLevelMap[data.activityLevel as keyof typeof activityLevelMap] || 'sedentary';
 
-  // Update profiles table (only fields that exist)
+  // Calculate date_of_birth from age
+  const currentYear = new Date().getFullYear();
+  const birthYear = currentYear - data.age!;
+  const dateOfBirth = `${birthYear}-01-01`; // Use January 1st as default
+
+  // Update profiles table (all onboarding fields)
   const { error: profileError } = await supabase
     .from("profiles")
     .update({
       full_name: data.fullName || null,
       gender: data.gender,
+      date_of_birth: dateOfBirth,
       height_cm,
       weight_kg: weight_kg,
       activity_level: dbActivityLevel,
+      primary_goal: data.primaryGoal,
+      diet_type: data.dietType || 'none',
+      daily_calorie_goal: Math.round(goals.daily_calories),
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     })

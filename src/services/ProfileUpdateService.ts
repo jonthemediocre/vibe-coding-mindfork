@@ -50,13 +50,25 @@ export async function updateUserProfile(
       };
     }
 
+    // Convert age to date_of_birth if age is being updated
+    if (updates.age !== undefined) {
+      const currentYear = new Date().getFullYear();
+      const birthYear = currentYear - updates.age;
+      (updates as any).date_of_birth = `${birthYear}-01-01`;
+      delete updates.age; // Remove age from updates since it's not in DB
+    }
+
+    // Remove target_weight_kg if present (not in DB schema)
+    if (updates.target_weight_kg !== undefined) {
+      delete updates.target_weight_kg;
+    }
+
     // Check if metrics changed that require goal recalculation
     const metricsChanged =
-      updates.age !== undefined ||
+      (updates as any).date_of_birth !== undefined ||
       updates.gender !== undefined ||
       updates.height_cm !== undefined ||
       updates.weight_kg !== undefined ||
-      updates.target_weight_kg !== undefined ||
       updates.activity_level !== undefined ||
       updates.primary_goal !== undefined ||
       updates.diet_type !== undefined;
@@ -209,8 +221,23 @@ export async function getCompleteUserProfile(
 
     if (!profile) return null;
 
+    // Calculate age from date_of_birth
+    let age: number | undefined;
+    if (profile.date_of_birth) {
+      const birthDate = new Date(profile.date_of_birth);
+      const today = new Date();
+      age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+    }
+
     return {
-      profile: profile as UserProfile,
+      profile: {
+        ...profile,
+        age
+      } as UserProfile,
       settings: settings || {}
     };
 
@@ -272,12 +299,6 @@ export function validateProfileUpdate(updates: UserProfileUpdate): {
   if (updates.weight_kg !== undefined) {
     if (updates.weight_kg < 30 || updates.weight_kg > 300) {
       errors.push('Weight must be between 30kg and 300kg');
-    }
-  }
-
-  if (updates.target_weight_kg !== undefined) {
-    if (updates.target_weight_kg < 30 || updates.target_weight_kg > 300) {
-      errors.push('Target weight must be between 30kg and 300kg');
     }
   }
 
