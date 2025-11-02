@@ -615,6 +615,13 @@ export function SettingsScreen({ navigation }: { navigation?: any }) {
           />
 
           <Button
+            title="Database Migration"
+            variant="outline"
+            onPress={() => navigation?.navigate('MigrationCheck')}
+            containerStyle={styles.devToolsButton}
+          />
+
+          <Button
             title="Sign Out"
             variant="outline"
             onPress={handleSignOut}

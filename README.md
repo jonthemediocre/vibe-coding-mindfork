@@ -6,7 +6,7 @@
 
 🚀 **99% PRODUCTION READY - VERIFIED DATABASE INTEGRATION COMPLETE!**
 
-**Latest Update (2025-11-02 - MEAL PLANNING NOW FUNCTIONAL + DATABASE MIGRATION READY):**
+**Latest Update (2025-11-02 - MEAL PLANNING NOW FUNCTIONAL + MIGRATION UI READY):**
 - 🎉 **MEAL PLANNING SYSTEM NOW WORKS!** - Fixed critical schema mismatches
 - ✅ **7-Day Calendar View** - Browse meals by week with visual calendar
 - ✅ **Database Schema Fixed** - Now uses `planned_meals` table correctly with `meal_plan_id`
@@ -16,7 +16,12 @@
 - ✅ **Meal Slot Organization** - Breakfast, Lunch, Dinner, Snacks for each day
 - 🔧 **Auto Meal Plan Creation** - Automatically creates meal plan when adding first meal
 - 📝 **Migration Created** - SQL file ready in `database/migrations/` for recipes & ingredients
-- 🚀 **Run Migration** - See `database/README.md` for instructions to enable full features
+- 🖥️ **Migration Check UI** - New screen in Settings shows migration status with instructions
+- 🚀 **How to Run Migration**:
+  1. Go to Settings → Database Migration in the app
+  2. Check if migration is needed (red X = needs migration, green checkmark = already done)
+  3. Follow the on-screen instructions to run SQL in Supabase Dashboard
+  4. Refresh status to verify completion
 - ⚠️ **After Migration** - Shopping lists and templates will be fully functional
 
 **What the Migration Adds:**
