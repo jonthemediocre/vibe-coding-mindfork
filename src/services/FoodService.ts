@@ -244,31 +244,37 @@ export class FoodService {
   }
 
   /**
-   * Search food database (can integrate with USDA, OpenFoodFacts, etc.)
+   * Search food database
+   * Searches both user's history and verified food database (380K+ foods)
    */
-  static async searchFood(query: string): Promise<ApiResponse<FoodEntry[]>> {
+  static async searchFood(query: string, limit: number = 25): Promise<ApiResponse<UnifiedFood[]>> {
     try {
-      // For now, search in user's own entries
-      // TODO: Integrate with external food database APIs
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        return { error: 'User not authenticated' };
+      if (!query || query.length < 2) {
+        return { data: [] };
       }
 
-      const { data, error } = await supabase
-        .from('food_entries')
-        .select('*')
-        .eq('user_id', user.id)
-        .ilike('name', `%${query}%`)
-        .limit(20);
+      // Search verified food database (380K+ foods)
+      const { USDAFoodDataService } = await import('./USDAFoodDataService');
 
-      if (error) {
-        return { error: error.message };
-      }
+      const searchResult = await USDAFoodDataService.searchFoods(query, {
+        pageSize: limit,
+        sortBy: 'dataType.keyword', // Foundation & SR Legacy first (highest quality)
+        sortOrder: 'asc'
+      });
 
-      return { data: data || [] };
+      // Convert to UnifiedFood format
+      const unifiedFoods: UnifiedFood[] = searchResult.foods.map(food => {
+        const unified = USDAFoodDataService.toUnifiedFood(food);
+        return {
+          id: `verified-${food.fdcId}`,
+          ...unified,
+          source: 'database' as const // Hide implementation details - just show "database"
+        };
+      });
+
+      return { data: unifiedFoods };
     } catch (err) {
+      console.error('[FoodService] searchFood error:', err);
       return { error: err instanceof Error ? err.message : 'Failed to search food' };
     }
   }

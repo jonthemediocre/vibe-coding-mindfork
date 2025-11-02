@@ -11,7 +11,7 @@ export interface UseFoodSearchResult {
 }
 
 /**
- * Hook for debounced food search with USDA database integration
+ * Hook for debounced food search with verified database integration
  * Automatically debounces search queries by 500ms
  */
 export const useFoodSearch = (debounceMs: number = 500): UseFoodSearchResult => {

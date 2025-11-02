@@ -19,7 +19,7 @@ interface FoodSearchBarProps {
 }
 
 export const FoodSearchBar: React.FC<FoodSearchBarProps> = ({
-  placeholder = 'Search USDA database...',
+  placeholder = 'Search foods...',
   onFoodSelected,
   autoFocus = false,
 }) => {
@@ -73,13 +73,13 @@ export const FoodSearchBar: React.FC<FoodSearchBarProps> = ({
           <Text variant="caption" color={colors.textSecondary}>
             {item.serving_size} {item.serving_unit}
           </Text>
-          {item.source && (
+          {item.protein_g > 0 && (
             <>
               <Text variant="caption" color={colors.textSecondary}>
                 {' • '}
               </Text>
-              <Text variant="caption" color={colors.primary}>
-                {item.source === 'usda' ? 'USDA' : item.source === 'database' ? 'DB' : 'OFF'}
+              <Text variant="caption" color={colors.textSecondary}>
+                {Math.round(item.protein_g)}g protein
               </Text>
             </>
           )}
