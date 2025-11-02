@@ -26,7 +26,6 @@ export const mapUnifiedFoodToEntry = (food: UnifiedFood): CreateFoodEntryInput =
   sugar_g: null,
   meal_type: null,
   photo_url: null,
-  consumed_at: new Date().toISOString(),
 });
 
 /**
@@ -47,7 +46,6 @@ export const mapRecentFoodToEntry = (food: RecentFood): CreateFoodEntryInput => 
   sugar_g: null,
   meal_type: null,
   photo_url: null,
-  consumed_at: new Date().toISOString(),
 });
 
 /**
@@ -68,7 +66,6 @@ export const mapFavoriteFoodToEntry = (food: FavoriteFood): CreateFoodEntryInput
   sugar_g: null,
   meal_type: null,
   photo_url: null,
-  consumed_at: new Date().toISOString(),
 });
 
 /**

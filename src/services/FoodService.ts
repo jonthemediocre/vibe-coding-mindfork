@@ -28,7 +28,7 @@ export class FoodService {
         .from('food_entries')
         .select('*')
         .eq('user_id', userId)
-        .order('consumed_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (options?.date) {
         const startOfDay = new Date(options.date);
@@ -37,8 +37,8 @@ export class FoodService {
         endOfDay.setHours(23, 59, 59, 999);
 
         query = query
-          .gte('consumed_at', startOfDay.toISOString())
-          .lte('consumed_at', endOfDay.toISOString());
+          .gte('created_at', startOfDay.toISOString())
+          .lte('created_at', endOfDay.toISOString());
       }
 
       if (options?.limit) {
@@ -94,7 +94,6 @@ export class FoodService {
             sugar_g: input.sugar_g,
             meal_type: input.meal_type,
             photo_url: input.photo_url,
-            consumed_at: input.consumed_at || new Date().toISOString(),
           };
 
           const { data, error } = await supabase
@@ -133,7 +132,6 @@ export class FoodService {
       fat_g: 0,
       fiber_g: 0,
       meal_type: mealType as any,
-      consumed_at: new Date().toISOString(),
     });
   }
 
@@ -312,7 +310,7 @@ export class FoodService {
         .from('food_entries')
         .select('*')
         .eq('user_id', userId)
-        .order('consumed_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) {
@@ -360,7 +358,6 @@ export class FoodService {
         carbs_g: fav.carbs,
         fat_g: fav.fat,
         fiber_g: fav.fiber,
-        consumed_at: fav.created_at,
         created_at: fav.created_at,
         meal_type: 'snack', // Default, will be set when logging
       }));
@@ -424,9 +421,9 @@ export class FoodService {
    * Note: This is automatic when creating food entries
    */
   static async addToRecentFoods(userId: string, foodId: string): Promise<ApiResponse<void>> {
-    // No-op for now since food entries are automatically tracked by consumed_at
+    // No-op for now since food entries are automatically tracked by created_at
     console.log('[FoodService] addToRecentFoods called for:', { userId, foodId });
-    return { message: 'Food automatically tracked via consumed_at timestamp' };
+    return { message: 'Food automatically tracked via created_at timestamp' };
   }
 
   /**
@@ -485,7 +482,6 @@ export class FoodService {
           carbs_g: unified.carbs_g,
           fat_g: unified.fat_g,
           fiber_g: unified.fiber_g || 0,
-          consumed_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
           meal_type: 'snack',
           serving_size: `${unified.serving_size} ${unified.serving_unit}`,

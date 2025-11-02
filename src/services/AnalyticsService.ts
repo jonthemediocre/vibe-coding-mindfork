@@ -65,9 +65,9 @@ export class AnalyticsService {
         .from('food_entries')
         .select('*')
         .eq('user_id', userId)
-        .gte('consumed_at', startDate.toISOString())
-        .lte('consumed_at', endDate.toISOString())
-        .order('consumed_at', { ascending: true });
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString())
+        .order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching food entries:', error);
@@ -127,7 +127,7 @@ export class AnalyticsService {
     const dailyMap = new Map<string, DailyNutritionData>();
 
     entries.forEach((entry) => {
-      const date = new Date(entry.consumed_at).toISOString().split('T')[0];
+      const date = new Date(entry.created_at).toISOString().split('T')[0];
 
       if (!dailyMap.has(date)) {
         dailyMap.set(date, {

@@ -73,7 +73,7 @@ export const FoodScreen: React.FC = () => {
           fiber: entry.fiber_g,
           serving_size: parseInt(entry.serving_size.split(' ')[0]) || 1,
           serving_unit: entry.serving_size.split(' ').slice(1).join(' ') || "serving",
-          last_logged: entry.consumed_at,
+          last_logged: entry.created_at,
           frequency: 1,
         }));
         setRecentFoods(mapped);
@@ -103,7 +103,7 @@ export const FoodScreen: React.FC = () => {
           fiber: entry.fiber_g,
           serving_size: parseInt(entry.serving_size.split(' ')[0]) || 1,
           serving_unit: entry.serving_size.split(' ').slice(1).join(' ') || "serving",
-          created_at: entry.consumed_at,
+          created_at: entry.created_at,
         }));
         setFavoriteFoods(mapped);
       }

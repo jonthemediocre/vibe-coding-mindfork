@@ -19,7 +19,7 @@ export interface FoodEntry {
   meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null;
   photo_url?: string | null;
   barcode?: string | null; // UPC/EAN barcode for local caching
-  consumed_at: string;
+  consumed_at?: string; // Optional - database uses created_at
   created_at: string;
 }
 
