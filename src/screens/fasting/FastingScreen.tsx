@@ -27,32 +27,22 @@ export const FastingScreen: React.FC = () => {
 
   const [selectedPreset, setSelectedPreset] = useState(FASTING_PRESETS[0]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [customStartHour, setCustomStartHour] = useState(20);
-  const [customEndHour, setCustomEndHour] = useState(12);
+  const [fastingStartHour, setFastingStartHour] = useState(20);
 
-  // Update custom hours when preset changes
+  // Calculate end hour based on start hour and selected preset duration
+  const fastingEndHour = (fastingStartHour + selectedPreset.fastingHours) % 24;
+
+  // When user drags the start handle, update start time (end time moves with it to maintain duration)
   const handleStartHourChange = (hour: number) => {
-    setCustomStartHour(hour);
-    // Calculate fasting hours from new start time
-    let fastingHours = customEndHour - hour;
-    if (fastingHours < 0) fastingHours += 24;
-    // Find matching preset or keep custom
-    const matchingPreset = FASTING_PRESETS.find(p => p.fastingHours === fastingHours);
-    if (matchingPreset) {
-      setSelectedPreset(matchingPreset);
-    }
+    setFastingStartHour(hour);
   };
 
+  // When user drags the end handle, calculate new start time to maintain the preset duration
   const handleEndHourChange = (hour: number) => {
-    setCustomEndHour(hour);
-    // Calculate fasting hours from new end time
-    let fastingHours = hour - customStartHour;
-    if (fastingHours < 0) fastingHours += 24;
-    // Find matching preset or keep custom
-    const matchingPreset = FASTING_PRESETS.find(p => p.fastingHours === fastingHours);
-    if (matchingPreset) {
-      setSelectedPreset(matchingPreset);
-    }
+    // Work backwards from end time to maintain the preset duration
+    let newStartHour = hour - selectedPreset.fastingHours;
+    if (newStartHour < 0) newStartHour += 24;
+    setFastingStartHour(newStartHour);
   };
 
   const handleStartFasting = async () => {
@@ -163,8 +153,8 @@ export const FastingScreen: React.FC = () => {
       {/* BEAUTIFUL CIRCULAR FASTING DIAL - 24-hour clock face */}
       <Card elevation={2} style={styles.dialCard}>
         <CircularFastingDial
-          fastingStartHour={customStartHour}
-          fastingEndHour={customEndHour}
+          fastingStartHour={fastingStartHour}
+          fastingEndHour={fastingEndHour}
           onStartChange={handleStartHourChange}
           onEndChange={handleEndHourChange}
           currentTime={new Date()}
