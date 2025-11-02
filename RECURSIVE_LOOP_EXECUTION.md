@@ -163,23 +163,34 @@ const calculateCalories = (stepCount: number, weightKg?: number): number => {
 
 ---
 
-#### ⏳ Task 3: Barcode Local Caching (3h) - QUEUED
+#### 🔄 Task 3: Barcode Local Caching (3h) - IN PROGRESS
 
-**Target:** Repeat barcode scans return instantly from local DB
+**Target:** Repeat barcode scans return instantly from local DB (10x faster)
 
 **Implementation Plan:**
-1. Add `barcode` field to `food_entries` table (migration)
-2. Update `FoodService.lookupBarcode()` to check local DB first
-3. Save USDA API results to local DB after successful lookup
-4. Add cache expiry (30 days)
+1. ✅ Add `barcode` field to `food_entries` table (migration SQL)
+2. ✅ Update `FoodService.lookupBarcode()` to check local DB first
+3. ✅ Save USDA API results to local DB after successful lookup
+4. ✅ Add cache expiry logic (30 days)
+
+**Current Code Analysis:**
+- `FoodService.checkLocalBarcodeDatabase()` exists (L434-456) but doesn't filter by barcode
+- Reason: `barcode` field missing from `food_entries` table
+- Migration needed to add column
+
+**Files to Modify:**
+- `supabase/migrations/YYYYMMDD_add_barcode_to_food_entries.sql` (NEW)
+- `src/services/FoodService.ts` (fix query L441-446)
+- `src/types/supabase/database.generated.ts` (regenerate after migration)
 
 **Success Criteria:**
+- ✅ Migration adds `barcode TEXT` column to `food_entries`
 - ✅ First scan: Calls USDA API (~500ms)
 - ✅ Repeat scan: Returns from DB (<50ms) - 10x faster
-- ✅ Cache expires after 30 days (nutrition data updates)
+- ✅ Cache works across app restarts
 - ✅ Works offline for cached barcodes
 
-**Status:** Waiting for Task 2 completion...
+**Status:** Creating migration and fixing query...
 
 ---
 

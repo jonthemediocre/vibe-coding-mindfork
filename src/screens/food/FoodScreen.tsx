@@ -14,6 +14,8 @@ import { useTheme } from "../../app-components/components/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { AIFoodScanService } from "../../services/AIFoodScanService";
+import { FoodService } from "../../services/FoodService";
+import { QuickAddModal } from "../../components/food/QuickAddModal";
 import type { CreateFoodEntryInput } from "../../types/models";
 
 const MEAL_TIMES = ["Breakfast", "Lunch", "Dinner", "Snacks"];
@@ -34,6 +36,7 @@ export const FoodScreen: React.FC = () => {
   } = useFoodTracking();
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
 
@@ -83,8 +86,23 @@ export const FoodScreen: React.FC = () => {
 
   const handleQuickAdd = () => {
     setShowAddModal(false);
-    // TODO: Implement quick add - for now just close modal
-    // This would show a form to manually enter calories
+    setShowQuickAddModal(true);
+  };
+
+  const handleQuickAddSubmit = async (calories: number, mealType: string) => {
+    if (!user?.id) return;
+
+    try {
+      const result = await FoodService.quickAddCalories(user.id, calories, mealType);
+
+      if (result.data) {
+        // Optimistically update UI by refetching entries
+        // The useFoodTracking hook will handle the state update
+        await addFoodEntry(result.data as CreateFoodEntryInput);
+      }
+    } catch (error) {
+      console.error('Quick add failed:', error);
+    }
   };
 
   const handleDeleteEntry = async (entryId: string) => {
@@ -555,6 +573,13 @@ export const FoodScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Quick Add Modal */}
+      <QuickAddModal
+        visible={showQuickAddModal}
+        onClose={() => setShowQuickAddModal(false)}
+        onSubmit={handleQuickAddSubmit}
+      />
 
       {/* Scanning Modal */}
       <Modal

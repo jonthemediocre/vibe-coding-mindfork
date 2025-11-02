@@ -116,6 +116,28 @@ export class FoodService {
   }
 
   /**
+   * Quick add calories - convenient method for logging calories without full macro breakdown
+   * Creates a generic food entry with just calories and meal type
+   */
+  static async quickAddCalories(
+    userId: string,
+    calories: number,
+    mealType: string
+  ): Promise<ApiResponse<FoodEntry>> {
+    return this.createFoodEntry(userId, {
+      food_name: `Quick Add - ${calories} calories`,
+      serving_size: '1 serving',
+      calories,
+      protein_g: 0,
+      carbs_g: 0,
+      fat_g: 0,
+      fiber_g: 0,
+      meal_type: mealType as any,
+      consumed_at: new Date().toISOString(),
+    });
+  }
+
+  /**
    * Update an existing food entry
    */
   static async updateFoodEntry(
@@ -399,7 +421,7 @@ export class FoodService {
         // Convert to our format
         const unified = USDAFoodDataService.toUnifiedFood(verifiedFood);
 
-        // Convert to FoodEntry format
+        // Convert to FoodEntry format with barcode for caching
         const foodEntry: FoodEntry = {
           id: `verified-${verifiedFood.fdcId}`,
           user_id: '', // Will be set when logged
@@ -412,10 +434,9 @@ export class FoodService {
           consumed_at: new Date().toISOString(),
           created_at: new Date().toISOString(),
           meal_type: 'snack',
-          serving_size: `${unified.serving_size} ${unified.serving_unit}`
+          serving_size: `${unified.serving_size} ${unified.serving_unit}`,
+          barcode: barcode, // Store barcode for local caching
         };
-
-        // TODO: Optionally save to local database for faster future lookups
 
         return { data: foodEntry };
       }
@@ -430,6 +451,7 @@ export class FoodService {
 
   /**
    * Check local database for barcode
+   * Returns cached food entry if user has scanned this barcode before
    */
   private static async checkLocalBarcodeDatabase(barcode: string): Promise<FoodEntry | null> {
     try {
@@ -437,13 +459,14 @@ export class FoodService {
       if (!user) return null;
 
       // Check if user has logged this barcode before
-      // Note: Requires barcode field in food_entries table
       const { data, error } = await supabase
         .from('food_entries')
         .select('*')
         .eq('user_id', user.id)
+        .eq('barcode', barcode)
+        .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return null;
