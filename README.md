@@ -6,7 +6,7 @@
 
 🚀 **99% PRODUCTION READY - VERIFIED DATABASE INTEGRATION COMPLETE!**
 
-**Latest Update (2025-11-02 - MEAL PLANNING NOW FUNCTIONAL):**
+**Latest Update (2025-11-02 - MEAL PLANNING NOW FUNCTIONAL + DATABASE MIGRATION READY):**
 - 🎉 **MEAL PLANNING SYSTEM NOW WORKS!** - Fixed critical schema mismatches
 - ✅ **7-Day Calendar View** - Browse meals by week with visual calendar
 - ✅ **Database Schema Fixed** - Now uses `planned_meals` table correctly with `meal_plan_id`
@@ -15,8 +15,16 @@
 - ✅ **Daily Macro Tracking** - View calories, protein, carbs, fat for each day
 - ✅ **Meal Slot Organization** - Breakfast, Lunch, Dinner, Snacks for each day
 - 🔧 **Auto Meal Plan Creation** - Automatically creates meal plan when adding first meal
-- ⚠️ **Templates Temporarily Disabled** - Being redesigned for new schema (coming soon)
-- ⚠️ **Shopping List Temporarily Disabled** - Being redesigned for new schema (coming soon)
+- 📝 **Migration Created** - SQL file ready in `database/migrations/` for recipes & ingredients
+- 🚀 **Run Migration** - See `database/README.md` for instructions to enable full features
+- ⚠️ **After Migration** - Shopping lists and templates will be fully functional
+
+**What the Migration Adds:**
+- 📚 Recipes table with full nutritional data and instructions
+- 🛒 Recipe ingredients table for automatic shopping list generation
+- 🔗 Optional `recipe_id` and `food_entry_id` references in planned_meals
+- 🌐 Community recipe sharing capability (public/private recipes)
+- ✅ Fully backward compatible - existing data unaffected
 
 **Previous Update (2025-11-02 - THEME COLOR CONSISTENCY COMPLETE):**
 - 🎨 **FASTING & FOOD PAGES NOW USE OFFICIAL THEME COLORS!** - No more hardcoded colors
