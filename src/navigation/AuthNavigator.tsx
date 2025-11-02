@@ -62,6 +62,7 @@ export function AuthNavigator() {
   return (
     <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
+        id={undefined}
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",

@@ -43,6 +43,7 @@ export function TabNavigator() {
 
   return (
     <Tab.Navigator
+      id={undefined}
       screenOptions={{
         tabBarStyle: {
           backgroundColor: colors.background,

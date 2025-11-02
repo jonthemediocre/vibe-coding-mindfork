@@ -13,6 +13,7 @@ export function CoachStackNavigator() {
 
   return (
     <Stack.Navigator
+      id={undefined}
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.surface,

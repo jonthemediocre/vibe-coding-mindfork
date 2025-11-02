@@ -13,6 +13,7 @@ export function SettingsStackNavigator() {
 
   return (
     <Stack.Navigator
+      id={undefined}
       screenOptions={{
         headerStyle: {
           backgroundColor: colors.surface,

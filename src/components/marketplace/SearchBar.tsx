@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInput } from 'react-native';
+import { View, StyleSheet, TextInput, Text, TouchableOpacity } from 'react-native';
 import { useThemeColors } from '../../ui';
 
 interface SearchBarProps {
@@ -74,6 +74,3 @@ const styles = StyleSheet.create({
     color: '#999',
   },
 });
-
-// Fix missing imports
-import { Text, TouchableOpacity } from 'react-native';
