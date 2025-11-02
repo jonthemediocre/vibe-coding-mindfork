@@ -106,8 +106,14 @@ export const FoodScreen: React.FC = () => {
   };
 
   const handleDeleteEntry = async (entryId: string) => {
-    await deleteFoodEntry(entryId);
-    setShowDeleteConfirm(null);
+    try {
+      await deleteFoodEntry(entryId);
+      setShowDeleteConfirm(null);
+    } catch (err) {
+      // Error is handled by useFoodTracking hook
+      console.error('[FoodScreen] Failed to delete entry:', err);
+      setShowDeleteConfirm(null);
+    }
   };
 
   const getMealIcon = (mealType: string) => {

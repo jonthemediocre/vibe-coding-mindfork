@@ -75,12 +75,23 @@ export const FastingScreen: React.FC = () => {
   };
 
   const handleStartFasting = async () => {
-    await startFasting(selectedPreset.fastingHours);
+    try {
+      await startFasting(selectedPreset.fastingHours);
+    } catch (err) {
+      // Error is handled by useFastingTimer hook
+      console.error('[FastingScreen] Failed to start fasting:', err);
+    }
   };
 
   const handleEndFasting = async () => {
-    await endFasting();
-    setShowConfirmEnd(false);
+    try {
+      await endFasting();
+      setShowConfirmEnd(false);
+    } catch (err) {
+      // Error is handled by useFastingTimer hook
+      console.error('[FastingScreen] Failed to end fasting:', err);
+      setShowConfirmEnd(false);
+    }
   };
 
   const remainingHours = activeSession

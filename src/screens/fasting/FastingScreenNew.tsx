@@ -56,10 +56,14 @@ export const FastingScreenNew: React.FC = () => {
   const durationMinutes = selectedPreset.fastingHours * 60;
 
   const handleStartFasting = async () => {
-    const success = await startFasting(selectedPreset.fastingHours);
-    if (!success && error) {
-      showAlert.error("Error", error);
-      clearError();
+    try {
+      const success = await startFasting(selectedPreset.fastingHours);
+      if (!success && error) {
+        showAlert.error("Error", error);
+        clearError();
+      }
+    } catch (err) {
+      console.error('[FastingScreenNew] Failed to start fasting:', err);
     }
   };
 
@@ -68,10 +72,14 @@ export const FastingScreenNew: React.FC = () => {
       "End Fasting",
       `You've fasted for ${elapsedHours.toFixed(1)} hours. End this session?`,
       async () => {
-        const success = await endFasting();
-        if (!success && error) {
-          showAlert.error("Error", error);
-          clearError();
+        try {
+          const success = await endFasting();
+          if (!success && error) {
+            showAlert.error("Error", error);
+            clearError();
+          }
+        } catch (err) {
+          console.error('[FastingScreenNew] Failed to end fasting:', err);
         }
       }
     );
@@ -82,10 +90,14 @@ export const FastingScreenNew: React.FC = () => {
       "Cancel Fasting",
       "Are you sure you want to cancel this fasting session?",
       async () => {
-        const success = await cancelFasting();
-        if (!success && error) {
-          showAlert.error("Error", error);
-          clearError();
+        try {
+          const success = await cancelFasting();
+          if (!success && error) {
+            showAlert.error("Error", error);
+            clearError();
+          }
+        } catch (err) {
+          console.error('[FastingScreenNew] Failed to cancel fasting:', err);
         }
       }
     );
