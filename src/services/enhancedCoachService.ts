@@ -49,18 +49,36 @@ export class EnhancedCoachService {
     }
   }
 
-  static async getChatHistory(coachId: string) {
-    devLog('Getting chat history for coach:', coachId);
-    
+  /**
+   * Get chat history for a specific coach and user
+   * Returns last 50 messages in chronological order
+   */
+  static async getChatHistory(coachId: string, userId: string, limit = 50) {
+    devLog('Getting chat history for coach:', coachId, 'user:', userId);
+
     if (devConfig.useCoachProfiles) {
       devLog('Using coach profile chat history');
-      return []; // Empty history for now
+      // In dev mode, still try to fetch real history
     }
-    
+
     try {
-      // Real API call would go here
-      devLog('Would call real API for chat history');
-      return [];
+      const { supabase } = await import('../lib/supabase');
+
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('coach_id', coachId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        devError('Failed to fetch chat history:', error);
+        return []; // Fallback to empty
+      }
+
+      // Reverse to get chronological order (oldest first)
+      return data?.reverse() || [];
     } catch (error) {
       devError('Failed to get chat history:', error);
       return []; // Fallback to empty
