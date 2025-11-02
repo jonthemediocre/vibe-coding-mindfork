@@ -146,11 +146,11 @@ export const FoodScreen: React.FC = () => {
             colors={
               remainingCalories >= 0
                 ? isDark
-                  ? ["#065F46", "#047857"]
-                  : ["#D1FAE5", "#A7F3D0"]
+                  ? [colors.success, colors.success]
+                  : [colors.success + "30", colors.success + "50"]
                 : isDark
-                ? ["#991B1B", "#B91C1C"]
-                : ["#FEE2E2", "#FECACA"]
+                ? [colors.error, colors.error]
+                : [colors.error + "30", colors.error + "50"]
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -162,51 +162,51 @@ export const FoodScreen: React.FC = () => {
             <View className="flex-row justify-between items-center mb-4">
               <View>
                 <Text
-                  className={`text-sm font-semibold mb-1 ${
-                    isDark
-                      ? remainingCalories >= 0
-                        ? "text-green-300"
-                        : "text-red-300"
-                      : remainingCalories >= 0
-                      ? "text-green-800"
-                      : "text-red-800"
-                  }`}
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "600",
+                    marginBottom: 4,
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                    opacity: 0.9,
+                  }}
                 >
                   {remainingCalories >= 0 ? "REMAINING" : "OVER GOAL"}
                 </Text>
                 <Text
-                  className={`text-5xl font-bold ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
+                  style={{
+                    fontSize: 48,
+                    fontWeight: "bold",
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                  }}
                 >
                   {Math.abs(remainingCalories)}
                 </Text>
                 <Text
-                  className={`text-base ${
-                    isDark
-                      ? remainingCalories >= 0
-                        ? "text-green-200"
-                        : "text-red-200"
-                      : remainingCalories >= 0
-                      ? "text-green-700"
-                      : "text-red-700"
-                  }`}
+                  style={{
+                    fontSize: 16,
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                    opacity: 0.8,
+                  }}
                 >
                   calories
                 </Text>
               </View>
               <View className="items-end">
                 <Text
-                  className={`text-base ${
-                    isDark ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  style={{
+                    fontSize: 16,
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                    opacity: 0.9,
+                  }}
                 >
                   {consumedCalories} / {goalCalories}
                 </Text>
                 <Text
-                  className={`text-sm ${
-                    isDark ? "text-gray-400" : "text-gray-500"
-                  }`}
+                  style={{
+                    fontSize: 14,
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                    opacity: 0.7,
+                  }}
                 >
                   consumed
                 </Text>
@@ -227,48 +227,63 @@ export const FoodScreen: React.FC = () => {
             <View className="flex-row justify-around mt-6 pt-6 border-t border-white/20">
               <View className="items-center">
                 <Text
-                  className={`text-2xl font-bold ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                  }}
                 >
                   {Math.round(dailyStats?.total_protein || 0)}g
                 </Text>
                 <Text
-                  className={`text-xs mt-1 ${
-                    isDark ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  style={{
+                    fontSize: 12,
+                    marginTop: 4,
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                    opacity: 0.8,
+                  }}
                 >
                   Protein
                 </Text>
               </View>
               <View className="items-center">
                 <Text
-                  className={`text-2xl font-bold ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                  }}
                 >
                   {Math.round(dailyStats?.total_carbs || 0)}g
                 </Text>
                 <Text
-                  className={`text-xs mt-1 ${
-                    isDark ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  style={{
+                    fontSize: 12,
+                    marginTop: 4,
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                    opacity: 0.8,
+                  }}
                 >
                   Carbs
                 </Text>
               </View>
               <View className="items-center">
                 <Text
-                  className={`text-2xl font-bold ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                  }}
                 >
                   {Math.round(dailyStats?.total_fat || 0)}g
                 </Text>
                 <Text
-                  className={`text-xs mt-1 ${
-                    isDark ? "text-gray-300" : "text-gray-600"
-                  }`}
+                  style={{
+                    fontSize: 12,
+                    marginTop: 4,
+                    color: remainingCalories >= 0 ? colors.onPrimary : "#FFFFFF",
+                    opacity: 0.8,
+                  }}
                 >
                   Fat
                 </Text>
@@ -351,7 +366,7 @@ export const FoodScreen: React.FC = () => {
                     <Ionicons
                       name="add"
                       size={32}
-                      color={isDark ? "#6B7280" : "#9CA3AF"}
+                      color={colors.textSecondary}
                     />
                     <Text className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                       Add food
@@ -364,8 +379,16 @@ export const FoodScreen: React.FC = () => {
         </View>
 
         {error && (
-          <View className="mx-5 mb-6 bg-red-100 dark:bg-red-900/30 rounded-2xl p-4">
-            <Text className="text-red-800 dark:text-red-200 text-sm">
+          <View
+            style={{
+              marginHorizontal: 20,
+              marginBottom: 24,
+              backgroundColor: isDark ? colors.error + "30" : colors.error + "15",
+              borderRadius: 16,
+              padding: 16,
+            }}
+          >
+            <Text style={{ color: colors.error, fontSize: 14 }}>
               {error}
             </Text>
           </View>
@@ -376,9 +399,21 @@ export const FoodScreen: React.FC = () => {
       <View className="absolute bottom-6 right-6">
         <Pressable
           onPress={handleAddFood}
-          className="bg-purple-500 rounded-full w-16 h-16 items-center justify-center shadow-lg"
+          style={{
+            backgroundColor: colors.primary,
+            borderRadius: 32,
+            width: 64,
+            height: 64,
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
         >
-          <Ionicons name="add" size={32} color="white" />
+          <Ionicons name="add" size={32} color="#FFFFFF" />
         </Pressable>
       </View>
 
@@ -401,7 +436,7 @@ export const FoodScreen: React.FC = () => {
                 <Ionicons
                   name="close"
                   size={28}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                  color={colors.textSecondary}
                 />
               </Pressable>
             </View>
@@ -409,18 +444,24 @@ export const FoodScreen: React.FC = () => {
             <View className="gap-3">
               <Pressable
                 onPress={handleScanFood}
-                className="bg-purple-500 rounded-2xl p-5 flex-row items-center"
+                style={{
+                  backgroundColor: colors.primary,
+                  borderRadius: 16,
+                  padding: 20,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
               >
-                <Ionicons name="camera" size={28} color="white" />
+                <Ionicons name="camera" size={28} color="#FFFFFF" />
                 <View className="ml-4 flex-1">
-                  <Text className="text-lg font-bold text-white">
+                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#FFFFFF" }}>
                     Scan Food
                   </Text>
-                  <Text className="text-sm text-purple-100 mt-1">
+                  <Text style={{ fontSize: 14, color: "#FFFFFF", opacity: 0.8, marginTop: 4 }}>
                     Take a photo to analyze
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={24} color="white" />
+                <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
               </Pressable>
 
               <Pressable
@@ -430,7 +471,7 @@ export const FoodScreen: React.FC = () => {
                 <Ionicons
                   name="search"
                   size={28}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                  color={colors.textSecondary}
                 />
                 <View className="ml-4 flex-1">
                   <Text className="text-lg font-bold text-gray-900 dark:text-white">
@@ -443,7 +484,7 @@ export const FoodScreen: React.FC = () => {
                 <Ionicons
                   name="chevron-forward"
                   size={24}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                  color={colors.textSecondary}
                 />
               </Pressable>
 
@@ -454,7 +495,7 @@ export const FoodScreen: React.FC = () => {
                 <Ionicons
                   name="flash"
                   size={28}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                  color={colors.textSecondary}
                 />
                 <View className="ml-4 flex-1">
                   <Text className="text-lg font-bold text-gray-900 dark:text-white">
@@ -467,7 +508,7 @@ export const FoodScreen: React.FC = () => {
                 <Ionicons
                   name="chevron-forward"
                   size={24}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                  color={colors.textSecondary}
                 />
               </Pressable>
             </View>
@@ -493,9 +534,14 @@ export const FoodScreen: React.FC = () => {
             <View className="gap-3">
               <Pressable
                 onPress={() => showDeleteConfirm && handleDeleteEntry(showDeleteConfirm)}
-                className="bg-red-500 rounded-2xl py-4 items-center"
+                style={{
+                  backgroundColor: colors.error,
+                  borderRadius: 16,
+                  paddingVertical: 16,
+                  alignItems: "center",
+                }}
               >
-                <Text className="text-white text-lg font-bold">Delete</Text>
+                <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>Delete</Text>
               </Pressable>
               <Pressable
                 onPress={() => setShowDeleteConfirm(null)}
@@ -518,7 +564,7 @@ export const FoodScreen: React.FC = () => {
       >
         <View className="flex-1 justify-center items-center bg-black/50">
           <View className="bg-white dark:bg-gray-900 rounded-3xl p-8 items-center">
-            <ActivityIndicator size="large" color="#8B5CF6" />
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text className="text-lg font-semibold text-gray-900 dark:text-white mt-4">
               Analyzing food...
             </Text>

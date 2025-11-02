@@ -125,11 +125,11 @@ export const FastingScreen: React.FC = () => {
           colors={
             activeSession
               ? isDark
-                ? ["#065F46", "#047857", "#059669"]
-                : ["#D1FAE5", "#A7F3D0", "#6EE7B7"]
+                ? [colors.success, colors.success, colors.success]
+                : [colors.success + "20", colors.success + "40", colors.success + "60"]
               : isDark
-              ? ["#374151", "#4B5563", "#6B7280"]
-              : ["#F3F4F6", "#E5E7EB", "#D1D5DB"]
+              ? [colors.secondary, colors.secondary, colors.secondary]
+              : [colors.surface, colors.surface, colors.surface]
           }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -144,28 +144,38 @@ export const FastingScreen: React.FC = () => {
             <>
               {/* Active Timer */}
               <Text
-                className={`text-sm font-semibold mb-2 ${
-                  isDark ? "text-green-300" : "text-green-800"
-                }`}
+                style={{
+                  fontSize: 12,
+                  fontWeight: "600",
+                  marginBottom: 8,
+                  color: activeSession ? colors.onPrimary : colors.text,
+                  opacity: 0.9,
+                }}
               >
                 TIME REMAINING
               </Text>
               <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
                 <Text
-                  className={`text-7xl font-bold ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
+                  style={{
+                    fontSize: 72,
+                    fontWeight: "bold",
+                    color: activeSession ? colors.onPrimary : colors.text,
+                  }}
                 >
                   {remainingTime.hours}
-                  <Text className="text-5xl">h</Text>
+                  <Text style={{ fontSize: 48 }}>h</Text>
                 </Text>
                 <Text
-                  className={`text-4xl font-semibold text-center ${
-                    isDark ? "text-green-200" : "text-green-700"
-                  }`}
+                  style={{
+                    fontSize: 36,
+                    fontWeight: "600",
+                    textAlign: "center",
+                    color: activeSession ? colors.onPrimary : colors.text,
+                    opacity: 0.8,
+                  }}
                 >
                   {remainingTime.minutes}
-                  <Text className="text-2xl">m</Text>
+                  <Text style={{ fontSize: 24 }}>m</Text>
                 </Text>
               </Animated.View>
 
@@ -177,9 +187,12 @@ export const FastingScreen: React.FC = () => {
               </View>
 
               <Text
-                className={`text-sm font-medium ${
-                  isDark ? "text-green-200" : "text-green-800"
-                }`}
+                style={{
+                  fontSize: 14,
+                  fontWeight: "500",
+                  color: activeSession ? colors.onPrimary : colors.text,
+                  opacity: 0.8,
+                }}
               >
                 {elapsedTime.hours}h {elapsedTime.minutes}m elapsed •{" "}
                 {Math.round(progress)}% complete
@@ -187,9 +200,12 @@ export const FastingScreen: React.FC = () => {
 
               {activeSession.start_time && (
                 <Text
-                  className={`text-xs mt-2 ${
-                    isDark ? "text-green-300/70" : "text-green-700/70"
-                  }`}
+                  style={{
+                    fontSize: 12,
+                    marginTop: 8,
+                    color: activeSession ? colors.onPrimary : colors.text,
+                    opacity: 0.7,
+                  }}
                 >
                   Started at{" "}
                   {new Date(activeSession.start_time).toLocaleTimeString([], {
@@ -205,39 +221,55 @@ export const FastingScreen: React.FC = () => {
               <Ionicons
                 name="time-outline"
                 size={48}
-                color={isDark ? "#9CA3AF" : "#6B7280"}
+                color={colors.textSecondary}
               />
               <Text
-                className={`text-2xl font-bold mt-4 ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
+                style={{
+                  fontSize: 24,
+                  fontWeight: "bold",
+                  marginTop: 16,
+                  color: colors.text,
+                }}
               >
                 {selectedPreset.label}
               </Text>
               <Text
-                className={`text-base mt-2 ${
-                  isDark ? "text-gray-300" : "text-gray-600"
-                }`}
+                style={{
+                  fontSize: 16,
+                  marginTop: 8,
+                  color: colors.textSecondary,
+                }}
               >
                 {selectedPreset.fastingHours} hours fasting •{" "}
                 {selectedPreset.eatingHours} hours eating
               </Text>
               <Text
-                className={`text-sm mt-1 ${
-                  isDark ? "text-gray-400" : "text-gray-500"
-                }`}
+                style={{
+                  fontSize: 14,
+                  marginTop: 4,
+                  color: colors.textSecondary,
+                  opacity: 0.8,
+                }}
               >
                 {selectedPreset.description}
               </Text>
 
               <Pressable
                 onPress={() => setShowPresetModal(true)}
-                className="mt-6 px-6 py-2 bg-white/20 rounded-full"
+                style={{
+                  marginTop: 24,
+                  paddingHorizontal: 24,
+                  paddingVertical: 8,
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  borderRadius: 20,
+                }}
               >
                 <Text
-                  className={`text-sm font-semibold ${
-                    isDark ? "text-white" : "text-gray-800"
-                  }`}
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: colors.text,
+                  }}
                 >
                   Change Plan
                 </Text>
@@ -251,9 +283,19 @@ export const FastingScreen: React.FC = () => {
           <View className="gap-3">
             <Pressable
               onPress={() => setShowConfirmEnd(true)}
-              className="bg-red-500 rounded-2xl py-5 items-center shadow-lg"
+              style={{
+                backgroundColor: colors.error,
+                borderRadius: 16,
+                paddingVertical: 20,
+                alignItems: "center",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 8,
+              }}
             >
-              <Text className="text-white text-lg font-bold">End Fast</Text>
+              <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>End Fast</Text>
             </Pressable>
             <Pressable
               onPress={cancelFasting}
@@ -268,24 +310,40 @@ export const FastingScreen: React.FC = () => {
           <Pressable
             onPress={handleStartFasting}
             disabled={isLoading}
-            className="bg-green-500 rounded-2xl py-5 items-center shadow-lg"
+            style={{
+              backgroundColor: colors.success,
+              borderRadius: 16,
+              paddingVertical: 20,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
           >
             {isLoading ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text className="text-white text-lg font-bold">Start Fast</Text>
+              <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>Start Fast</Text>
             )}
           </Pressable>
         )}
 
         {/* Info Cards */}
         <View className="mt-8 gap-4">
-          <View className="bg-purple-50 dark:bg-purple-900/20 rounded-2xl p-5">
+          <View
+            style={{
+              backgroundColor: isDark ? colors.primary + "20" : colors.primary + "15",
+              borderRadius: 16,
+              padding: 20,
+            }}
+          >
             <View className="flex-row items-center mb-2">
               <Ionicons
                 name="water-outline"
                 size={24}
-                color={isDark ? "#C084FC" : "#9333EA"}
+                color={colors.primary}
               />
               <Text className="text-lg font-bold text-gray-900 dark:text-white ml-3">
                 Stay Hydrated
@@ -296,12 +354,18 @@ export const FastingScreen: React.FC = () => {
             </Text>
           </View>
 
-          <View className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-5">
+          <View
+            style={{
+              backgroundColor: isDark ? colors.info + "20" : colors.info + "15",
+              borderRadius: 16,
+              padding: 20,
+            }}
+          >
             <View className="flex-row items-center mb-2">
               <Ionicons
                 name="restaurant-outline"
                 size={24}
-                color={isDark ? "#60A5FA" : "#3B82F6"}
+                color={colors.info}
               />
               <Text className="text-lg font-bold text-gray-900 dark:text-white ml-3">
                 Eating Window
@@ -315,8 +379,15 @@ export const FastingScreen: React.FC = () => {
         </View>
 
         {error && (
-          <View className="mt-4 bg-red-100 dark:bg-red-900/30 rounded-2xl p-4">
-            <Text className="text-red-800 dark:text-red-200 text-sm">
+          <View
+            style={{
+              marginTop: 16,
+              backgroundColor: isDark ? colors.error + "30" : colors.error + "15",
+              borderRadius: 16,
+              padding: 16,
+            }}
+          >
+            <Text style={{ color: colors.error, fontSize: 14 }}>
               {error}
             </Text>
           </View>
@@ -343,7 +414,7 @@ export const FastingScreen: React.FC = () => {
                 <Ionicons
                   name="close"
                   size={28}
-                  color={isDark ? "#9CA3AF" : "#6B7280"}
+                  color={colors.textSecondary}
                 />
               </Pressable>
             </View>
@@ -358,19 +429,26 @@ export const FastingScreen: React.FC = () => {
                       setSelectedPreset(preset);
                       setShowPresetModal(false);
                     }}
-                    className={`mb-4 p-5 rounded-2xl border-2 ${
-                      isSelected
-                        ? "bg-purple-100 dark:bg-purple-900/30 border-purple-500"
-                        : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                    }`}
+                    style={{
+                      marginBottom: 16,
+                      padding: 20,
+                      borderRadius: 16,
+                      borderWidth: 2,
+                      backgroundColor: isSelected
+                        ? isDark
+                          ? colors.primary + "30"
+                          : colors.primary + "15"
+                        : colors.surface,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    }}
                   >
                     <View className="flex-row items-center justify-between mb-2">
                       <Text
-                        className={`text-2xl font-bold ${
-                          isSelected
-                            ? "text-purple-600 dark:text-purple-400"
-                            : "text-gray-900 dark:text-white"
-                        }`}
+                        style={{
+                          fontSize: 24,
+                          fontWeight: "bold",
+                          color: isSelected ? colors.primary : colors.text,
+                        }}
                       >
                         {preset.label}
                       </Text>
@@ -378,7 +456,7 @@ export const FastingScreen: React.FC = () => {
                         <Ionicons
                           name="checkmark-circle"
                           size={28}
-                          color={isDark ? "#C084FC" : "#9333EA"}
+                          color={colors.primary}
                         />
                       )}
                     </View>
@@ -415,9 +493,14 @@ export const FastingScreen: React.FC = () => {
             <View className="gap-3">
               <Pressable
                 onPress={handleEndFasting}
-                className="bg-green-500 rounded-2xl py-4 items-center"
+                style={{
+                  backgroundColor: colors.success,
+                  borderRadius: 16,
+                  paddingVertical: 16,
+                  alignItems: "center",
+                }}
               >
-                <Text className="text-white text-lg font-bold">
+                <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "bold" }}>
                   Complete Fast
                 </Text>
               </Pressable>
