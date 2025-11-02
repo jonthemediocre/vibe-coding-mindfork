@@ -53,14 +53,26 @@ export interface RecipeIngredient {
 
 export interface MealPlanEntry {
   id: string;
+  meal_plan_id: string;
   user_id: string;
-  date: string; // ISO date string (YYYY-MM-DD)
+  meal_name: string;
+  meal_description?: string | null;
   meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  food_entry_id?: string;
-  recipe_id?: string;
-  servings: number;
+  planned_date: string; // ISO date string (YYYY-MM-DD)
+  planned_time?: string | null;
+  estimated_calories?: number | null;
+  estimated_protein_g?: number | null;
+  estimated_carbs_g?: number | null;
+  estimated_fat_g?: number | null;
+  prep_time_minutes?: number | null;
+  difficulty_level?: 'easy' | 'medium' | 'hard' | null;
+  instructions?: string | null;
+  is_completed?: boolean | null;
+  completed_at?: string | null;
+  servings?: number;
   notes?: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface MealTemplate {
@@ -128,12 +140,12 @@ export class MealPlanningService {
   ): Promise<ApiResponse<MealPlanEntry[]>> {
     try {
       const { data, error } = await supabase
-        .from('meal_plans')
+        .from('planned_meals')
         .select('*')
         .eq('user_id', userId)
-        .gte('date', startDate)
-        .lte('date', endDate)
-        .order('date', { ascending: true })
+        .gte('planned_date', startDate)
+        .lte('planned_date', endDate)
+        .order('planned_date', { ascending: true })
         .order('meal_type', { ascending: true });
 
       if (error) {
@@ -149,6 +161,62 @@ export class MealPlanningService {
   }
 
   /**
+   * Get or create a default meal plan for the user
+   */
+  static async getOrCreateDefaultMealPlan(
+    userId: string,
+    startDate: string,
+    endDate: string
+  ): Promise<ApiResponse<string>> {
+    try {
+      // Check if user has an active meal plan for this period
+      const { data: existingPlans, error: fetchError } = await supabase
+        .from('meal_plans')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .gte('end_date', startDate)
+        .lte('start_date', endDate)
+        .limit(1);
+
+      if (fetchError) {
+        logger.error('Error fetching meal plans', fetchError);
+        return { error: fetchError.message };
+      }
+
+      if (existingPlans && existingPlans.length > 0) {
+        return { data: existingPlans[0].id };
+      }
+
+      // Create a new meal plan
+      const { data: newPlan, error: createError } = await supabase
+        .from('meal_plans')
+        .insert({
+          user_id: userId,
+          name: 'Weekly Meal Plan',
+          description: 'Auto-generated meal plan',
+          plan_type: 'custom',
+          start_date: startDate,
+          end_date: endDate,
+          is_active: true,
+          is_template: false,
+        })
+        .select('id')
+        .single();
+
+      if (createError) {
+        logger.error('Error creating meal plan', createError);
+        return { error: createError.message };
+      }
+
+      return { data: newPlan.id };
+    } catch (err) {
+      logger.error('Error in getOrCreateDefaultMealPlan', err as Error);
+      return { error: 'Failed to get or create meal plan' };
+    }
+  }
+
+  /**
    * Add a meal to a specific slot (date + meal type)
    */
   static async addMealToSlot(
@@ -156,30 +224,45 @@ export class MealPlanningService {
     date: string,
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack',
     options: {
-      foodEntryId?: string;
-      recipeId?: string;
+      mealName: string;
+      mealDescription?: string;
+      estimatedCalories?: number;
+      estimatedProteinG?: number;
+      estimatedCarbsG?: number;
+      estimatedFatG?: number;
       servings?: number;
       notes?: string;
     }
   ): Promise<ApiResponse<MealPlanEntry>> {
     try {
-      if (!options.foodEntryId && !options.recipeId) {
-        return { error: 'Must provide either foodEntryId or recipeId' };
+      // Get or create meal plan
+      const { data: mealPlanId, error: planError } = await this.getOrCreateDefaultMealPlan(
+        userId,
+        date,
+        date
+      );
+
+      if (planError || !mealPlanId) {
+        return { error: planError || 'Failed to get meal plan' };
       }
 
       const newMeal = {
+        meal_plan_id: mealPlanId,
         user_id: userId,
-        date,
+        meal_name: options.mealName,
+        meal_description: options.mealDescription || null,
         meal_type: mealType,
-        food_entry_id: options.foodEntryId || null,
-        recipe_id: options.recipeId || null,
+        planned_date: date,
+        estimated_calories: options.estimatedCalories || null,
+        estimated_protein_g: options.estimatedProteinG || null,
+        estimated_carbs_g: options.estimatedCarbsG || null,
+        estimated_fat_g: options.estimatedFatG || null,
         servings: options.servings || 1,
         notes: options.notes || null,
-        created_at: new Date().toISOString(),
       };
 
       const { data, error } = await supabase
-        .from('meal_plans')
+        .from('planned_meals')
         .insert(newMeal)
         .select()
         .single();
@@ -492,91 +575,15 @@ export class MealPlanningService {
 
   /**
    * Generate shopping list from meal plan
+   * TODO: Reimplement to work with planned_meals schema (no recipe_id)
    */
   static async generateShoppingList(
     userId: string,
     startDate: string,
     endDate: string
   ): Promise<ApiResponse<ShoppingListItem[]>> {
-    try {
-      // Get meal plan for date range
-      const { data: mealPlan, error: planError } = await this.getMealPlan(
-        userId,
-        startDate,
-        endDate
-      );
-
-      if (planError || !mealPlan) {
-        return { error: 'Failed to fetch meal plan' };
-      }
-
-      // Extract unique recipe IDs
-      const recipeIds = [...new Set(
-        mealPlan
-          .filter(meal => meal.recipe_id)
-          .map(meal => meal.recipe_id!)
-      )];
-
-      if (recipeIds.length === 0) {
-        return { data: [] };
-      }
-
-      // Fetch recipe details with ingredients
-      const { data: recipes, error: recipesError } = await supabase
-        .from('recipes')
-        .select(`
-          id,
-          name,
-          ingredients:recipe_ingredients(*)
-        `)
-        .in('id', recipeIds);
-
-      if (recipesError) {
-        return { error: 'Failed to fetch recipe details' };
-      }
-
-      // Aggregate ingredients
-      const ingredientMap: Map<string, ShoppingListItem> = new Map();
-
-      mealPlan.forEach(meal => {
-        if (!meal.recipe_id) return;
-
-        const recipe = recipes?.find(r => r.id === meal.recipe_id);
-        if (!recipe) return;
-
-        recipe.ingredients?.forEach((ingredient: any) => {
-          const key = ingredient.ingredient_name.toLowerCase();
-          const existing = ingredientMap.get(key);
-
-          if (existing) {
-            // Add to existing (simplified aggregation)
-            existing.recipes.push(recipe.name);
-            // Note: Real quantity aggregation would need unit conversion
-          } else {
-            ingredientMap.set(key, {
-              ingredient_name: ingredient.ingredient_name,
-              total_quantity: ingredient.quantity || '1',
-              unit: ingredient.unit || '',
-              recipes: [recipe.name],
-              checked: false,
-            });
-          }
-        });
-      });
-
-      const shoppingList = Array.from(ingredientMap.values());
-
-      // Cache in AsyncStorage for offline access
-      await AsyncStorage.setItem(
-        `@mindfork:shopping_list:${userId}`,
-        JSON.stringify(shoppingList)
-      );
-
-      return { data: shoppingList };
-    } catch (err) {
-      logger.error('Error in generateShoppingList', err as Error);
-      return { error: 'Failed to generate shopping list' };
-    }
+    // Temporarily disabled - schema mismatch
+    return { data: [], message: 'Shopping list feature temporarily unavailable' };
   }
 
   /**
@@ -645,39 +652,14 @@ export class MealPlanningService {
       let totalFat = 0;
       let totalFiber = 0;
 
-      // Aggregate macros from recipes and food entries
+      // Aggregate macros from planned meals (nutritional data is stored directly)
       for (const meal of mealPlan) {
-        if (meal.recipe_id) {
-          const { data: recipe } = await supabase
-            .from('recipes')
-            .select('calories_per_serving, protein_g, carbs_g, fat_g, fiber_g')
-            .eq('id', meal.recipe_id)
-            .single();
-
-          if (recipe) {
-            const servings = meal.servings || 1;
-            totalCalories += (recipe.calories_per_serving || 0) * servings;
-            totalProtein += (recipe.protein_g || 0) * servings;
-            totalCarbs += (recipe.carbs_g || 0) * servings;
-            totalFat += (recipe.fat_g || 0) * servings;
-            totalFiber += (recipe.fiber_g || 0) * servings;
-          }
-        } else if (meal.food_entry_id) {
-          const { data: foodEntry } = await supabase
-            .from('food_entries')
-            .select('calories, protein, carbs, fat, fiber')
-            .eq('id', meal.food_entry_id)
-            .single();
-
-          if (foodEntry) {
-            const servings = meal.servings || 1;
-            totalCalories += (foodEntry.calories || 0) * servings;
-            totalProtein += (foodEntry.protein || 0) * servings;
-            totalCarbs += (foodEntry.carbs || 0) * servings;
-            totalFat += (foodEntry.fat || 0) * servings;
-            totalFiber += (foodEntry.fiber || 0) * servings;
-          }
-        }
+        const servings = meal.servings || 1;
+        totalCalories += (meal.estimated_calories || 0) * servings;
+        totalProtein += (meal.estimated_protein_g || 0) * servings;
+        totalCarbs += (meal.estimated_carbs_g || 0) * servings;
+        totalFat += (meal.estimated_fat_g || 0) * servings;
+        // Note: fiber not tracked in planned_meals schema
       }
 
       const summary: DailyMacroSummary = {

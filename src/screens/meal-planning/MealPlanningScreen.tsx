@@ -120,7 +120,12 @@ export const MealPlanningScreen: React.FC = () => {
     if (!selectedSlot) return;
 
     await addMeal(selectedSlot.date, selectedSlot.mealType, {
-      foodEntryId: food.id,
+      mealName: food.food_name,
+      mealDescription: `${food.serving_size || '1 serving'}`,
+      estimatedCalories: food.calories || 0,
+      estimatedProteinG: food.protein_g || 0,
+      estimatedCarbsG: food.carbs_g || 0,
+      estimatedFatG: food.fat_g || 0,
       servings: 1,
     });
 
@@ -132,7 +137,12 @@ export const MealPlanningScreen: React.FC = () => {
     if (!selectedSlot) return;
 
     await addMeal(selectedSlot.date, selectedSlot.mealType, {
-      recipeId: recipe.id,
+      mealName: recipe.name,
+      mealDescription: recipe.description || '',
+      estimatedCalories: recipe.calories_per_serving || 0,
+      estimatedProteinG: recipe.protein_g || 0,
+      estimatedCarbsG: recipe.carbs_g || 0,
+      estimatedFatG: recipe.fat_g || 0,
       servings: 1,
     });
 
@@ -161,15 +171,9 @@ export const MealPlanningScreen: React.FC = () => {
   };
 
   const handleApplyTemplate = async (template: MealTemplate) => {
-    // Apply template to current selected date
-    for (const meal of template.meals) {
-      await addMeal(currentDate, meal.meal_type, {
-        recipeId: meal.recipe_id,
-        foodEntryId: meal.food_entry_id,
-        servings: meal.servings,
-      });
-    }
-    showAlert.success('Success', 'Template applied successfully');
+    // Temporarily disabled - schema mismatch
+    showAlert.error('Feature Unavailable', 'Template feature is being updated for the new database schema');
+    return;
   };
 
   // Get meals for current date
@@ -371,22 +375,25 @@ export const MealPlanningScreen: React.FC = () => {
       )}
 
       {/* Template Modal */}
+      {/* Temporarily disabled - schema mismatch */}
+      {/*
       <MealTemplateModal
         visible={showTemplateModal}
         mode={templateMode}
         currentMeals={
           mealPlan
-            .filter(m => m.date === currentDate)
+            .filter(m => m.planned_date === currentDate)
             .map(m => ({
               meal_type: m.meal_type,
-              recipe_id: m.recipe_id,
-              food_entry_id: m.food_entry_id,
-              servings: m.servings,
+              recipe_id: undefined,
+              food_entry_id: undefined,
+              servings: m.servings || 1,
             }))
         }
         onClose={() => setShowTemplateModal(false)}
         onTemplateLoad={handleApplyTemplate}
       />
+      */}
 
       {/* Shopping List Modal */}
       <ShoppingListView
