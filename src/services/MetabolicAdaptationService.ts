@@ -368,40 +368,47 @@ export class MetabolicAdaptationService {
   }
 
   /**
-   * Apply metabolic adaptation (update profile with new calories and record in database)
+   * Apply metabolic adaptation (SAFE MODE - Requires user approval by default)
+   *
+   * This sends a notification to the user but DOES NOT automatically change calories
+   * unless autoApply is explicitly set to true.
    *
    * @param userId - User's UUID
    * @param adaptation - Adaptation result from detectAdaptation()
    * @param coachId - Which coach should explain the adaptation
+   * @param autoApply - If true, automatically update calories without approval (default: false for safety)
    * @returns Success boolean
    */
   static async applyAdaptation(
     userId: string,
     adaptation: AdaptationResult,
-    coachId?: string
+    coachId?: string,
+    autoApply: boolean = false
   ): Promise<boolean> {
 
     try {
       const finalCoachId = coachId || 'synapse';
 
-      // 1. Update profile with new calories
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ daily_calories: adaptation.newCalories })
-        .eq('id', userId);
+      // SAFE MODE: Do NOT update profile automatically unless explicitly approved
+      if (autoApply) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ daily_calories: adaptation.newCalories })
+          .eq('id', userId);
 
-      if (profileError) {
-        console.error('[MetabolicAdaptationService] Profile update error:', profileError);
-        throw profileError;
+        if (profileError) {
+          console.error('[MetabolicAdaptationService] Profile update error:', profileError);
+          throw profileError;
+        }
       }
 
-      // 2. Get current date for week calculation
+      // Get current date for week calculation
       const today = new Date();
       const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
       const weekEnd = today;
 
-      // 3. Record adaptation in database
-      const { error: adaptError } = await supabase
+      // Record adaptation in database (but mark as pending approval if not auto-applied)
+      const { data: adaptationRecord, error: adaptError } = await supabase
         .from('metabolic_adaptations')
         .insert({
           user_id: userId,
@@ -420,22 +427,32 @@ export class MetabolicAdaptationService {
           coach_message: adaptation.coachExplanation,
           data_points_used: adaptation.dataPoints,
           confidence_score: adaptation.confidence,
-        });
+          // Track if this was auto-applied or needs approval
+          user_acknowledged: autoApply,
+        })
+        .select()
+        .single();
 
       if (adaptError) {
         console.error('[MetabolicAdaptationService] Adaptation record error:', adaptError);
         throw adaptError;
       }
 
-      // 4. Send in-app notification via coach message
+      // Send notification with approval context (if not auto-applied)
+      const notificationMessage = autoApply
+        ? adaptation.coachExplanation
+        : `${adaptation.coachExplanation}\n\n🔍 Review This Change:\n• Current: ${adaptation.oldCalories} cal/day\n• Recommended: ${adaptation.newCalories} cal/day\n• Change: ${adaptation.newCalories > adaptation.oldCalories ? '+' : ''}${adaptation.newCalories - adaptation.oldCalories} cal\n\nWould you like me to apply this adjustment? You can accept or decline in your dashboard.`;
+
       const { error: messageError } = await supabase
         .from('coach_messages')
         .insert({
           coach_id: finalCoachId,
           user_id: userId,
-          message: 'system_metabolic_adaptation_detected',
-          response: adaptation.coachExplanation,
+          message: autoApply ? 'system_metabolic_adaptation_applied' : 'system_metabolic_adaptation_pending',
+          response: notificationMessage,
           created_at: new Date().toISOString(),
+          // Store adaptation ID for approval flow
+          metadata: { adaptation_id: adaptationRecord.id },
         });
 
       if (messageError) {
@@ -443,11 +460,109 @@ export class MetabolicAdaptationService {
         // Non-fatal - continue even if message fails
       }
 
-      console.log(`[MetabolicAdaptationService] ✅ Applied ${adaptation.type} adaptation for user ${userId}: ${adaptation.oldCalories} → ${adaptation.newCalories} cal`);
+      if (autoApply) {
+        console.log(`[MetabolicAdaptationService] ✅ Auto-applied ${adaptation.type} adaptation for user ${userId}: ${adaptation.oldCalories} → ${adaptation.newCalories} cal`);
+      } else {
+        console.log(`[MetabolicAdaptationService] 📋 Pending approval: ${adaptation.type} adaptation for user ${userId}: ${adaptation.oldCalories} → ${adaptation.newCalories} cal`);
+      }
+
       return true;
 
     } catch (error) {
       console.error('[MetabolicAdaptationService] Failed to apply metabolic adaptation:', error);
+      return false;
+    }
+  }
+
+  /**
+   * User approves pending adaptation
+   * This will update the user's calorie target and mark the adaptation as acknowledged
+   *
+   * @param userId - User's UUID
+   * @param adaptationId - ID of the pending adaptation
+   * @returns Success boolean
+   */
+  static async approvePendingAdaptation(
+    userId: string,
+    adaptationId: string
+  ): Promise<boolean> {
+    try {
+      // Get pending adaptation
+      const { data: adaptation, error: fetchError } = await supabase
+        .from('metabolic_adaptations')
+        .select('*')
+        .eq('id', adaptationId)
+        .eq('user_id', userId)
+        .eq('user_acknowledged', false)
+        .single();
+
+      if (fetchError || !adaptation) {
+        console.error('[MetabolicAdaptationService] Adaptation not found or already applied');
+        return false;
+      }
+
+      // Apply the change to user's profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ daily_calories: adaptation.new_daily_calories })
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error('[MetabolicAdaptationService] Failed to update profile:', profileError);
+        return false;
+      }
+
+      // Mark as acknowledged
+      await supabase
+        .from('metabolic_adaptations')
+        .update({
+          user_acknowledged: true,
+          user_acknowledged_at: new Date().toISOString()
+        })
+        .eq('id', adaptationId);
+
+      console.log(`[MetabolicAdaptationService] ✅ User approved adaptation: ${adaptation.old_daily_calories} → ${adaptation.new_daily_calories} cal`);
+      return true;
+
+    } catch (error) {
+      console.error('[MetabolicAdaptationService] Failed to approve adaptation:', error);
+      return false;
+    }
+  }
+
+  /**
+   * User declines pending adaptation
+   * This will mark the adaptation as acknowledged without applying changes
+   *
+   * @param userId - User's UUID
+   * @param adaptationId - ID of the pending adaptation
+   * @returns Success boolean
+   */
+  static async declinePendingAdaptation(
+    userId: string,
+    adaptationId: string
+  ): Promise<boolean> {
+    try {
+      // Just mark as acknowledged without applying
+      const { error } = await supabase
+        .from('metabolic_adaptations')
+        .update({
+          user_acknowledged: true,
+          user_acknowledged_at: new Date().toISOString()
+        })
+        .eq('id', adaptationId)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('[MetabolicAdaptationService] Failed to decline adaptation:', error);
+        return false;
+      }
+
+      console.log(`[MetabolicAdaptationService] ❌ User declined adaptation ${adaptationId}`);
+      return true;
+
+    } catch (error) {
+      console.error('[MetabolicAdaptationService] Failed to decline adaptation:', error);
       return false;
     }
   }

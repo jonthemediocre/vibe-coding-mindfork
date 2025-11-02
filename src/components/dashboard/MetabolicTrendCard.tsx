@@ -234,24 +234,61 @@ export const MetabolicTrendCard: React.FC<MetabolicTrendCardProps> = ({
           </View>
 
           {/* Coach Message */}
-          <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+          <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
             {recentAdaptation.coach_message}
           </Text>
 
-          {/* Acknowledge Button */}
+          {/* Approval Buttons (if not yet acknowledged) */}
           {!recentAdaptation.user_acknowledged && (
-            <Pressable
-              onPress={() => {
-                // Mark as acknowledged in database
-                setRecentAdaptation({ ...recentAdaptation, user_acknowledged: true });
-              }}
-              className="mt-3 py-2 bg-blue-600 rounded-lg"
-            >
-              <Text className="text-center text-white font-medium text-sm">
-                Got it, thanks!
-              </Text>
-            </Pressable>
+            <View className="flex-row gap-2 mb-3">
+              <Pressable
+                onPress={async () => {
+                  const success = await MetabolicAdaptationService.approvePendingAdaptation(
+                    userId,
+                    recentAdaptation.id
+                  );
+                  if (success) {
+                    // Update local state
+                    setRecentAdaptation({ ...recentAdaptation, user_acknowledged: true });
+                    // Optional: Show feedback to user
+                    console.log(`✅ Calorie adjustment applied: ${recentAdaptation.new_daily_calories} cal/day`);
+                  }
+                }}
+                className="flex-1 py-3 bg-blue-600 rounded-lg"
+              >
+                <Text className="text-center text-white font-semibold text-sm">
+                  ✓ Accept Change
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={async () => {
+                  const success = await MetabolicAdaptationService.declinePendingAdaptation(
+                    userId,
+                    recentAdaptation.id
+                  );
+                  if (success) {
+                    // Update local state
+                    setRecentAdaptation({ ...recentAdaptation, user_acknowledged: true });
+                    // Optional: Show feedback to user
+                    console.log('❌ Calorie adjustment declined. Keeping current target.');
+                  }
+                }}
+                className="flex-1 py-3 bg-gray-200 dark:bg-gray-700 rounded-lg"
+              >
+                <Text className="text-center text-gray-800 dark:text-gray-200 font-semibold text-sm">
+                  ✗ Keep Current
+                </Text>
+              </Pressable>
+            </View>
           )}
+
+          {/* Medical Disclaimer */}
+          <View className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+            <Text className="text-xs text-yellow-800 dark:text-yellow-300 leading-relaxed">
+              ⚠️ This is wellness guidance, not medical advice. Consult a healthcare professional before making significant dietary changes, especially if you have medical conditions.
+            </Text>
+          </View>
         </View>
       )}
 
