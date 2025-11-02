@@ -302,14 +302,21 @@ export class AIFoodScanService {
       // Convert image to base64
       const base64Image = await this.imageUriToBase64(imageUri);
 
-      // Import OpenAI client
-      const { getOpenAIClient } = await import('../api/openai');
-      const openai = getOpenAIClient();
+      // Import OpenAI client configured for OpenRouter
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({
+        apiKey: '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',
+        baseURL: 'https://openrouter.ai/api/v1',
+        defaultHeaders: {
+          'HTTP-Referer': 'https://mindfork.app',
+          'X-Title': 'MindFork',
+        },
+      });
 
-      // Call OpenAI Vision API with retry logic
+      // Call OpenAI Vision API via OpenRouter with retry logic
       const result = await this.retryWithBackoff(async () => {
         const response = await openai.chat.completions.create({
-          model: 'gpt-4o-2024-11-20',
+          model: 'openai/gpt-4o-2024-11-20',
           messages: [
             {
               role: 'user',

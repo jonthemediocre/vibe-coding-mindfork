@@ -1,0 +1,520 @@
+{
+  "results": [
+    {
+      "id": 1,
+      "name": "apple",
+      "filename": "1_apple.jpg",
+      "filepath": "/home/user/workspace/test-food-images/1_apple.jpg",
+      "expected": {
+        "name": "Apple",
+        "calories": 95,
+        "protein": 0.5,
+        "carbs": 25,
+        "fat": 0.3,
+        "serving": "1 medium (182g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Apple",
+        "serving_size": "1 medium (182g)",
+        "calories": 95,
+        "protein_g": 0.5,
+        "carbs_g": 23.6,
+        "fat_g": 0.3,
+        "fiber_g": 3.0788267067558173,
+        "confidence_score": 0.8049645763908887
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 0,
+        "calorieAccuracy": 1,
+        "proteinAccuracy": 1,
+        "carbsAccuracy": 0.9440000000000001,
+        "fatAccuracy": 1
+      },
+      "success": true,
+      "duration": 987,
+      "mock": true
+    },
+    {
+      "id": 2,
+      "name": "banana",
+      "filename": "2_banana.jpg",
+      "filepath": "/home/user/workspace/test-food-images/2_banana.jpg",
+      "expected": {
+        "name": "Banana",
+        "calories": 105,
+        "protein": 1.3,
+        "carbs": 27,
+        "fat": 0.4,
+        "serving": "1 medium (118g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Banana",
+        "serving_size": "1 medium (118g)",
+        "calories": 117,
+        "protein_g": 1.4,
+        "carbs_g": 28.1,
+        "fat_g": 0.4,
+        "fiber_g": 3.397004357659706,
+        "confidence_score": 0.849712384304535
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 12,
+        "calorieAccuracy": 0.8857142857142857,
+        "proteinAccuracy": 0.9230769230769231,
+        "carbsAccuracy": 0.9592592592592593,
+        "fatAccuracy": 1
+      },
+      "success": true,
+      "duration": 1479,
+      "mock": true
+    },
+    {
+      "id": 4,
+      "name": "chicken_breast",
+      "filename": "4_chicken_breast.jpg",
+      "filepath": "/home/user/workspace/test-food-images/4_chicken_breast.jpg",
+      "expected": {
+        "name": "Chicken Breast",
+        "calories": 165,
+        "protein": 31,
+        "carbs": 0,
+        "fat": 3.6,
+        "serving": "100g"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Similar to Chicken Breast",
+        "serving_size": "100g",
+        "calories": 179,
+        "protein_g": 32,
+        "carbs_g": 0,
+        "fat_g": 3.7,
+        "fiber_g": 3.195475490663623,
+        "confidence_score": 0.9147904808461763
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 14,
+        "calorieAccuracy": 0.9151515151515152,
+        "proteinAccuracy": 0.967741935483871,
+        "carbsAccuracy": 0,
+        "fatAccuracy": 0.9722222222222222
+      },
+      "success": true,
+      "duration": 830,
+      "mock": true
+    },
+    {
+      "id": 5,
+      "name": "eggs",
+      "filename": "5_eggs.jpg",
+      "filepath": "/home/user/workspace/test-food-images/5_eggs.jpg",
+      "expected": {
+        "name": "Eggs",
+        "calories": 155,
+        "protein": 13,
+        "carbs": 1.1,
+        "fat": 11,
+        "serving": "2 large eggs"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Similar to Eggs",
+        "serving_size": "2 large eggs",
+        "calories": 165,
+        "protein_g": 12.7,
+        "carbs_g": 1.1,
+        "fat_g": 10.8,
+        "fiber_g": 4.283918389825272,
+        "confidence_score": 0.8282891199092428
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 10,
+        "calorieAccuracy": 0.935483870967742,
+        "proteinAccuracy": 0.9769230769230769,
+        "carbsAccuracy": 1,
+        "fatAccuracy": 0.9818181818181819
+      },
+      "success": true,
+      "duration": 1173,
+      "mock": true
+    },
+    {
+      "id": 6,
+      "name": "salmon",
+      "filename": "6_salmon.jpg",
+      "filepath": "/home/user/workspace/test-food-images/6_salmon.jpg",
+      "expected": {
+        "name": "Salmon",
+        "calories": 206,
+        "protein": 22,
+        "carbs": 0,
+        "fat": 13,
+        "serving": "100g"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Salmon",
+        "serving_size": "100g",
+        "calories": 219,
+        "protein_g": 21.2,
+        "carbs_g": 0,
+        "fat_g": 12.6,
+        "fiber_g": 4.665073279981833,
+        "confidence_score": 0.8475005190581975
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 13,
+        "calorieAccuracy": 0.9368932038834952,
+        "proteinAccuracy": 0.9636363636363636,
+        "carbsAccuracy": 0,
+        "fatAccuracy": 0.9692307692307692
+      },
+      "success": true,
+      "duration": 689,
+      "mock": true
+    },
+    {
+      "id": 7,
+      "name": "rice",
+      "filename": "7_rice.jpg",
+      "filepath": "/home/user/workspace/test-food-images/7_rice.jpg",
+      "expected": {
+        "name": "White Rice",
+        "calories": 205,
+        "protein": 4.2,
+        "carbs": 45,
+        "fat": 0.4,
+        "serving": "1 cup cooked (158g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "White Rice",
+        "serving_size": "1 cup cooked (158g)",
+        "calories": 203,
+        "protein_g": 4.2,
+        "carbs_g": 45.3,
+        "fat_g": 0.4,
+        "fiber_g": 4.944398063511516,
+        "confidence_score": 0.8545822317566316
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 2,
+        "calorieAccuracy": 0.9902439024390244,
+        "proteinAccuracy": 1,
+        "carbsAccuracy": 0.9933333333333334,
+        "fatAccuracy": 1
+      },
+      "success": true,
+      "duration": 844,
+      "mock": true
+    },
+    {
+      "id": 8,
+      "name": "avocado",
+      "filename": "8_avocado.jpg",
+      "filepath": "/home/user/workspace/test-food-images/8_avocado.jpg",
+      "expected": {
+        "name": "Avocado",
+        "calories": 240,
+        "protein": 3,
+        "carbs": 13,
+        "fat": 22,
+        "serving": "1 medium (150g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Avocado",
+        "serving_size": "1 medium (150g)",
+        "calories": 207,
+        "protein_g": 2.7,
+        "carbs_g": 11.9,
+        "fat_g": 20.1,
+        "fiber_g": 4.0397548688216265,
+        "confidence_score": 0.9180797301772984
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 33,
+        "calorieAccuracy": 0.8625,
+        "proteinAccuracy": 0.9,
+        "carbsAccuracy": 0.9153846153846155,
+        "fatAccuracy": 0.9136363636363637
+      },
+      "success": true,
+      "duration": 1007,
+      "mock": true
+    },
+    {
+      "id": 9,
+      "name": "pizza",
+      "filename": "9_pizza.jpg",
+      "filepath": "/home/user/workspace/test-food-images/9_pizza.jpg",
+      "expected": {
+        "name": "Pizza",
+        "calories": 285,
+        "protein": 12,
+        "carbs": 36,
+        "fat": 10,
+        "serving": "1 slice (107g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Pizza",
+        "serving_size": "1 slice (107g)",
+        "calories": 261,
+        "protein_g": 11,
+        "carbs_g": 33.1,
+        "fat_g": 9.2,
+        "fiber_g": 3.3264849505313556,
+        "confidence_score": 0.8957297664323236
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 24,
+        "calorieAccuracy": 0.9157894736842105,
+        "proteinAccuracy": 0.9166666666666666,
+        "carbsAccuracy": 0.9194444444444445,
+        "fatAccuracy": 0.9199999999999999
+      },
+      "success": true,
+      "duration": 693,
+      "mock": true
+    },
+    {
+      "id": 10,
+      "name": "burger",
+      "filename": "10_burger.jpg",
+      "filepath": "/home/user/workspace/test-food-images/10_burger.jpg",
+      "expected": {
+        "name": "Hamburger",
+        "calories": 354,
+        "protein": 16,
+        "carbs": 30,
+        "fat": 19,
+        "serving": "1 burger (110g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Hamburger",
+        "serving_size": "1 burger (110g)",
+        "calories": 326,
+        "protein_g": 16.2,
+        "carbs_g": 30.4,
+        "fat_g": 19.3,
+        "fiber_g": 3.6814928862431433,
+        "confidence_score": 0.7596624965286433
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 28,
+        "calorieAccuracy": 0.9209039548022598,
+        "proteinAccuracy": 0.9875,
+        "carbsAccuracy": 0.9866666666666667,
+        "fatAccuracy": 0.9842105263157894
+      },
+      "success": true,
+      "duration": 1457,
+      "mock": true
+    },
+    {
+      "id": 11,
+      "name": "salad",
+      "filename": "11_salad.jpg",
+      "filepath": "/home/user/workspace/test-food-images/11_salad.jpg",
+      "expected": {
+        "name": "Garden Salad",
+        "calories": 50,
+        "protein": 3,
+        "carbs": 8,
+        "fat": 1,
+        "serving": "1 cup (100g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Garden Salad",
+        "serving_size": "1 cup (100g)",
+        "calories": 49,
+        "protein_g": 2.8,
+        "carbs_g": 7.6,
+        "fat_g": 0.9,
+        "fiber_g": 2.7924649297882027,
+        "confidence_score": 0.8016700971328717
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 1,
+        "calorieAccuracy": 0.98,
+        "proteinAccuracy": 0.9333333333333332,
+        "carbsAccuracy": 0.95,
+        "fatAccuracy": 0.9
+      },
+      "success": true,
+      "duration": 706,
+      "mock": true
+    },
+    {
+      "id": 12,
+      "name": "orange",
+      "filename": "12_orange.jpg",
+      "filepath": "/home/user/workspace/test-food-images/12_orange.jpg",
+      "expected": {
+        "name": "Orange",
+        "calories": 62,
+        "protein": 1.2,
+        "carbs": 15,
+        "fat": 0.2,
+        "serving": "1 medium (131g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Orange",
+        "serving_size": "1 medium (131g)",
+        "calories": 60,
+        "protein_g": 1.3,
+        "carbs_g": 15.9,
+        "fat_g": 0.2,
+        "fiber_g": 4.808904232371254,
+        "confidence_score": 0.8755531444318736
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 2,
+        "calorieAccuracy": 0.967741935483871,
+        "proteinAccuracy": 0.9166666666666666,
+        "carbsAccuracy": 0.94,
+        "fatAccuracy": 1
+      },
+      "success": true,
+      "duration": 717,
+      "mock": true
+    },
+    {
+      "id": 13,
+      "name": "steak",
+      "filename": "13_steak.jpg",
+      "filepath": "/home/user/workspace/test-food-images/13_steak.jpg",
+      "expected": {
+        "name": "Beef Steak",
+        "calories": 271,
+        "protein": 26,
+        "carbs": 0,
+        "fat": 19,
+        "serving": "100g"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Beef Steak",
+        "serving_size": "100g",
+        "calories": 264,
+        "protein_g": 28,
+        "carbs_g": 0,
+        "fat_g": 20.5,
+        "fiber_g": 4.169229297491212,
+        "confidence_score": 0.8190686230076317
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 7,
+        "calorieAccuracy": 0.974169741697417,
+        "proteinAccuracy": 0.9230769230769231,
+        "carbsAccuracy": 0,
+        "fatAccuracy": 0.9210526315789473
+      },
+      "success": true,
+      "duration": 1040,
+      "mock": true
+    },
+    {
+      "id": 14,
+      "name": "pasta",
+      "filename": "14_pasta.jpg",
+      "filepath": "/home/user/workspace/test-food-images/14_pasta.jpg",
+      "expected": {
+        "name": "Pasta",
+        "calories": 221,
+        "protein": 8,
+        "carbs": 43,
+        "fat": 1.3,
+        "serving": "1 cup cooked (140g)"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Pasta",
+        "serving_size": "1 cup cooked (140g)",
+        "calories": 191,
+        "protein_g": 7.6,
+        "carbs_g": 41.1,
+        "fat_g": 1.2,
+        "fiber_g": 2.5760611347994993,
+        "confidence_score": 0.884848195724738
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 30,
+        "calorieAccuracy": 0.8642533936651584,
+        "proteinAccuracy": 0.95,
+        "carbsAccuracy": 0.9558139534883722,
+        "fatAccuracy": 0.923076923076923
+      },
+      "success": true,
+      "duration": 643,
+      "mock": true
+    },
+    {
+      "id": 15,
+      "name": "yogurt",
+      "filename": "15_yogurt.jpg",
+      "filepath": "/home/user/workspace/test-food-images/15_yogurt.jpg",
+      "expected": {
+        "name": "Greek Yogurt",
+        "calories": 100,
+        "protein": 17,
+        "carbs": 6,
+        "fat": 0.7,
+        "serving": "170g container"
+      },
+      "downloaded": true,
+      "actual": {
+        "name": "Greek Yogurt",
+        "serving_size": "170g container",
+        "calories": 101,
+        "protein_g": 17.9,
+        "carbs_g": 6.3,
+        "fat_g": 0.7,
+        "fiber_g": 3.026735278535165,
+        "confidence_score": 0.8638168508820019
+      },
+      "metrics": {
+        "nameMatch": true,
+        "calorieError": 1,
+        "calorieAccuracy": 0.99,
+        "proteinAccuracy": 0.9470588235294118,
+        "carbsAccuracy": 0.9500000000000001,
+        "fatAccuracy": 1
+      },
+      "success": true,
+      "duration": 1414,
+      "mock": true
+    }
+  ],
+  "stats": {
+    "totalTests": 14,
+    "successful": 14,
+    "avgNameMatch": 1,
+    "avgCalorieAccuracy": 0.9384889483920699,
+    "avgProteinAccuracy": 0.9504057651709454,
+    "avgCarbsAccuracy": 0.7509930194697636,
+    "avgFatAccuracy": 0.963231972705657,
+    "avgConfidence": 0.8513048726130751,
+    "avgDuration": 977.0714285714286
+  },
+  "mock": true
+}

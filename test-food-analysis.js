@@ -11,24 +11,26 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
 // Load environment
-const OPENAI_KEY = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY;
+const OPENROUTER_KEY = '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';
 const DATASET_FILE = path.join(__dirname, 'food-dataset.json');
 const OUTPUT_DIR = path.join(__dirname, 'test-food-images');
 const RESULTS_FILE = path.join(__dirname, 'test-results.json');
-
-if (!OPENAI_KEY) {
-  console.error('❌ EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY not set');
-  process.exit(1);
-}
 
 if (!fs.existsSync(DATASET_FILE)) {
   console.error('❌ Dataset not found. Run: node download-food-dataset.js');
   process.exit(1);
 }
 
-// Import OpenAI
+// Import OpenAI configured for OpenRouter
 const OpenAI = require('openai');
-const openai = new OpenAI({ apiKey: OPENAI_KEY });
+const openai = new OpenAI({
+  apiKey: OPENROUTER_KEY,
+  baseURL: 'https://openrouter.ai/api/v1',
+  defaultHeaders: {
+    'HTTP-Referer': 'https://mindfork.app',
+    'X-Title': 'MindFork Food Analysis Testing',
+  },
+});
 
 /**
  * Convert image file to base64
@@ -46,7 +48,7 @@ async function analyzeFoodImage(imagePath) {
     const base64Image = imageToBase64(imagePath);
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-11-20',
+      model: 'openai/gpt-4o-2024-11-20',
       messages: [
         {
           role: 'user',
