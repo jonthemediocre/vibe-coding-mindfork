@@ -481,8 +481,8 @@ export const FoodScreen: React.FC = () => {
                   <Text style={{ fontSize: 18, fontWeight: "bold", color: "#FFFFFF" }}>
                     Scan Food
                   </Text>
-                  <Text style={{ fontSize: 14, color: "#FFFFFF", opacity: 0.8, marginTop: 4 }}>
-                    Take a photo to analyze
+                  <Text style={{ fontSize: 14, color: "#FFFFFF", opacity: 0.9, marginTop: 4 }}>
+                    Photo, barcode, or nutrition label
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
