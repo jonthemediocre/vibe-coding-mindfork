@@ -7,7 +7,7 @@ import { ThemeToggle } from "../components/ThemeToggle";
 import { DashboardScreen } from "../screens/dashboard/DashboardScreen";
 import { FoodScreen } from "../screens/food/FoodScreen";
 import { FastingScreen } from "../screens/fasting/FastingScreen";
-import { MealsScreen } from "../screens/meals/MealsScreen";
+import { MealPlanningScreen } from "../screens/meal-planning/MealPlanningScreen";
 import { CoachStackNavigator } from "./CoachStackNavigator";
 import { SettingsStackNavigator } from "./SettingsStackNavigator";
 import { analytics } from "../utils/analytics";
@@ -98,7 +98,7 @@ export function TabNavigator() {
       />
       <Tab.Screen
         name="Meals"
-        component={MealsScreen}
+        component={MealPlanningScreen}
         options={{
           tabBarIcon: ({ color, size }) => <Icon name="book-open" color={color} size={size} />,
           headerTitle: "Meal planning",
