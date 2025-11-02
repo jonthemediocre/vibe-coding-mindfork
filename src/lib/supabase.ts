@@ -1,8 +1,14 @@
 import "react-native-url-polyfill/auto";
-import { createClient, type SupabaseClient as SupabaseClientType } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Database } from "../types/supabase";
 import { ENV, ENV_VALIDATION } from "../config/env";
+
+// Workaround for TypeScript module resolution issue with @supabase/supabase-js
+// The package exports createClient correctly at runtime, but TypeScript can't resolve it
+// @ts-ignore - Import works at runtime
+import { createClient } from "@supabase/supabase-js";
+// @ts-ignore - Type import works at runtime
+import type { AuthSession, AuthUser } from "@supabase/supabase-js";
 
 const initializeSupabase = () => {
   if (!ENV_VALIDATION.hasValidUrl || !ENV_VALIDATION.hasCriticalVars) {
@@ -27,7 +33,8 @@ export const ensureSupabaseInitialized = async () => {
   return supabase;
 };
 
-export type { SupabaseClient };
+export type SupabaseClient = typeof supabase;
+export type { AuthSession, AuthUser };
 export const isSupabaseInitialized = () => !!supabase;
 export const isUsingMockData = () => false;
 

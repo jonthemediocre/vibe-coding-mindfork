@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global __dirname */
 /**
  * Multi-API Food Analysis Comparison Framework
  *

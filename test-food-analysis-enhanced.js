@@ -1,3 +1,4 @@
+/* global __dirname */
 /**
  * Test Food Analysis with Verified Database Validation
  *

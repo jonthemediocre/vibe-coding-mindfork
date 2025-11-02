@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global __dirname */
 /**
  * Mock Food Analysis Testing - Simulates AI responses for testing
  */
