@@ -47,26 +47,30 @@ export class CoachService {
         const coach = getCoachById(coachId);
         const coachPersonality = coach?.personality || 'supportive';
 
-        // Generate system prompt (NOT included in user message!)
-        let systemPrompt = '';
+        // Generate concise system prompt
+        let systemPrompt = `You are ${coach?.name}, a ${coachPersonality} health and wellness coach. Keep responses brief, supportive, and personalized. Use 2-3 sentences max.`;
+
         if (context) {
-          systemPrompt = CoachContextService.generateCoachPrompt(
-            context,
-            coachPersonality,
-            '' // Empty user message for system prompt
-          );
+          // Add only essential context info
+          systemPrompt += `\n\nUser context:\n- Goal: ${context.userGoals.primary_goal}\n- Daily calories: ${context.userGoals.daily_calories} kcal\n- Today's progress: ${context.currentProgress.calories_consumed}/${context.userGoals.daily_calories} calories`;
         }
 
-        // Use direct OpenAI/Vibecode API since Edge Function is broken
-        const apiKey = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY || process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+        // Use direct OpenAI/OpenRouter API since Edge Function is broken
+        // Prioritize OpenRouter if available (user added credits there)
+        const openRouterKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+        const vibecodeKey = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY;
+        const apiKey = openRouterKey || vibecodeKey;
+
         if (!apiKey) {
           throw new Error('No AI API key configured');
         }
 
         const OpenAI = (await import('openai')).default;
+        const usingOpenRouter = !!openRouterKey;
+
         const openai = new OpenAI({
-          apiKey: process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY || process.env.EXPO_PUBLIC_OPENROUTER_API_KEY,
-          ...(process.env.EXPO_PUBLIC_OPENROUTER_API_KEY && !process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY ? {
+          apiKey: apiKey,
+          ...(usingOpenRouter ? {
             baseURL: 'https://openrouter.ai/api/v1',
             defaultHeaders: {
               'HTTP-Referer': 'https://mindfork.app',
@@ -75,9 +79,14 @@ export class CoachService {
           } : {})
         });
 
-        const modelName = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY
-          ? 'gpt-4o-mini'
-          : 'openai/gpt-4o-mini';
+        const modelName = usingOpenRouter ? 'openai/gpt-4o-mini' : 'gpt-4o-mini';
+
+        console.log('[CoachService] Sending to AI:', {
+          usingOpenRouter,
+          modelName,
+          systemPromptLength: systemPrompt.length,
+          userMessage: message
+        });
 
         const response = await openai.chat.completions.create({
           model: modelName,
@@ -96,6 +105,11 @@ export class CoachService {
         });
 
         const aiResponse = response.choices[0]?.message?.content || 'I apologize, I could not generate a response.';
+
+        console.log('[CoachService] AI Response:', {
+          responseLength: aiResponse.length,
+          response: aiResponse.substring(0, 100) + '...'
+        });
 
         return {
           id: `${Date.now()}`,
