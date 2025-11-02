@@ -73,22 +73,24 @@ export class ProfileService {
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to handle 0 rows gracefully
 
       if (error) {
         console.error('ProfileService: Supabase error:', error);
-        
+
         // Fallback to cache if available
         if (fallbackToCache && this.cachedProfile) {
           console.log('ProfileService: Falling back to cached profile');
           return this.cachedProfile;
         }
-        
+
         throw new ProfileLoadError(`Failed to load profile: ${error.message}`);
       }
 
       if (!data) {
-        throw new ProfileNotFoundError('Profile not found');
+        // No profile exists yet - this is OK for new users
+        console.log('ProfileService: No profile found for user (new user?)');
+        throw new ProfileNotFoundError('Profile not found - user needs to complete onboarding');
       }
 
       // Validate and process profile
