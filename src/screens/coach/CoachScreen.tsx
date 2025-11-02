@@ -148,9 +148,19 @@ export const CoachScreen: React.FC = () => {
   }, [state.messages]);
 
   const handleSelectCoach = async (coachId: string) => {
-    setSelectedCoachId(coachId);
-    await AsyncStorage.setItem(SELECTED_COACH_KEY, coachId);
-    setShowCoachSelector(false);
+    try {
+      setSelectedCoachId(coachId);
+      await AsyncStorage.setItem(SELECTED_COACH_KEY, coachId);
+      setShowCoachSelector(false);
+    } catch (error) {
+      logger.error("Failed to select coach", error as Error, {
+        operation: "handleSelectCoach",
+        coachId,
+      });
+      // Still set the coach ID even if saving fails
+      setSelectedCoachId(coachId);
+      setShowCoachSelector(false);
+    }
   };
 
   const handleSend = async () => {
@@ -242,6 +252,55 @@ export const CoachScreen: React.FC = () => {
       <Screen>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </Screen>
+    );
+  }
+
+  // Safety check: if no coaches loaded and no selected coach, show error
+  if (!selectedCoachId || coaches.length === 0) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Coach Unavailable
+          </Text>
+          <Text className="text-center text-gray-600 dark:text-gray-400 mb-4">
+            Unable to load coaches. Please check your connection and try again.
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              setLoading(true);
+              // Retry loading coaches
+              const fetchCoaches = async () => {
+                try {
+                  const { data, error } = await supabase
+                    .from("coaches")
+                    .select("*")
+                    .eq("is_active", true)
+                    .order("level");
+
+                  if (error) throw error;
+
+                  const coaches = (data as Coach[]) || [];
+                  setCoaches(coaches);
+
+                  if (coaches.length > 0) {
+                    setSelectedCoachId(coaches[0].id);
+                  }
+                } catch (error) {
+                  logger.error("Failed to retry fetch coaches", error as Error);
+                  setSelectedCoachId("synapse"); // Fallback
+                } finally {
+                  setLoading(false);
+                }
+              };
+              fetchCoaches();
+            }}
+            className="bg-purple-500 px-6 py-3 rounded-xl"
+          >
+            <Text className="text-white font-semibold">Retry</Text>
+          </TouchableOpacity>
         </View>
       </Screen>
     );
