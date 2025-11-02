@@ -44,81 +44,27 @@ export function getRoastModulation(roastLevel: number): RoastModulation {
  */
 export function buildRoastModePrompt(config: RoastConfig): string {
   const personality = getCoachPersonality(config.coachId);
-  if (!personality) {
-    return `You are a supportive coach with a roast level of ${config.roastLevel}/10.`;
-  }
 
-  const modulation = getRoastModulation(config.roastLevel);
+  const coachName = personality?.name || 'Coach';
+  const basePersonality = personality?.corePersonality?.split('\n')[0] || 'supportive wellness coach';
 
-  // Base personality
-  let prompt = `${personality.corePersonality}\n\n`;
+  // Simple, concise system prompt
+  let prompt = `You are ${coachName}, a ${basePersonality}. Keep responses brief (2-3 sentences max).`;
 
-  // Add roast level modulation
+  // Add roast level intensity
   if (config.roastLevel <= 3) {
-    // Gentle mode
-    prompt += `COACHING INTENSITY: GENTLE (Level ${config.roastLevel}/10)
-You are in gentle, supportive mode. Focus heavily on encouragement and positive reinforcement. When addressing struggles, lead with empathy and understanding. Use soft language and give the user the benefit of the doubt. Your goal is to make them feel safe and supported while still moving forward.\n\n`;
+    prompt += ` Be gentle, supportive, and encouraging.`;
   } else if (config.roastLevel <= 6) {
-    // Balanced mode
-    prompt += `COACHING INTENSITY: BALANCED (Level ${config.roastLevel}/10)
-You are in standard coaching mode. Balance support with accountability. Be honest about patterns and obstacles, but maintain warmth. Call out excuses gently when needed. Your goal is to be both kind and effective.\n\n`;
+    prompt += ` Balance support with accountability. Be honest but warm.`;
   } else if (config.roastLevel <= 8) {
-    // Direct mode
-    prompt += `COACHING INTENSITY: DIRECT (Level ${config.roastLevel}/10)
-You are in direct, no-nonsense mode. Be blunt about excuses and patterns. Challenge the user more forcefully. Use competitive language and rivalry energy. Don't sugarcoat - give it to them straight. Your goal is to provoke growth through honest challenge. This is where VIRAL ROAST MOMENTS happen - be memorable, quotable, and shareable!\n\n`;
+    prompt += ` Be direct and challenge excuses. No sugarcoating.`;
   } else {
-    // Roast mode (9-10)
-    prompt += `🔥 ROAST MODE ACTIVATED (Level ${config.roastLevel}/10) 🔥
-You are in FULL ROAST MODE. This is your chance to create VIRAL content that users WANT to share. Be direct, witty, and challenging. Call out excuses with humor and edge. Use playful rivalry and competitive fire. Channel your inner Gordon Ramsay of wellness coaching - tough love with entertainment value. Make every response quotable and shareable. Examples:
-
-- "You said you'd track your meals but here we are again. Are we doing this or are we just pretending?"
-- "That excuse might work on someone else. It's not working on me."
-- "Champions don't need motivation on good days. They show up on the hard days. Which one are you?"
-- "Let's be real: You know what you need to do. The question is whether you're going to do it."
-
-Keep it REAL, keep it SHARP, keep it VIRAL. This user ASKED for this level - give them something worth sharing!\n\n`;
+    prompt += ` ROAST MODE: Be witty, challenging, and quotable. Call out excuses with humor. Make it memorable!`;
   }
-
-  // Add communication style with roast modulation
-  prompt += `COMMUNICATION STYLE:\n${personality.communicationStyle}\n\n`;
-
-  // Add roast-specific vocabulary at higher levels
-  if (config.roastLevel >= 7) {
-    prompt += `ROAST MODE VOCABULARY (Use these strategically):\n`;
-    prompt += `- "Let's be real..."\n`;
-    prompt += `- "I'm calling you out because..."\n`;
-    prompt += `- "That's not going to fly here."\n`;
-    prompt += `- "Champions do it anyway."\n`;
-    prompt += `- "Excuses or results. Choose."\n`;
-    prompt += `- "Are you serious right now?"\n`;
-    prompt += `- "That's the story you're telling yourself?"\n`;
-    prompt += `- "Show me, don't tell me."\n\n`;
-  }
-
-  // Add methodology
-  prompt += `COACHING METHODOLOGY:\n${personality.coachingMethodology}\n\n`;
-
-  // Add avoidance patterns (CRITICAL - never cross these lines)
-  prompt += `NEVER DO THIS (Even in Roast Mode):\n`;
-  for (const pattern of personality.avoidancePatterns) {
-    prompt += `- ${pattern}\n`;
-  }
-  prompt += `- Never be cruel or personally attacking\n`;
-  prompt += `- Never shame body size or appearance\n`;
-  prompt += `- Never mock genuine health struggles or disabilities\n`;
-  prompt += `- Never cross the line from tough love to abusive\n\n`;
-
-  // Add signature phrase
-  prompt += `SIGNATURE PHRASE: "${personality.signaturePhrase}"\n\n`;
 
   // Add context if provided
   if (config.context) {
-    prompt += `CURRENT CONTEXT: ${config.context}\n\n`;
-  }
-
-  // Add viral moment reminder at high roast levels
-  if (config.roastLevel >= 8) {
-    prompt += `🎬 VIRAL MOMENT POTENTIAL: Every response at this roast level should be memorable and shareable. Make the user laugh, feel called out (in a good way), and want to screenshot/share your response. This is entertainment + coaching combined. GO HARD!\n\n`;
+    prompt += `\n\nContext: ${config.context}`;
   }
 
   return prompt;

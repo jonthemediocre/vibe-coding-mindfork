@@ -127,22 +127,8 @@ export const CoachScreen: React.FC = () => {
     setDraft("");
 
     try {
-      // Use personalized context if available
-      if (context && selectedCoach && profile) {
-        // Generate personalized prompt with context
-        const personalizedPrompt = generatePrompt(selectedCoach.personality, userMessage);
-        
-        if (personalizedPrompt) {
-          // Send with context-aware prompt
-          await sendMessage(personalizedPrompt);
-        } else {
-          // Fallback to regular message
-          await sendMessage(userMessage);
-        }
-      } else {
-        // No context available, send regular message
-        await sendMessage(userMessage);
-      }
+      // Always send just the user message - let the agent handle personalization
+      await sendMessage(userMessage);
     } catch (error) {
       logger.error('Failed to send coach message', error as Error, {
         operation: 'handleSend',
