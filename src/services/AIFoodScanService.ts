@@ -1,14 +1,14 @@
 /**
- * AIFoodScanService - Refactored to use Supabase Edge Functions
- * 
- * SECURITY: OpenAI API calls moved to edge functions (no exposed API keys)
- * ENHANCEMENTS:
- * - Server-side OpenAI calls via edge functions
- * - Automatic rate limiting (5 requests/min)
- * - Database logging and analytics
- * - USDA nutrition database integration
- * - Retry logic with exponential backoff
- * - Better error messages for rate limiting
+ * AIFoodScanService - AI-Powered Food Photo Analysis
+ *
+ * Uses OpenAI GPT-4 Vision to analyze food photos and extract nutritional information
+ *
+ * FEATURES:
+ * - Direct OpenAI Vision API integration
+ * - Automatic retry logic with exponential backoff
+ * - Base64 image conversion for all platforms (iOS, Android)
+ * - Rate limiting handling
+ * - Fallback to estimated values if analysis fails
  */
 
 import * as ImagePicker from 'expo-image-picker';
@@ -17,7 +17,6 @@ import { Platform } from 'react-native';
 import type { CreateFoodEntryInput } from '../types/models';
 import { logger } from '../utils/logger';
 import { showAlert } from '../utils/alerts';
-import { supabase } from '../lib/supabase';
 
 /**
  * Food analysis result from edge function
@@ -292,103 +291,132 @@ export class AIFoodScanService {
   }
 
   /**
-   * Analyze food image using Supabase edge functions
-   * 
-   * Uses food-analysis edge function which provides:
-   * - Rate limiting (5 requests/min)
-   * - Server-side OpenAI API calls
-   * - Database logging
+   * Analyze food image using OpenAI Vision API
+   *
+   * Uses GPT-4 Vision to analyze food photos and extract nutritional information
    */
   static async analyzeFoodImage(imageUri: string): Promise<FoodAnalysisResult | null> {
     try {
-      logger.info('Analyzing food image via edge function...');
+      logger.info('Analyzing food image with OpenAI Vision...');
 
       // Convert image to base64
       const base64Image = await this.imageUriToBase64(imageUri);
 
-      // Call edge function with retry logic
+      // Import OpenAI client
+      const { getOpenAIClient } = await import('../api/openai');
+      const openai = getOpenAIClient();
+
+      // Call OpenAI Vision API with retry logic
       const result = await this.retryWithBackoff(async () => {
-        const { data, error } = await supabase.functions.invoke<FoodAnalysisEdgeResponse>(
-          'food-analysis',
-          {
-            body: {
-              imageBase64: base64Image,
-              mealType: 'snack', // Default to snack, can be customized
+        const response = await openai.chat.completions.create({
+          model: 'gpt-4o-2024-11-20',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Analyze this food image and provide nutritional information. Return ONLY valid JSON in this exact format:
+{
+  "name": "food name",
+  "serving_size": "serving size (e.g., 1 cup, 100g, 1 medium)",
+  "calories": number,
+  "protein_g": number,
+  "carbs_g": number,
+  "fat_g": number,
+  "fiber_g": number,
+  "confidence_score": number (0.0 to 1.0)
+}
+
+Be as accurate as possible with the nutritional values. If you cannot identify the food clearly, set confidence_score to 0.5 or lower.`
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:image/jpeg;base64,${base64Image}`,
+                  },
+                },
+              ],
             },
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (error) {
-          // Check if it's a rate limit error
-          if (error.message?.includes('rate limit') || error.message?.includes('429')) {
-            const rateLimitError: RateLimitError = {
-              error: 'RATE_LIMIT_EXCEEDED',
-              code: 'RATE_LIMIT_EXCEEDED',
-              message: error.message || 'Rate limit exceeded',
-              retryAfter: 60, // Default to 60 seconds
-            };
-            throw rateLimitError;
-          }
-
-          throw error;
-        }
-
-        if (!data) {
-          throw new Error('No data returned from edge function');
-        }
-
-        return data;
-      });
-
-      // Handle edge function errors
-      if (!result.success) {
-        if (this.isRateLimitError(result)) {
-          this.handleRateLimitError(result as any);
-          return null;
-        }
-
-        logger.error('Edge function error:', new Error(result.error || 'Unknown error'), {
-          code: result.code,
-          message: result.message,
+          ],
+          max_tokens: 500,
         });
 
+        const content = response.choices[0]?.message?.content;
+        if (!content) {
+          throw new Error('No response from OpenAI');
+        }
+
+        // Parse JSON response
+        try {
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) {
+            throw new Error('No JSON found in response');
+          }
+
+          const parsed = JSON.parse(jsonMatch[0]);
+
+          return {
+            success: true,
+            data: {
+              name: parsed.name,
+              serving_size: parsed.serving_size,
+              calories: parsed.calories,
+              protein_g: parsed.protein_g,
+              carbs_g: parsed.carbs_g,
+              fat_g: parsed.fat_g,
+              fiber_g: parsed.fiber_g,
+              confidence_score: parsed.confidence_score || 0.85,
+            },
+          } as FoodAnalysisEdgeResponse;
+        } catch (parseError) {
+          logger.error('Failed to parse OpenAI response:', parseError as Error, {
+            content,
+          });
+          throw new Error('Invalid response format from OpenAI');
+        }
+      });
+
+      // Handle errors
+      if (!result.success) {
+        logger.error('OpenAI analysis error:', new Error(result.error || 'Unknown error'));
         showAlert.error(
           'Analysis Error',
           result.message || 'Failed to analyze food. Using estimate instead.'
         );
-        
         return this.generateNutritionalEstimate();
       }
 
       // Convert response to standard format
       const nutritionData = this.convertEdgeResponseToResult(result);
 
-      logger.info('Food analysis complete via edge function', {
+      logger.info('Food analysis complete with OpenAI Vision', {
         foodName: nutritionData.name,
         calories: nutritionData.calories,
         confidence: nutritionData.confidence,
-        source: result.source,
       });
 
       return nutritionData;
 
     } catch (error: any) {
       // Handle rate limit errors
-      if (this.isRateLimitError(error)) {
-        this.handleRateLimitError(error);
+      if (this.isRateLimitError(error) || error?.status === 429) {
+        this.handleRateLimitError({
+          error: 'RATE_LIMIT_EXCEEDED',
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: 'OpenAI API rate limit exceeded. Please try again in a moment.',
+          retryAfter: 60,
+        });
         return null;
       }
 
-      logger.error('Error analyzing food via edge function:', error as Error);
-      
+      logger.error('Error analyzing food with OpenAI:', error as Error);
+
       showAlert.error(
         'Analysis Error',
         'Could not analyze the image. Please try manual entry or try again.'
       );
-      
+
       return null;
     }
   }
