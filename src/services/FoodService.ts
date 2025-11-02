@@ -7,6 +7,7 @@ import type {
   ApiResponse,
   DailyStats,
 } from '../types/models';
+import type { UnifiedFood } from '../types/food';
 import { apiInterceptor } from '../utils/api-interceptor';
 import { FoodClassificationService } from './FoodClassificationService';
 import { MetabolicAdaptationService } from './MetabolicAdaptationService';
@@ -282,7 +283,7 @@ export class FoodService {
   /**
    * Get recent foods for a user (for quick logging)
    */
-  static async getRecentFoods(userId: string, limit: number = 10): Promise<ApiResponse<FoodEntry[]>> {
+  static async getRecentFoods(limit: number = 10, userId?: string): Promise<ApiResponse<FoodEntry[]>> {
     try {
       const { data, error } = await supabase
         .from('food_entries')

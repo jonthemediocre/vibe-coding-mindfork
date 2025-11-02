@@ -39,11 +39,11 @@ export const PhotoCaptureModal: React.FC<PhotoCaptureModalProps> = ({
 
     try {
       setIsCapturing(true);
-      const photo = await cameraRef.current.takePicture({
+      const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
 
-      if (photo?.uri) {
+      if (photo && 'uri' in photo && photo.uri) {
         onPhotoCapture(photo.uri);
         onClose();
       }
