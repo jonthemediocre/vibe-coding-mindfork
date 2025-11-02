@@ -93,31 +93,27 @@ export const CoachCard: React.FC<CoachCardProps> = ({ coach, onPress }) => {
           </View>
         )}
 
-        {/* Coach Avatar & Name */}
+        {/* BEAUTIFUL COACH ARTWORK - Hero Image (whimsical animal/human/food hybrids!) */}
+        {(() => {
+          const coachProfile = getCoachById(coach.id);
+          if (coachProfile?.imageUrl) {
+            return (
+              <View style={styles.heroImageContainer}>
+                <Image
+                  source={coachProfile.imageUrl}
+                  style={styles.heroImage}
+                  resizeMode="contain"
+                />
+              </View>
+            );
+          }
+          return null;
+        })()}
+
+        {/* Coach Name & Details */}
         <View style={styles.header}>
-          <View style={[styles.avatar, { backgroundColor: colors.surface }]}>
-            {(() => {
-              // Try to get coach image from coachProfiles
-              const coachProfile = getCoachById(coach.id);
-              if (coachProfile?.imageUrl) {
-                return (
-                  <Image 
-                    source={coachProfile.imageUrl} 
-                    style={styles.avatarImage}
-                    resizeMode="cover"
-                  />
-                );
-              }
-              // Fallback to avatar_url or emoji
-              return (
-                <Text variant="headingSmall">
-                  {coach.avatar_url || coachProfile?.avatar || '👤'}
-                </Text>
-              );
-            })()}
-          </View>
           <View style={{ flex: 1 }}>
-            <Text variant="titleSmall" numberOfLines={1}>
+            <Text variant="titleMedium" numberOfLines={1} style={styles.coachName}>
               {coach.name}
             </Text>
             <Text variant="caption" color={colors.textSecondary}>
@@ -188,6 +184,7 @@ export const CoachCard: React.FC<CoachCardProps> = ({ coach, onPress }) => {
 const styles = StyleSheet.create({
   card: {
     marginBottom: 12,
+    overflow: 'hidden',
   },
   featuredBadge: {
     position: 'absolute',
@@ -210,10 +207,27 @@ const styles = StyleSheet.create({
   featuredText: {
     fontWeight: '600',
   },
+  heroImageContainer: {
+    width: '100%',
+    height: 180,
+    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FAFAFA',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  coachName: {
+    fontWeight: '700',
   },
   avatar: {
     width: 48,
