@@ -67,13 +67,20 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const radius = size * 0.35;
   const handleRadius = 14;
   const [draggingHandle, setDraggingHandle] = useState<'start' | 'end' | null>(null);
+  const [componentLayout, setComponentLayout] = useState({ x: 0, y: 0 });
 
-  // Convert touch position to hour
-  const positionToHour = (x: number, y: number): number => {
-    const dx = x - center;
-    const dy = y - center;
+  // Convert touch position (screen coordinates) to hour
+  const positionToHour = (screenX: number, screenY: number): number => {
+    // Convert screen coordinates to component-relative coordinates
+    const localX = screenX - componentLayout.x;
+    const localY = screenY - componentLayout.y;
+
+    // Calculate relative to center
+    const dx = localX - center;
+    const dy = localY - center;
+
     let angle = Math.atan2(dy, dx);
-    // Convert from radians to hours (0-24)
+    // Convert from radians to hours (0-24), adjusted for 12 o'clock = 0
     let hour = ((angle * 180 / Math.PI + 90) / 15) % 24;
     if (hour < 0) hour += 24;
     return Math.round(hour);
@@ -83,32 +90,34 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const startPanResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => interactive,
     onMoveShouldSetPanResponder: () => interactive,
-    onPanResponderGrant: () => setDraggingHandle('start'),
+    onPanResponderGrant: () => {
+      setDraggingHandle('start');
+    },
     onPanResponderMove: (_, gestureState) => {
       if (!interactive || !onStartChange) return;
-      const newHour = positionToHour(
-        gestureState.moveX - gestureState.x0 + startPos.x,
-        gestureState.moveY - gestureState.y0 + startPos.y
-      );
+      const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
       onStartChange(newHour);
     },
-    onPanResponderRelease: () => setDraggingHandle(null),
+    onPanResponderRelease: () => {
+      setDraggingHandle(null);
+    },
   });
 
   // Create pan responder for end handle
   const endPanResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => interactive,
     onMoveShouldSetPanResponder: () => interactive,
-    onPanResponderGrant: () => setDraggingHandle('end'),
+    onPanResponderGrant: () => {
+      setDraggingHandle('end');
+    },
     onPanResponderMove: (_, gestureState) => {
       if (!interactive || !onEndChange) return;
-      const newHour = positionToHour(
-        gestureState.moveX - gestureState.x0 + endPos.x,
-        gestureState.moveY - gestureState.y0 + endPos.y
-      );
+      const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
       onEndChange(newHour);
     },
-    onPanResponderRelease: () => setDraggingHandle(null),
+    onPanResponderRelease: () => {
+      setDraggingHandle(null);
+    },
   });
 
   // Calculate angles (0° = 12 o'clock, clockwise)
@@ -225,7 +234,13 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   };
 
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <View
+      style={[styles.container, { width: size, height: size }]}
+      onLayout={(event) => {
+        const { x, y } = event.nativeEvent.layout;
+        setComponentLayout({ x, y });
+      }}
+    >
       <Svg width={size} height={size}>
         {/* Outer circle (clock face) */}
         <Circle

@@ -158,7 +158,7 @@ export const FastingScreen: React.FC = () => {
           onStartChange={handleStartHourChange}
           onEndChange={handleEndHourChange}
           currentTime={new Date()}
-          size={280}
+          size={340}
           interactive={!activeSession}
           elapsedHours={activeSession ? elapsedHours : undefined}
         />
