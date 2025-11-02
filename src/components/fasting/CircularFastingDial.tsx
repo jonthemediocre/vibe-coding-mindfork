@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Pressable, Animated, PanResponder } from 'react-native';
 import { Text } from 'react-native';
 import Svg, { Circle, Line, Text as SvgText, G, Path } from 'react-native-svg';
 
@@ -66,6 +66,50 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const center = size / 2;
   const radius = size * 0.35;
   const handleRadius = 14;
+  const [draggingHandle, setDraggingHandle] = useState<'start' | 'end' | null>(null);
+
+  // Convert touch position to hour
+  const positionToHour = (x: number, y: number): number => {
+    const dx = x - center;
+    const dy = y - center;
+    let angle = Math.atan2(dy, dx);
+    // Convert from radians to hours (0-24)
+    let hour = ((angle * 180 / Math.PI + 90) / 15) % 24;
+    if (hour < 0) hour += 24;
+    return Math.round(hour);
+  };
+
+  // Create pan responder for start handle
+  const startPanResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => interactive,
+    onMoveShouldSetPanResponder: () => interactive,
+    onPanResponderGrant: () => setDraggingHandle('start'),
+    onPanResponderMove: (_, gestureState) => {
+      if (!interactive || !onStartChange) return;
+      const newHour = positionToHour(
+        gestureState.moveX - gestureState.x0 + startPos.x,
+        gestureState.moveY - gestureState.y0 + startPos.y
+      );
+      onStartChange(newHour);
+    },
+    onPanResponderRelease: () => setDraggingHandle(null),
+  });
+
+  // Create pan responder for end handle
+  const endPanResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => interactive,
+    onMoveShouldSetPanResponder: () => interactive,
+    onPanResponderGrant: () => setDraggingHandle('end'),
+    onPanResponderMove: (_, gestureState) => {
+      if (!interactive || !onEndChange) return;
+      const newHour = positionToHour(
+        gestureState.moveX - gestureState.x0 + endPos.x,
+        gestureState.moveY - gestureState.y0 + endPos.y
+      );
+      onEndChange(newHour);
+    },
+    onPanResponderRelease: () => setDraggingHandle(null),
+  });
 
   // Calculate angles (0° = 12 o'clock, clockwise)
   const hourToAngle = (hour: number) => {
@@ -232,7 +276,7 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
             cx={startPos.x}
             cy={startPos.y}
             r={handleRadius}
-            fill="#10B981"
+            fill={draggingHandle === 'start' ? "#059669" : "#10B981"}
             stroke="#FFFFFF"
             strokeWidth={3}
           />
@@ -254,7 +298,7 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
             cx={endPos.x}
             cy={endPos.y}
             r={handleRadius}
-            fill="#F59E0B"
+            fill={draggingHandle === 'end' ? "#D97706" : "#F59E0B"}
             stroke="#FFFFFF"
             strokeWidth={3}
           />
@@ -301,6 +345,35 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
         </SvgText>
       </Svg>
 
+      {/* Touchable overlays for handles - positioned absolutely over SVG */}
+      {interactive && (
+        <>
+          {/* Start handle touchable area */}
+          <View
+            {...startPanResponder.panHandlers}
+            style={[
+              styles.handleTouchArea,
+              {
+                left: startPos.x - 20,
+                top: startPos.y - 20,
+              },
+            ]}
+          />
+
+          {/* End handle touchable area */}
+          <View
+            {...endPanResponder.panHandlers}
+            style={[
+              styles.handleTouchArea,
+              {
+                left: endPos.x - 20,
+                top: endPos.y - 20,
+              },
+            ]}
+          />
+        </>
+      )}
+
       {/* Time labels below dial */}
       <View style={styles.timeLabels}>
         <View style={styles.timeLabel}>
@@ -320,6 +393,12 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  handleTouchArea: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    zIndex: 10,
   },
   timeLabels: {
     flexDirection: 'row',
