@@ -369,21 +369,67 @@ export class FoodService {
 
   /**
    * Get food by barcode
-   * TODO: Integrate with OpenFoodFacts or other barcode database
+   * Checks local database first, then verified food database
    */
   static async getFoodByBarcode(barcode: string): Promise<ApiResponse<FoodEntry>> {
     try {
-      // TODO: Integrate with external barcode database (OpenFoodFacts API)
-      console.log('[FoodService] getFoodByBarcode - External API integration needed');
-
-      // For now, search in existing entries
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return { error: 'User not authenticated' };
+      // Step 1: Check local food_items database first (fastest)
+      const localResult = await this.checkLocalBarcodeDatabase(barcode);
+      if (localResult) {
+        console.log('[FoodService] Barcode found in local database');
+        return { data: localResult };
       }
 
+      // Step 2: Check verified food database (USDA, free, accurate)
+      console.log('[FoodService] Checking verified food database...');
+      const { USDAFoodDataService } = await import('./USDAFoodDataService');
+      const verifiedFood = await USDAFoodDataService.searchByBarcode(barcode);
+
+      if (verifiedFood) {
+        console.log('[FoodService] Barcode found in verified database:', verifiedFood.description);
+
+        // Convert to our format
+        const unified = USDAFoodDataService.toUnifiedFood(verifiedFood);
+
+        // Convert to FoodEntry format
+        const foodEntry: FoodEntry = {
+          id: `verified-${verifiedFood.fdcId}`,
+          user_id: '', // Will be set when logged
+          food_name: unified.name,
+          calories: unified.calories_per_serving,
+          protein: unified.protein_g,
+          carbs: unified.carbs_g,
+          fat: unified.fat_g,
+          fiber: unified.fiber_g || 0,
+          logged_at: new Date().toISOString(),
+          meal_type: 'snack',
+          serving_size: unified.serving_size,
+          serving_unit: unified.serving_unit
+        };
+
+        // TODO: Optionally save to local database for faster future lookups
+
+        return { data: foodEntry };
+      }
+
+      // Step 3: Not found anywhere
+      return { error: 'Barcode not found. Try searching manually or entering nutrition info.' };
+    } catch (err) {
+      console.error('[FoodService] getFoodByBarcode error:', err);
+      return { error: 'Failed to lookup barcode. Please try again.' };
+    }
+  }
+
+  /**
+   * Check local database for barcode
+   */
+  private static async checkLocalBarcodeDatabase(barcode: string): Promise<FoodEntry | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
       // Check if user has logged this barcode before
-      // Note: Requires adding barcode field to food_entries table
+      // Note: Requires barcode field in food_entries table
       const { data, error } = await supabase
         .from('food_entries')
         .select('*')
@@ -392,12 +438,12 @@ export class FoodService {
         .single();
 
       if (error || !data) {
-        return { error: 'Barcode not found. External barcode database integration needed.' };
+        return null;
       }
 
-      return { data };
-    } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Failed to lookup barcode' };
+      return data;
+    } catch {
+      return null;
     }
   }
 

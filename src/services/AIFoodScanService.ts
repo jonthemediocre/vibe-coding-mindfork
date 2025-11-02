@@ -17,6 +17,8 @@ import { Platform } from 'react-native';
 import type { CreateFoodEntryInput } from '../types/models';
 import { logger } from '../utils/logger';
 import { showAlert } from '../utils/alerts';
+import { USDAFoodDataService } from './USDAFoodDataService';
+import { NutritionConstraintValidator } from './NutritionConstraintValidator';
 
 /**
  * Food analysis result from AI
@@ -493,13 +495,17 @@ Return ONLY valid JSON in this exact format:
       // Convert response to standard format
       const nutritionData = this.convertEdgeResponseToResult(result);
 
-      logger.info('Food analysis complete with OpenAI Vision', {
-        foodName: nutritionData.name,
-        calories: nutritionData.calories,
-        confidence: nutritionData.confidence,
+      // Validate and enhance with verified database (behind the scenes)
+      const enhancedData = await this.validateAndEnhanceNutrition(nutritionData);
+
+      logger.info('Food analysis complete with AI', {
+        foodName: enhancedData.name,
+        calories: enhancedData.calories,
+        confidence: enhancedData.confidence,
+        enhanced: enhancedData.confidence > nutritionData.confidence
       });
 
-      return nutritionData;
+      return enhancedData;
 
     } catch (error: any) {
       // Handle rate limit errors
@@ -564,5 +570,159 @@ Return ONLY valid JSON in this exact format:
       fat: analysis.fat,
       fiber: analysis.fiber,
     };
+  }
+
+  /**
+   * Validate and enhance AI nutrition data with verified database
+   * Runs silently in the background - no user-facing USDA branding
+   */
+  private static async validateAndEnhanceNutrition(
+    aiResult: FoodAnalysisResult
+  ): Promise<FoodAnalysisResult> {
+    try {
+      // Step 1: Validate AI result with thermodynamic constraints
+      const validation = NutritionConstraintValidator.validate({
+        calories: aiResult.calories,
+        protein_g: aiResult.protein || 0,
+        carbs_g: aiResult.carbs || 0,
+        fat_g: aiResult.fat || 0
+      });
+
+      // Step 2: Search verified database for matching food
+      const searchResult = await USDAFoodDataService.searchFoods(aiResult.name, {
+        pageSize: 10,
+        dataType: ['Foundation', 'SR Legacy', 'Survey'] // Exclude branded for generic foods
+      });
+
+      if (searchResult.foods.length === 0) {
+        // No match found - use AI result with validation
+        if (!validation.isValid && validation.correctedCalories) {
+          logger.info('AI result failed validation, auto-correcting', {
+            original: aiResult.calories,
+            corrected: validation.correctedCalories
+          });
+          return {
+            ...aiResult,
+            calories: validation.correctedCalories,
+            confidence: Math.max(0.5, aiResult.confidence * 0.8)
+          };
+        }
+        return aiResult;
+      }
+
+      // Step 3: Find best match using name similarity + calorie proximity
+      const bestMatch = this.findBestVerifiedMatch(aiResult, searchResult.foods);
+
+      if (!bestMatch || bestMatch.confidence < 0.6) {
+        // Low confidence match - use AI result
+        logger.info('Verified match confidence too low, using AI result', {
+          matchConfidence: bestMatch?.confidence || 0
+        });
+        return aiResult;
+      }
+
+      // Step 4: Extract verified nutrition data
+      const verifiedNutrition = USDAFoodDataService.toUnifiedFood(bestMatch.food);
+
+      // Step 5: Decide whether to use verified data or blend
+      if (bestMatch.confidence > 0.8) {
+        // High confidence - use verified data
+        logger.info('High-confidence verified match found', {
+          food: bestMatch.food.description,
+          confidence: bestMatch.confidence,
+          aiCalories: aiResult.calories,
+          verifiedCalories: verifiedNutrition.calories_per_serving
+        });
+
+        return {
+          ...aiResult,
+          calories: Math.round(verifiedNutrition.calories_per_serving),
+          protein: Math.round(verifiedNutrition.protein_g),
+          carbs: Math.round(verifiedNutrition.carbs_g),
+          fat: Math.round(verifiedNutrition.fat_g),
+          fiber: Math.round(verifiedNutrition.fiber_g || aiResult.fiber || 0),
+          confidence: Math.max(aiResult.confidence, bestMatch.confidence)
+        };
+      } else {
+        // Medium confidence - blend AI + verified data
+        logger.info('Medium-confidence match, blending AI + verified data', {
+          confidence: bestMatch.confidence
+        });
+
+        const blendWeight = bestMatch.confidence; // 0.6-0.8
+        const aiWeight = 1 - blendWeight;
+
+        return {
+          ...aiResult,
+          calories: Math.round(
+            aiResult.calories * aiWeight + verifiedNutrition.calories_per_serving * blendWeight
+          ),
+          protein: Math.round(
+            (aiResult.protein || 0) * aiWeight + verifiedNutrition.protein_g * blendWeight
+          ),
+          carbs: Math.round(
+            (aiResult.carbs || 0) * aiWeight + verifiedNutrition.carbs_g * blendWeight
+          ),
+          fat: Math.round(
+            (aiResult.fat || 0) * aiWeight + verifiedNutrition.fat_g * blendWeight
+          ),
+          fiber: Math.round(
+            (aiResult.fiber || 0) * aiWeight + (verifiedNutrition.fiber_g || 0) * blendWeight
+          ),
+          confidence: Math.max(aiResult.confidence, 0.75)
+        };
+      }
+    } catch (error) {
+      // Silently fail - don't block user, just log
+      logger.warn('Verification enhancement failed, using AI result', { error });
+      return aiResult;
+    }
+  }
+
+  /**
+   * Find best verified food match using name similarity + calorie proximity
+   */
+  private static findBestVerifiedMatch(
+    aiResult: FoodAnalysisResult,
+    verifiedFoods: any[]
+  ): { food: any; confidence: number } | null {
+    let bestMatch: { food: any; confidence: number } | null = null;
+
+    for (const verifiedFood of verifiedFoods) {
+      // Name similarity (Jaccard index of words)
+      const nameSimilarity = this.calculateNameSimilarity(
+        aiResult.name.toLowerCase(),
+        verifiedFood.description.toLowerCase()
+      );
+
+      // Calorie similarity (within 30% = reasonable match)
+      const verifiedCalories = USDAFoodDataService.getNutrient(verifiedFood, '208');
+      if (verifiedCalories === 0) continue; // Skip foods with no calorie data
+
+      const calorieError = Math.abs(aiResult.calories - verifiedCalories) / aiResult.calories;
+      const calorieSimilarity = Math.max(0, 1 - calorieError / 0.3); // 30% tolerance
+
+      // Combined confidence (70% name, 30% calories)
+      const confidence = nameSimilarity * 0.7 + calorieSimilarity * 0.3;
+
+      if (!bestMatch || confidence > bestMatch.confidence) {
+        bestMatch = { food: verifiedFood, confidence };
+      }
+    }
+
+    return bestMatch;
+  }
+
+  /**
+   * Simple name similarity (Jaccard index of words)
+   */
+  private static calculateNameSimilarity(name1: string, name2: string): number {
+    const words1 = new Set(name1.split(/\s+/));
+    const words2 = new Set(name2.split(/\s+/));
+
+    const intersection = new Set([...words1].filter(w => words2.has(w)));
+    const union = new Set([...words1, ...words2]);
+
+    return intersection.size / union.size; // Jaccard similarity
   }
 }
