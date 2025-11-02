@@ -31,6 +31,14 @@ export interface User {
   tier?: "free" | "premium" | "savage";
 }
 
+interface UserMetadata {
+  name?: string;
+  avatar_url?: string;
+  phone_number?: string;
+  subscription_tier?: "free" | "premium" | "savage";
+  [key: string]: any; // Allow additional metadata fields
+}
+
 export interface AuthState {
   user: User | null;
   session: Session | null;
@@ -49,16 +57,19 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 
 function mapUser(supabaseUser: SupabaseUser | null | undefined): User | null {
   if (!supabaseUser) return null;
+
+  const metadata = (supabaseUser.user_metadata || {}) as UserMetadata;
+
   return {
     id: supabaseUser.id,
     email: supabaseUser.email ?? "",
-    name: (supabaseUser.user_metadata as Record<string, any>)?.name,
-    avatar_url: (supabaseUser.user_metadata as Record<string, any>)?.avatar_url,
-    phone_number: (supabaseUser.user_metadata as Record<string, any>)?.phone_number,
+    name: metadata.name,
+    avatar_url: metadata.avatar_url,
+    phone_number: metadata.phone_number,
     email_confirmed_at: supabaseUser.email_confirmed_at ?? undefined,
     created_at: supabaseUser.created_at,
     updated_at: supabaseUser.updated_at ?? undefined,
-    tier: (supabaseUser.user_metadata as Record<string, any>)?.subscription_tier,
+    tier: metadata.subscription_tier,
   };
 }
 

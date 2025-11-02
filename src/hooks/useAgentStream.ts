@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { getAnthropicTextResponse } from "../api/chat-service";
 import { AIMessage } from "../types/ai";
 import { buildRoastModePrompt } from "../services/RoastModeService";
@@ -81,51 +81,70 @@ export function useAgentStream(options: UseAgentStreamOptions) {
           context: undefined // Can be added later for context-aware coaching
         });
 
-        // Build conversation history for AI
-        // IMPORTANT: System message is NOT stored in state.messages to prevent leaking
-        // Only user/assistant messages are stored and displayed to user
-        const conversationHistory: AIMessage[] = [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          ...state.messages
-            .filter(msg => msg.role !== "system") // Never include system messages from state
-            .map((msg) => ({
-              role: msg.role as "user" | "assistant",
-              content: msg.content,
-            })),
-          {
-            role: "user",
-            content: userMessage,
-          },
-        ];
+        // Build conversation history for AI using functional setState to get latest messages
+        setState((prev) => {
+          // IMPORTANT: System message is NOT stored in state.messages to prevent leaking
+          // Only user/assistant messages are stored and displayed to user
+          const conversationHistory: AIMessage[] = [
+            {
+              role: "system",
+              content: systemPrompt,
+            },
+            ...prev.messages
+              .filter(msg => msg.role !== "system") // Never include system messages from state
+              .map((msg) => ({
+                role: msg.role as "user" | "assistant",
+                content: msg.content,
+              })),
+            {
+              role: "user",
+              content: userMessage,
+            },
+          ];
 
-        // Get AI response
-        const response = await getAnthropicTextResponse(conversationHistory, {
-          maxTokens: 1024,
-          temperature: 0.7,
+          // Get AI response (async operation)
+          getAnthropicTextResponse(conversationHistory, {
+            maxTokens: 1024,
+            temperature: 0.7,
+          }).then(response => {
+            // Check if request was aborted
+            if (controller.signal.aborted) {
+              return;
+            }
+
+            // Create assistant message
+            const assistantMessage: Message = {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: response.content,
+            };
+
+            // Update state with assistant response
+            setState((currentState) => ({
+              ...currentState,
+              messages: [...currentState.messages, assistantMessage],
+              thinking: false,
+              status: "idle",
+            }));
+          }).catch((error: any) => {
+            // Check if request was aborted
+            if (controller.signal.aborted) {
+              return;
+            }
+
+            // Handle error
+            setState((currentState) => ({
+              ...currentState,
+              thinking: false,
+              status: "error",
+              error: error.message || "Failed to get response from coach",
+            }));
+          }).finally(() => {
+            abortControllerRef.current = null;
+          });
+
+          return prev; // Return unchanged state during async operation
         });
-
-        // Check if request was aborted
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        // Create assistant message
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: response.content,
-        };
-
-        // Update state with assistant response
-        setState((prev) => ({
-          ...prev,
-          messages: [...prev.messages, assistantMessage],
-          thinking: false,
-          status: "idle",
-        }));
       } catch (error: any) {
         // Check if request was aborted
         if (controller.signal.aborted) {
@@ -139,11 +158,10 @@ export function useAgentStream(options: UseAgentStreamOptions) {
           status: "error",
           error: error.message || "Failed to get response from coach",
         }));
-      } finally {
         abortControllerRef.current = null;
       }
     },
-    [options.coachId, options.coachPersona, options.roastLevel, state.messages]
+    [options.coachId, options.coachPersona, options.roastLevel]
   );
 
   const cancel = useCallback(() => {
@@ -156,6 +174,16 @@ export function useAgentStream(options: UseAgentStreamOptions) {
         status: "idle",
       }));
     }
+  }, []);
+
+  // Cleanup on unmount - abort any pending requests
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
   }, []);
 
   return {

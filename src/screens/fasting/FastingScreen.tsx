@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, StyleSheet, Switch, Alert, ActivityIndicator } from "react-native";
 import { Screen, Card, Text, Button, useThemeColors, useThemedStyles } from "../../ui";
 import { useFastingTimer } from "../../hooks";
-import { CircularFastingDial } from "../../components/fasting/CircularFastingDial";
+import { CircularFastingDial } from "../../components/fasting/CircularFastingDialSimple";
 
 const FASTING_PRESETS = [
   { id: "16-8", label: "16 : 8", fastingHours: 16 },
