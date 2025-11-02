@@ -583,8 +583,85 @@ export class MealPlanningService {
     startDate: string,
     endDate: string
   ): Promise<ApiResponse<ShoppingListItem[]>> {
-    // Temporarily disabled - schema mismatch
-    return { data: [], message: 'Shopping list feature temporarily unavailable' };
+    try {
+      // Get all meal plan entries for the date range
+      const { data: mealEntries, error: entriesError } = await supabase
+        .from('meal_plan_entries')
+        .select(`
+          *,
+          recipe:recipes(
+            id,
+            name,
+            ingredients:recipe_ingredients(*)
+          )
+        `)
+        .eq('user_id', userId)
+        .gte('date', startDate)
+        .lte('date', endDate);
+
+      if (entriesError) {
+        logger.error('Error fetching meal entries for shopping list', entriesError);
+        return { error: entriesError.message };
+      }
+
+      if (!mealEntries || mealEntries.length === 0) {
+        return { data: [] };
+      }
+
+      // Aggregate ingredients
+      const ingredientMap = new Map<string, {
+        quantities: number[];
+        unit: string;
+        recipes: Set<string>;
+      }>();
+
+      for (const entry of mealEntries) {
+        if (!entry.recipe || !entry.recipe.ingredients) continue;
+
+        const recipe = entry.recipe as any;
+        const servings = entry.servings || 1;
+
+        for (const ingredient of recipe.ingredients) {
+          const name = ingredient.ingredient_name.toLowerCase();
+          const unit = ingredient.unit || '';
+          const quantity = parseFloat(ingredient.quantity || '1') * servings;
+
+          if (!ingredientMap.has(name)) {
+            ingredientMap.set(name, {
+              quantities: [],
+              unit,
+              recipes: new Set(),
+            });
+          }
+
+          const existing = ingredientMap.get(name)!;
+          existing.quantities.push(quantity);
+          existing.recipes.add(recipe.name);
+        }
+      }
+
+      // Convert to ShoppingListItem array
+      const shoppingList: ShoppingListItem[] = Array.from(ingredientMap.entries()).map(
+        ([name, data]) => ({
+          ingredient_name: name.charAt(0).toUpperCase() + name.slice(1),
+          total_quantity: data.quantities.reduce((a, b) => a + b, 0).toFixed(1),
+          unit: data.unit,
+          recipes: Array.from(data.recipes),
+          checked: false,
+        })
+      );
+
+      // Cache the list
+      await AsyncStorage.setItem(
+        `@mindfork:shopping_list:${userId}`,
+        JSON.stringify(shoppingList)
+      );
+
+      return { data: shoppingList };
+    } catch (err) {
+      logger.error('Error in generateShoppingList', err as Error);
+      return { error: 'Failed to generate shopping list' };
+    }
   }
 
   /**

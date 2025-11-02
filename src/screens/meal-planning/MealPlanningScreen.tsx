@@ -26,6 +26,7 @@ import { useTheme } from '../../app-components/components/ThemeProvider';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMealPlanning } from '../../hooks/useMealPlanning';
 import { FoodService } from '../../services/FoodService';
+import { MealPlanningService } from '../../services/MealPlanningService';
 import { CalendarView } from '../../components/meal-planning/CalendarView';
 import { MealSlot } from '../../components/meal-planning/MealSlot';
 import { DraggableFoodItem } from '../../components/meal-planning/DraggableFoodItem';
@@ -35,6 +36,7 @@ import { ShoppingListView } from '../../components/meal-planning/ShoppingListVie
 import type { FoodEntry } from '../../types/models';
 import type { Recipe, MealTemplate } from '../../services/MealPlanningService';
 import { showAlert } from '../../utils/alerts';
+import { logger } from '../../utils/logger';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 
@@ -171,9 +173,28 @@ export const MealPlanningScreen: React.FC = () => {
   };
 
   const handleApplyTemplate = async (template: MealTemplate) => {
-    // Temporarily disabled - schema mismatch
-    showAlert.error('Feature Unavailable', 'Template feature is being updated for the new database schema');
-    return;
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await MealPlanningService.applyTemplate(
+        user.id,
+        template.id,
+        currentDate
+      );
+
+      if (error) {
+        showAlert.error('Error', error);
+        return;
+      }
+
+      // Refresh meal plan after applying template
+      await refreshMealPlan();
+      setShowTemplateModal(false);
+      showAlert.success('Success', `Template "${template.name}" applied successfully`);
+    } catch (err) {
+      logger.error('Error applying template', err as Error);
+      showAlert.error('Error', 'Failed to apply template');
+    }
   };
 
   // Get meals for current date
@@ -375,25 +396,22 @@ export const MealPlanningScreen: React.FC = () => {
       )}
 
       {/* Template Modal */}
-      {/* Temporarily disabled - schema mismatch */}
-      {/*
       <MealTemplateModal
         visible={showTemplateModal}
         mode={templateMode}
         currentMeals={
           mealPlan
-            .filter(m => m.planned_date === currentDate)
+            .filter(m => m.date === currentDate)
             .map(m => ({
               meal_type: m.meal_type,
-              recipe_id: undefined,
-              food_entry_id: undefined,
+              recipe_id: m.recipe_id || undefined,
+              food_entry_id: m.food_entry_id || undefined,
               servings: m.servings || 1,
             }))
         }
         onClose={() => setShowTemplateModal(false)}
         onTemplateLoad={handleApplyTemplate}
       />
-      */}
 
       {/* Shopping List Modal */}
       <ShoppingListView
