@@ -26,9 +26,9 @@ export const DraggableFoodItem: React.FC<DraggableFoodItemProps> = ({
 
   // Determine category color based on macros
   const getCategoryColor = (): string => {
-    const protein = food.protein || 0;
-    const carbs = food.carbs || 0;
-    const fat = food.fat || 0;
+    const protein = food.protein_g || 0;
+    const carbs = food.carbs_g || 0;
+    const fat = food.fat_g || 0;
 
     if (protein > carbs && protein > fat) return '#E91E63'; // High protein
     if (carbs > protein && carbs > fat) return '#FF9800'; // High carbs
@@ -54,27 +54,27 @@ export const DraggableFoodItem: React.FC<DraggableFoodItemProps> = ({
         <View style={[styles.indicator, { backgroundColor: categoryColor }]} />
         <View style={styles.info}>
           <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-            {food.name}
+            {food.food_name}
           </Text>
           <Text style={[styles.serving, { color: colors.textSecondary }]}>
-            {food.serving}
+            {food.serving_size}
           </Text>
           <View style={styles.macros}>
             <View style={styles.macroItem}>
               <Text style={[styles.macroValue, { color: '#E91E63' }]}>
-                {Math.round(food.protein || 0)}g
+                {Math.round(food.protein_g || 0)}g
               </Text>
               <Text style={[styles.macroLabel, { color: colors.textSecondary }]}>P</Text>
             </View>
             <View style={styles.macroItem}>
               <Text style={[styles.macroValue, { color: '#FF9800' }]}>
-                {Math.round(food.carbs || 0)}g
+                {Math.round(food.carbs_g || 0)}g
               </Text>
               <Text style={[styles.macroLabel, { color: colors.textSecondary }]}>C</Text>
             </View>
             <View style={styles.macroItem}>
               <Text style={[styles.macroValue, { color: '#607D8B' }]}>
-                {Math.round(food.fat || 0)}g
+                {Math.round(food.fat_g || 0)}g
               </Text>
               <Text style={[styles.macroLabel, { color: colors.textSecondary }]}>F</Text>
             </View>

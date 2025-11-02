@@ -176,9 +176,9 @@ export class PreferenceFilter {
    * Suggest alternative foods for excluded items
    */
   public suggestAlternatives(
-    excludedFood: FoodItem, 
+    excludedFood: FoodItem,
     preferences: UserDietaryPreferences
-  ): FoodItem[] {
+  ): string[] {
     try {
       // This would typically query a food database
       // For now, return conceptual alternatives based on food category

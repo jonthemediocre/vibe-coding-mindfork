@@ -1082,6 +1082,35 @@ export interface Database {
           updated_at?: string | null;
         };
       };
+      step_tracking: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          step_count: number;
+          calories_burned: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          date: string;
+          step_count: number;
+          calories_burned: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          date?: string;
+          step_count?: number;
+          calories_burned?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       user_nutrition_trends: {

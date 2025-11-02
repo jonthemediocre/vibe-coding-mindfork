@@ -410,6 +410,7 @@ export class FoodService {
           fat_g: unified.fat_g,
           fiber_g: unified.fiber_g || 0,
           consumed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
           meal_type: 'snack',
           serving_size: `${unified.serving_size} ${unified.serving_unit}`
         };

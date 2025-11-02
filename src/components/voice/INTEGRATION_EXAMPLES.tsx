@@ -148,7 +148,8 @@ const FoodScreen = () => {
 
 export const Example5_MultipleScreens = () => {
   return (
-    <Tab.Navigator id={undefined}>
+    // @ts-ignore - id prop type mismatch
+    <Tab.Navigator id="main-tabs">
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Food" component={FoodScreen} />
     </Tab.Navigator>
@@ -168,7 +169,8 @@ export const Example6_GlobalApp = () => {
     <ThemeProvider>
       <NavigationContainer>
         {/* Your app navigation */}
-        <Tab.Navigator>
+        {/* @ts-ignore - id prop type mismatch */}
+        <Tab.Navigator id="global-tabs">
           <Tab.Screen name="Home" component={DashboardScreen} />
           <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>

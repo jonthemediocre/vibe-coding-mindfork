@@ -57,9 +57,9 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
       }
 
       // Add to recent foods
-      await FoodService.addToRecentFoods(foodData);
+      await FoodService.addToRecentFoods(user.id, foodData.food_name);
 
-      showAlert.success('Success', `Added ${foodData.name} - ${foodData.calories} kcal`);
+      showAlert.success('Success', `Added ${foodData.food_name} - ${foodData.calories} kcal`);
 
       // Navigate back and refresh
       onConfirm?.();
@@ -80,10 +80,10 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
         feedbackType !== 'correct'
           ? {
               calories: foodData.calories,
-              protein_g: foodData.protein || 0,
-              carbs_g: foodData.carbs || 0,
-              fat_g: foodData.fat || 0,
-              fiber_g: foodData.fiber || 0,
+              protein_g: foodData.protein_g || 0,
+              carbs_g: foodData.carbs_g || 0,
+              fat_g: foodData.fat_g || 0,
+              fiber_g: foodData.fiber_g || 0,
             }
           : null;
 
@@ -91,7 +91,7 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
         p_vision_log_id: visionLogId,
         p_user_id: user.id,
         p_feedback_type: feedbackType,
-        p_corrected_food_name: feedbackType !== 'correct' ? foodData.name : null,
+        p_corrected_food_name: feedbackType !== 'correct' ? foodData.food_name : null,
         p_corrected_nutrition: correctedNutrition,
         p_correction_source: 'manual',
       } as any);
@@ -164,8 +164,8 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
           <Text style={styles.label}>Food Name</Text>
           <TextInput
             style={styles.input}
-            value={foodData.name}
-            onChangeText={(text) => updateField('name', text)}
+            value={foodData.food_name}
+            onChangeText={(text) => updateField('food_name', text)}
             placeholder="Food name"
           />
         </View>
@@ -175,8 +175,8 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
           <Text style={styles.label}>Serving Size</Text>
           <TextInput
             style={styles.input}
-            value={foodData.serving}
-            onChangeText={(text) => updateField('serving', text)}
+            value={foodData.serving_size || ''}
+            onChangeText={(text) => updateField('serving_size', text)}
             placeholder="1 serving"
           />
         </View>
@@ -201,8 +201,8 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
             <Text style={styles.macroLabel}>Protein</Text>
             <TextInput
               style={styles.macroInput}
-              value={foodData.protein ? String(foodData.protein) : ''}
-              onChangeText={(text) => updateField('protein', Number(text) || undefined)}
+              value={foodData.protein_g ? String(foodData.protein_g) : ''}
+              onChangeText={(text) => updateField('protein_g', Number(text) || undefined)}
               keyboardType="numeric"
               placeholder="0"
             />
@@ -214,8 +214,8 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
             <Text style={styles.macroLabel}>Carbs</Text>
             <TextInput
               style={styles.macroInput}
-              value={foodData.carbs ? String(foodData.carbs) : ''}
-              onChangeText={(text) => updateField('carbs', Number(text) || undefined)}
+              value={foodData.carbs_g ? String(foodData.carbs_g) : ''}
+              onChangeText={(text) => updateField('carbs_g', Number(text) || undefined)}
               keyboardType="numeric"
               placeholder="0"
             />
@@ -227,8 +227,8 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
             <Text style={styles.macroLabel}>Fat</Text>
             <TextInput
               style={styles.macroInput}
-              value={foodData.fat ? String(foodData.fat) : ''}
-              onChangeText={(text) => updateField('fat', Number(text) || undefined)}
+              value={foodData.fat_g ? String(foodData.fat_g) : ''}
+              onChangeText={(text) => updateField('fat_g', Number(text) || undefined)}
               keyboardType="numeric"
               placeholder="0"
             />
@@ -240,8 +240,8 @@ export function FoodEntryConfirmScreen({ route, navigation }: FoodEntryConfirmSc
             <Text style={styles.macroLabel}>Fiber</Text>
             <TextInput
               style={styles.macroInput}
-              value={foodData.fiber ? String(foodData.fiber) : ''}
-              onChangeText={(text) => updateField('fiber', Number(text) || undefined)}
+              value={foodData.fiber_g ? String(foodData.fiber_g) : ''}
+              onChangeText={(text) => updateField('fiber_g', Number(text) || undefined)}
               keyboardType="numeric"
               placeholder="0"
             />

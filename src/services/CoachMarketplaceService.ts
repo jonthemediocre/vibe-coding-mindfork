@@ -10,6 +10,7 @@ import type {
   PurchaseCoachInput,
   CreateReviewInput,
   UpdateReviewInput,
+  PurchaseStatus,
 } from '../types/marketplace';
 
 export class CoachMarketplaceService {
@@ -136,12 +137,12 @@ export class CoachMarketplaceService {
           );
 
           coaches.forEach((coach) => {
-            const purchase = purchaseMap.get(coach.id);
+            const purchase = purchaseMap.get(coach.id) as any;
             if (purchase) {
               coach.is_purchased = true;
-              coach.purchase_status = purchase.status;
-              coach.is_trial = purchase.is_trial;
-              coach.trial_ends_at = purchase.trial_ends_at;
+              coach.purchase_status = purchase.status as PurchaseStatus;
+              coach.is_trial = purchase.is_trial as boolean;
+              coach.trial_ends_at = purchase.trial_ends_at as string | undefined;
             }
           });
         }
@@ -302,7 +303,7 @@ export class CoachMarketplaceService {
       );
 
       const coaches: Coach[] = (data || []).map((item: any) => {
-        const purchase = purchaseMap.get(item.id);
+        const purchase = purchaseMap.get(item.id) as any;
         return {
           ...item,
           category_id: item.coach_marketplace_info?.category_id,
@@ -319,9 +320,9 @@ export class CoachMarketplaceService {
           total_ratings: item.coach_marketplace_info?.total_ratings,
           sample_interactions: item.coach_marketplace_info?.sample_interactions,
           is_purchased: true,
-          purchase_status: purchase?.status,
-          is_trial: purchase?.is_trial,
-          trial_ends_at: purchase?.trial_ends_at,
+          purchase_status: purchase?.status as PurchaseStatus | undefined,
+          is_trial: purchase?.is_trial as boolean | undefined,
+          trial_ends_at: purchase?.trial_ends_at as string | undefined,
         };
       });
 

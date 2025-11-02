@@ -20,7 +20,7 @@ interface WisdomCardCreatorProps {
   coachName: string;
   coachImageUrl?: string;
   coachImageSource?: any; // For local require() images
-  gradientColors?: string[];
+  gradientColors?: readonly [string, string, ...string[]];
 }
 
 export const WisdomCardCreator: React.FC<WisdomCardCreatorProps> = ({

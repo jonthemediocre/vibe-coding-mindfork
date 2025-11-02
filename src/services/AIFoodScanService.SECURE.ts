@@ -286,7 +286,7 @@ export class AIFoodScanService {
 
       // Show accuracy indicator to user if confidence is low
       if (data.calibrated_confidence < 0.7) {
-        showAlert.warning(
+        showAlert.error(
           'Low Confidence',
           `AI is ${Math.round(data.calibrated_confidence * 100)}% confident. Please verify nutrition values.`
         );

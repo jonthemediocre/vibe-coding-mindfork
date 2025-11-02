@@ -540,6 +540,22 @@ export class CoachContextService {
   }
 
   /**
+   * Check if a restriction contains medical terminology that should be filtered
+   */
+  private static isMedicalRestriction(restriction: string): boolean {
+    const medicalTerms = [
+      'diabetes', 'diabetic', 'insulin', 'blood sugar', 'glucose',
+      'hypertension', 'blood pressure', 'cardiac', 'heart condition',
+      'allergic', 'allergy', 'intolerance', 'celiac', 'gluten',
+      'medication', 'prescription', 'condition', 'disease', 'disorder',
+      'health', 'medical', 'treatment', 'therapy', 'syndrome'
+    ];
+
+    const lowerRestriction = restriction.toLowerCase();
+    return medicalTerms.some(term => lowerRestriction.includes(term));
+  }
+
+  /**
    * Sanitize text descriptions to remove medical and personal identifiers
    */
   private static sanitizeMedicalDescription(description: string): string {
@@ -554,7 +570,7 @@ export class CoachContextService {
       .replace(/\b\d+\s*(lbs?|kg|pounds?)\b/gi, 'X weight units') // Replace specific weights
       .replace(/\b\d+\s*days?\b/gi, 'several days') // Generalize day counts
       .replace(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi, 'recently'); // Remove specific days
-    
+
     return sanitized;
   }
 

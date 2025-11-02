@@ -241,12 +241,12 @@ export function useSubscription() {
         await clearCache();
         await fetchSubscription(true);
 
-        showAlert.success('Subscription upgraded successfully!');
+        showAlert.success('Success', 'Subscription upgraded successfully!');
         return { success: true };
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to upgrade plan';
         setError(message);
-        showAlert.error(message);
+        showAlert.error('Error', message);
         logger.error('Upgrade plan error', err);
         return { success: false, error: message };
       } finally {
@@ -280,7 +280,7 @@ export function useSubscription() {
         if (data) {
           setSubscription(data);
           await cacheSubscription(data);
-          showAlert.success('Subscription updated successfully!');
+          showAlert.success('Success', 'Subscription updated successfully!');
           return { success: true };
         }
 
@@ -288,7 +288,7 @@ export function useSubscription() {
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to update subscription';
         setError(message);
-        showAlert.error(message);
+        showAlert.error('Error', message);
         logger.error('Update subscription error', err);
         return { success: false, error: message };
       } finally {
@@ -327,7 +327,7 @@ export function useSubscription() {
             ? 'Subscription canceled immediately'
             : 'Subscription will cancel at the end of the billing period';
 
-          showAlert.success(message);
+          showAlert.success('Success', message);
           return { success: true };
         }
 
@@ -335,7 +335,7 @@ export function useSubscription() {
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to cancel subscription';
         setError(message);
-        showAlert.error(message);
+        showAlert.error('Error', message);
         logger.error('Cancel subscription error', err);
         return { success: false, error: message };
       } finally {
@@ -367,14 +367,14 @@ export function useSubscription() {
 
         if (data) {
           setPaymentMethods((prev) => [data, ...prev]);
-          showAlert.success('Payment method added successfully');
+          showAlert.success('Success', 'Payment method added successfully');
           return { success: true };
         }
 
         return { success: false };
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to add payment method';
-        showAlert.error(message);
+        showAlert.error('Error', message);
         logger.error('Add payment method error', err);
         return { success: false, error: message };
       } finally {
@@ -404,11 +404,11 @@ export function useSubscription() {
           prev.filter((pm) => pm.stripe_payment_method_id !== paymentMethodId)
         );
 
-        showAlert.success('Payment method removed successfully');
+        showAlert.success('Success', 'Payment method removed successfully');
         return { success: true };
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to remove payment method';
-        showAlert.error(message);
+        showAlert.error('Error', message);
         logger.error('Remove payment method error', err);
         return { success: false, error: message };
       } finally {

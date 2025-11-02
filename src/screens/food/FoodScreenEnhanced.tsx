@@ -62,9 +62,21 @@ export const FoodScreen: React.FC = () => {
   const loadRecentFoods = async () => {
     setLoadingRecent(true);
     try {
-      const response = await FoodService.getRecentFoods(20);
+      const response = await FoodService.getRecentFoods(20, user?.id);
       if (response.data) {
-        setRecentFoods(response.data);
+        const mapped = response.data.map((entry) => ({
+          food_name: entry.food_name,
+          calories: entry.calories,
+          protein: entry.protein_g,
+          carbs: entry.carbs_g,
+          fat: entry.fat_g,
+          fiber: entry.fiber_g,
+          serving_size: parseInt(entry.serving_size.split(' ')[0]) || 1,
+          serving_unit: entry.serving_size.split(' ').slice(1).join(' ') || "serving",
+          last_logged: entry.consumed_at,
+          frequency: 1,
+        }));
+        setRecentFoods(mapped);
       }
     } catch (error) {
       console.error('Error loading recent foods:', error);
@@ -80,7 +92,20 @@ export const FoodScreen: React.FC = () => {
     try {
       const response = await FoodService.getFavoriteFoods(user.id);
       if (response.data) {
-        setFavoriteFoods(response.data);
+        const mapped = response.data.map((entry) => ({
+          id: entry.id,
+          user_id: entry.user_id,
+          food_name: entry.food_name,
+          calories: entry.calories,
+          protein: entry.protein_g,
+          carbs: entry.carbs_g,
+          fat: entry.fat_g,
+          fiber: entry.fiber_g,
+          serving_size: parseInt(entry.serving_size.split(' ')[0]) || 1,
+          serving_unit: entry.serving_size.split(' ').slice(1).join(' ') || "serving",
+          created_at: entry.consumed_at,
+        }));
+        setFavoriteFoods(mapped);
       }
     } catch (error) {
       console.error('Error loading favorite foods:', error);
@@ -94,8 +119,8 @@ export const FoodScreen: React.FC = () => {
     const success = await addFoodEntry(item);
     setAddingQuickItem(null);
 
-    if (success) {
-      await FoodService.addToRecentFoods(item);
+    if (success && user?.id) {
+      await FoodService.addToRecentFoods(user.id, item.food_name);
     } else if (error) {
       showAlert.error('Error', error);
       clearError();
@@ -109,8 +134,8 @@ export const FoodScreen: React.FC = () => {
 
       if (foodData) {
         const success = await addFoodEntry(foodData);
-        if (success) {
-          await FoodService.addToRecentFoods(foodData);
+        if (success && user?.id) {
+          await FoodService.addToRecentFoods(user.id, foodData.food_name);
           showAlert.success('Success', `Added ${foodData.food_name} - ${foodData.calories} kcal`);
         } else if (error) {
           showAlert.error('Error', error);
@@ -138,8 +163,8 @@ export const FoodScreen: React.FC = () => {
       `${food.name}\n${foodEntry.calories} cal | P: ${foodEntry.protein_g}g | C: ${foodEntry.carbs_g}g | F: ${foodEntry.fat_g}g`,
       async () => {
         const success = await addFoodEntry(foodEntry);
-        if (success) {
-          await FoodService.addToRecentFoods(foodEntry);
+        if (success && user?.id) {
+          await FoodService.addToRecentFoods(user.id, foodEntry.food_name);
           showAlert.success('Success', `Added ${foodEntry.food_name}`);
         }
       }
@@ -162,8 +187,8 @@ export const FoodScreen: React.FC = () => {
       `${food.name}${food.brand ? ` (${food.brand})` : ''}\n${foodEntry.calories} cal | P: ${foodEntry.protein_g}g | C: ${foodEntry.carbs_g}g | F: ${foodEntry.fat_g}g`,
       async () => {
         const success = await addFoodEntry(foodEntry);
-        if (success) {
-          await FoodService.addToRecentFoods(foodEntry);
+        if (success && user?.id) {
+          await FoodService.addToRecentFoods(user.id, foodEntry.food_name);
           showAlert.success('Success', `Added ${foodEntry.food_name}`);
         }
       }
@@ -182,8 +207,8 @@ export const FoodScreen: React.FC = () => {
     };
 
     const success = await addFoodEntry(foodEntry);
-    if (success) {
-      await FoodService.addToRecentFoods(foodEntry);
+    if (success && user?.id) {
+      await FoodService.addToRecentFoods(user.id, foodEntry.food_name);
       showAlert.success('Success', `Added ${foodEntry.food_name}`);
     }
   };
@@ -200,8 +225,8 @@ export const FoodScreen: React.FC = () => {
     };
 
     const success = await addFoodEntry(foodEntry);
-    if (success) {
-      await FoodService.addToRecentFoods(foodEntry);
+    if (success && user?.id) {
+      await FoodService.addToRecentFoods(user.id, foodEntry.food_name);
       showAlert.success('Success', `Added ${foodEntry.food_name}`);
     }
   };

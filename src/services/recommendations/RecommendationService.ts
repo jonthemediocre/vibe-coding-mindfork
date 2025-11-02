@@ -143,7 +143,7 @@ export class RecommendationService {
       if (!scannedFood) {
         throw new RecommendationError(
           'Scanned food not found',
-          RecommendationErrorCode.INSUFFICIENT_DATA
+          'FETCH_ERROR'
         );
       }
 

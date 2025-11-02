@@ -95,7 +95,7 @@ export const FoodSearchBar: React.FC<FoodSearchBarProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={[styles.searchContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+      <View style={[styles.searchContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
         <Text variant="body" style={styles.searchIcon}>
           🔍
         </Text>

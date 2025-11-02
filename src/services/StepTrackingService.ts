@@ -62,12 +62,9 @@ export class StepTrackingService {
           updated_at: new Date().toISOString(),
         };
 
-        // @ts-ignore - Table types will be regenerated after migration
         const { data, error } = await supabase
           .from('step_tracking')
-          // @ts-ignore - Table types will be regenerated after migration
           .update(updateData)
-          // @ts-ignore - Table types will be regenerated after migration
           .eq('id', existing.id)
           .select()
           .single();
@@ -86,10 +83,8 @@ export class StepTrackingService {
           calories_burned: calories,
         };
 
-        // @ts-ignore - Table types will be regenerated after migration
         const { data, error } = await supabase
           .from('step_tracking')
-          // @ts-ignore - Table types will be regenerated after migration
           .insert(insertData)
           .select()
           .single();

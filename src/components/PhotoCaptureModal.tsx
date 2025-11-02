@@ -8,7 +8,7 @@ import {
   Alert,
   StyleSheet,
 } from 'react-native';
-import { CameraView, CameraType, useCameraPermissions, CameraViewRef } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '../ui';
 import { useTheme } from '../app-components/components/ThemeProvider';
@@ -28,7 +28,7 @@ export const PhotoCaptureModal: React.FC<PhotoCaptureModalProps> = ({
   const [facing, setFacing] = useState<CameraType>('front');
   const [permission, requestPermission] = useCameraPermissions();
   const [isCapturing, setIsCapturing] = useState(false);
-  const cameraRef = useRef<CameraViewRef>(null);
+  const cameraRef = useRef<CameraView>(null);
 
   const handleFlipCamera = () => {
     setFacing((current) => (current === 'back' ? 'front' : 'back'));

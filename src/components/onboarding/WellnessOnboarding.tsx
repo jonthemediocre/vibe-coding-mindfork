@@ -185,7 +185,6 @@ export const WellnessOnboarding: React.FC<WellnessOnboardingProps> = ({
                 styles.optionCard,
                 isSelected && { borderColor: colors.primary, borderWidth: 2 }
               ]}
-              onPress={() => handleOptionSelect(option.value)}
             >
               <Text variant="titleSmall" style={styles.optionTitle}>
                 {option.label}

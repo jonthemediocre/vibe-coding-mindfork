@@ -9,9 +9,9 @@ import { ColorCodedFoodCard, ColorDistributionBar } from "../../components/food/
 import type { CreateFoodEntryInput } from "../../types/models";
 
 const QUICK_ADD_ITEMS: CreateFoodEntryInput[] = [
-  { name: "Protein shake", serving: "1 bottle", calories: 190, protein: 25, carbs: 10, fat: 3 },
-  { name: "Veggie salad", serving: "1 bowl", calories: 240, protein: 8, carbs: 30, fat: 12 },
-  { name: "Greek yogurt", serving: "1 cup", calories: 130, protein: 15, carbs: 12, fat: 4 },
+  { food_name: "Protein shake", serving_size: "1 bottle", calories: 190, protein_g: 25, carbs_g: 10, fat_g: 3 },
+  { food_name: "Veggie salad", serving_size: "1 bowl", calories: 240, protein_g: 8, carbs_g: 30, fat_g: 12 },
+  { food_name: "Greek yogurt", serving_size: "1 cup", calories: 130, protein_g: 15, carbs_g: 12, fat_g: 4 },
 ];
 
 export const FoodScreen: React.FC = () => {
@@ -31,7 +31,7 @@ export const FoodScreen: React.FC = () => {
   const [isScanning, setIsScanning] = useState(false);
 
   const handleQuickAdd = async (item: CreateFoodEntryInput) => {
-    setAddingQuickItem(item.name);
+    setAddingQuickItem(item.food_name);
     const success = await addFoodEntry(item);
     setAddingQuickItem(null);
 
@@ -49,7 +49,7 @@ export const FoodScreen: React.FC = () => {
       if (foodData) {
         const success = await addFoodEntry(foodData);
         if (success) {
-          Alert.alert("Success", `Added ${foodData.name} - ${foodData.calories} kcal`);
+          Alert.alert("Success", `Added ${foodData.food_name} - ${foodData.calories} kcal`);
         } else if (error) {
           Alert.alert("Error", error);
           clearError();
@@ -152,12 +152,12 @@ export const FoodScreen: React.FC = () => {
         <View style={styles.quickRow}>
           {QUICK_ADD_ITEMS.map((item) => (
             <Button
-              key={item.name}
-              title={item.name}
+              key={item.food_name}
+              title={item.food_name}
               size="small"
               variant="outline"
               onPress={() => handleQuickAdd(item)}
-              loading={addingQuickItem === item.name}
+              loading={addingQuickItem === item.food_name}
               containerStyle={styles.quickButton}
             />
           ))}
@@ -182,13 +182,12 @@ export const FoodScreen: React.FC = () => {
             ItemSeparatorComponent={() => <View style={styles.separator} />}
             renderItem={({ item }) => (
               <ColorCodedFoodCard
-                name={item.name}
-                serving={item.serving}
+                name={item.food_name}
+                serving={item.serving_size}
                 calories={item.calories}
-                protein={item.protein || 0}
-                carbs={item.carbs || 0}
-                fat={item.fat || 0}
-                dietColor={item.diet_color || "neutral"}
+                protein={item.protein_g || 0}
+                carbs={item.carbs_g || 0}
+                fat={item.fat_g || 0}
                 mealType={item.meal_type}
                 onPress={() => handleDelete(item.id)}
                 showColorLabel={true}

@@ -62,7 +62,24 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerProps> = ({
         return;
       }
 
-      onFoodScanned(response.data);
+      // Convert FoodEntry to UnifiedFood
+      const unifiedFood: UnifiedFood = {
+        id: response.data.id,
+        name: response.data.food_name,
+        barcode: data,
+        calories_per_serving: response.data.calories || 0,
+        protein_g: response.data.protein_g || 0,
+        carbs_g: response.data.carbs_g || 0,
+        fat_g: response.data.fat_g || 0,
+        fiber_g: response.data.fiber_g || 0,
+        sugar_g: response.data.sugar_g || 0,
+        sodium_mg: response.data.sodium_mg || 0,
+        serving_size: 1,
+        serving_unit: response.data.serving_size || 'serving',
+        source: 'database' as const,
+      };
+
+      onFoodScanned(unifiedFood);
       onClose();
     } catch (error) {
       Alert.alert('Error', 'Failed to lookup barcode. Please try again.');

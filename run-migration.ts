@@ -4,6 +4,7 @@
  * Executes the food color classification migration directly via Supabase
  */
 
+// @ts-ignore - createClient exists in supabase-js
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';

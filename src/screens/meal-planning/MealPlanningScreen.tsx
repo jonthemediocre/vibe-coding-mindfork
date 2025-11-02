@@ -41,7 +41,7 @@ const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
 export const MealPlanningScreen: React.FC = () => {
   const { theme } = useTheme();
   const colors = theme.colors;
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
   // State
   const [selectedDate, setSelectedDate] = useState(() => {

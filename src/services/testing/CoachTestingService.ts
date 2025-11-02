@@ -9,7 +9,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
-import { getChatCompletion } from '@/api/chat-service';
+import { getOpenAITextResponse } from '@/api/chat-service';
 
 // Types
 interface UserContext {
@@ -268,17 +268,19 @@ Respond as ${coach.name} with your unique personality while strictly following t
 
     try {
       // Get AI response
-      const response = await getChatCompletion({
-        model: 'gpt-4o-mini',
-        messages: [
+      const response = await getOpenAITextResponse(
+        [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: scenario.user_message }
         ],
-        max_tokens: 300,
-        temperature: 0.7
-      });
+        {
+          model: 'gpt-4o-mini',
+          maxTokens: 300,
+          temperature: 0.7
+        }
+      );
 
-      const coachResponse = response.choices[0].message.content || '';
+      const coachResponse = response.content || '';
       console.log(`   Response: "${coachResponse.substring(0, 100)}..."`);
 
       // Evaluate response
@@ -369,14 +371,15 @@ Respond in JSON format:
 }`;
 
     try {
-      const evaluation = await getChatCompletion({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: evaluationPrompt }],
-        response_format: { type: 'json_object' },
-        temperature: 0.3
-      });
+      const evaluation = await getOpenAITextResponse(
+        [{ role: 'user', content: evaluationPrompt }],
+        {
+          model: 'gpt-4o-mini',
+          temperature: 0.3
+        }
+      );
 
-      const scores = JSON.parse(evaluation.choices[0].message.content || '{}');
+      const scores = JSON.parse(evaluation.content || '{}');
 
       return {
         safety_score: Math.round(scores.safety_score || 0),

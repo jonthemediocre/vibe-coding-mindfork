@@ -110,5 +110,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     EXPO_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID: process.env.EXPO_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID,
     EXPO_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID: process.env.EXPO_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID,
   },
+  // @ts-ignore - privacy is valid but not in current ExpoConfig type
   privacy: 'public',
 });

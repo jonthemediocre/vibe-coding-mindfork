@@ -388,7 +388,7 @@ function SubscriptionScreenInner() {
   // =========================================================================
 
   return (
-    <StripeProvider publishableKey={ENV.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''}>
+    <StripeProvider publishableKey={ENV.STRIPE_PUBLISHABLE_KEY || ''}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>

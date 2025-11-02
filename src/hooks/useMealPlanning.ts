@@ -43,7 +43,7 @@ interface UseMealPlanningReturn {
 }
 
 export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlanningReturn {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [mealPlan, setMealPlan] = useState<MealPlanEntry[]>([]);
   const [macroSummaries, setMacroSummaries] = useState<Map<string, DailyMacroSummary>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
@@ -104,13 +104,6 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
     const summaries = new Map<string, DailyMacroSummary>();
     const start = new Date(options.startDate);
 
-    const userGoals = profile ? {
-      daily_calorie_goal: profile.daily_calorie_goal,
-      daily_protein_goal: profile.daily_protein_goal,
-      daily_carbs_goal: profile.daily_carbs_goal,
-      daily_fat_goal: profile.daily_fat_goal,
-    } : undefined;
-
     // Fetch summaries for each day
     for (let i = 0; i < numberOfDays; i++) {
       const date = new Date(start);
@@ -119,8 +112,7 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
 
       const { data } = await MealPlanningService.getDailyMacroSummary(
         user.id,
-        dateStr,
-        userGoals
+        dateStr
       );
 
       if (data) {
@@ -129,7 +121,7 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
     }
 
     setMacroSummaries(summaries);
-  }, [user?.id, profile, options.startDate, numberOfDays]);
+  }, [user?.id, options.startDate, numberOfDays]);
 
   /**
    * Add a meal to the plan
@@ -159,17 +151,9 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
         setMealPlan(prev => [...prev, data]);
 
         // Refresh macro summary for this date
-        const userGoals = profile ? {
-          daily_calorie_goal: profile.daily_calorie_goal,
-          daily_protein_goal: profile.daily_protein_goal,
-          daily_carbs_goal: profile.daily_carbs_goal,
-          daily_fat_goal: profile.daily_fat_goal,
-        } : undefined;
-
         const { data: summary } = await MealPlanningService.getDailyMacroSummary(
           user.id,
-          date,
-          userGoals
+          date
         );
 
         if (summary) {
@@ -182,7 +166,7 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
       logger.error('Error adding meal', err as Error);
       showAlert.error('Error', 'Failed to add meal');
     }
-  }, [user?.id, profile]);
+  }, [user?.id]);
 
   /**
    * Remove a meal from the plan
@@ -210,17 +194,9 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
 
       // Refresh macro summary for this date
       if (mealDate) {
-        const userGoals = profile ? {
-          daily_calorie_goal: profile.daily_calorie_goal,
-          daily_protein_goal: profile.daily_protein_goal,
-          daily_carbs_goal: profile.daily_carbs_goal,
-          daily_fat_goal: profile.daily_fat_goal,
-        } : undefined;
-
         const { data: summary } = await MealPlanningService.getDailyMacroSummary(
           user.id,
-          mealDate,
-          userGoals
+          mealDate
         );
 
         if (summary) {
@@ -233,7 +209,7 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
       logger.error('Error removing meal', err as Error);
       showAlert.error('Error', 'Failed to remove meal');
     }
-  }, [user?.id, profile, mealPlan]);
+  }, [user?.id, mealPlan]);
 
   /**
    * Update meal servings or notes
@@ -265,17 +241,9 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
 
         // Refresh macro summary if servings changed
         if (updates.servings && mealDate) {
-          const userGoals = profile ? {
-            daily_calorie_goal: profile.daily_calorie_goal,
-            daily_protein_goal: profile.daily_protein_goal,
-            daily_carbs_goal: profile.daily_carbs_goal,
-            daily_fat_goal: profile.daily_fat_goal,
-          } : undefined;
-
           const { data: summary } = await MealPlanningService.getDailyMacroSummary(
             user.id,
-            mealDate,
-            userGoals
+            mealDate
           );
 
           if (summary) {
@@ -287,7 +255,7 @@ export function useMealPlanning(options: UseMealPlanningOptions): UseMealPlannin
       logger.error('Error updating meal', err as Error);
       showAlert.error('Error', 'Failed to update meal');
     }
-  }, [user?.id, profile, mealPlan]);
+  }, [user?.id, mealPlan]);
 
   /**
    * Manually refresh meal plan

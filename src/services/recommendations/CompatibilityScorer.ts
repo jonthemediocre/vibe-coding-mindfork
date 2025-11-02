@@ -22,6 +22,8 @@ import type {
 } from '../../types/recommendations';
 import type { FoodItem } from './MacroCalculator';
 
+export type { FoodItem };
+
 export interface ScoringContext {
   macroCompatibility: MacroCompatibility;
   nutrientGaps: NutrientGapAnalysis;

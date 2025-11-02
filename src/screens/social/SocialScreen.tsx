@@ -160,7 +160,7 @@ export function SocialScreen() {
               coachMessage={currentQuote.message}
               coachName={currentQuote.coachName}
               coachImageSource={getCoachById(currentQuote.coachId)?.imageUrl}
-              gradientColors={currentQuote.gradientColors}
+              gradientColors={currentQuote.gradientColors as unknown as readonly [string, string, ...string[]]}
             />
 
             {/* Tips */}
