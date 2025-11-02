@@ -16,13 +16,13 @@
       "downloaded": true,
       "actual": {
         "name": "apple",
-        "serving_size": "1 medium (182g)",
+        "serving_size": "1 medium apple (~200g)",
         "calories": 95,
         "protein_g": 0.5,
         "carbs_g": 25,
         "fat_g": 0.3,
-        "fiber_g": 4.4,
-        "confidence_score": 0.9
+        "fiber_g": 4.3,
+        "confidence_score": 0.99
       },
       "metrics": {
         "nameMatch": true,
@@ -36,7 +36,7 @@
         "fatAccuracy": 1
       },
       "success": true,
-      "duration": 2158
+      "duration": 3272
     },
     {
       "id": 2,
@@ -53,14 +53,14 @@
       },
       "downloaded": true,
       "actual": {
-        "name": "banana",
-        "serving_size": "1 medium (118g)",
+        "name": "whole bananas",
+        "serving_size": "1 whole banana, medium",
         "calories": 105,
         "protein_g": 1.3,
         "carbs_g": 27,
         "fat_g": 0.3,
         "fiber_g": 3.1,
-        "confidence_score": 0.95
+        "confidence_score": 0.99
       },
       "metrics": {
         "nameMatch": true,
@@ -74,7 +74,7 @@
         "fatAccuracy": 0.75
       },
       "success": true,
-      "duration": 2395
+      "duration": 3524
     },
     {
       "id": 4,
@@ -92,27 +92,27 @@
       "downloaded": true,
       "actual": {
         "name": "raw turkey breast",
-        "serving_size": "100g",
-        "calories": 135,
-        "protein_g": 24,
+        "serving_size": "6 oz raw",
+        "calories": 165,
+        "protein_g": 30,
         "carbs_g": 0,
-        "fat_g": 3,
+        "fat_g": 1,
         "fiber_g": 0,
-        "confidence_score": 0.9
+        "confidence_score": 0.95
       },
       "metrics": {
         "nameMatch": false,
-        "calorieError": 30,
-        "proteinError": 7,
+        "calorieError": 0,
+        "proteinError": 1,
         "carbsError": 0,
-        "fatError": 0.6000000000000001,
-        "calorieAccuracy": 0.8181818181818181,
-        "proteinAccuracy": 0.7741935483870968,
+        "fatError": 2.6,
+        "calorieAccuracy": 1,
+        "proteinAccuracy": 0.967741935483871,
         "carbsAccuracy": 0,
-        "fatAccuracy": 0.8333333333333333
+        "fatAccuracy": 0.2777777777777778
       },
       "success": true,
-      "duration": 2905
+      "duration": 3980
     },
     {
       "id": 5,
@@ -128,29 +128,9 @@
         "serving": "2 large eggs"
       },
       "downloaded": true,
-      "actual": {
-        "name": "eggs",
-        "serving_size": "1 large egg",
-        "calories": 70,
-        "protein_g": 6,
-        "carbs_g": 1,
-        "fat_g": 5,
-        "fiber_g": 0,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": true,
-        "calorieError": 85,
-        "proteinError": 7,
-        "carbsError": 0.10000000000000009,
-        "fatError": 6,
-        "calorieAccuracy": 0.4516129032258065,
-        "proteinAccuracy": 0.46153846153846156,
-        "carbsAccuracy": 0.9090909090909091,
-        "fatAccuracy": 0.4545454545454546
-      },
-      "success": true,
-      "duration": 2242
+      "actual": null,
+      "success": false,
+      "duration": 192
     },
     {
       "id": 6,
@@ -166,29 +146,9 @@
         "serving": "100g"
       },
       "downloaded": true,
-      "actual": {
-        "name": "Creamy Spinach and Salmon Dish",
-        "serving_size": "1 cup",
-        "calories": 350,
-        "protein_g": 25,
-        "carbs_g": 5,
-        "fat_g": 25,
-        "fiber_g": 2,
-        "confidence_score": 0.8
-      },
-      "metrics": {
-        "nameMatch": true,
-        "calorieError": 144,
-        "proteinError": 3,
-        "carbsError": 0,
-        "fatError": 12,
-        "calorieAccuracy": 0.30097087378640774,
-        "proteinAccuracy": 0.8636363636363636,
-        "carbsAccuracy": 0,
-        "fatAccuracy": 0.07692307692307687
-      },
-      "success": true,
-      "duration": 3379
+      "actual": null,
+      "success": false,
+      "duration": 179
     },
     {
       "id": 7,
@@ -204,29 +164,9 @@
         "serving": "1 cup cooked (158g)"
       },
       "downloaded": true,
-      "actual": {
-        "name": "white rice",
-        "serving_size": "1 cup (200g cooked)",
-        "calories": 205,
-        "protein_g": 4.3,
-        "carbs_g": 44.5,
-        "fat_g": 0.4,
-        "fiber_g": 0.6,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": true,
-        "calorieError": 0,
-        "proteinError": 0.09999999999999964,
-        "carbsError": 0.5,
-        "fatError": 0,
-        "calorieAccuracy": 1,
-        "proteinAccuracy": 0.9761904761904763,
-        "carbsAccuracy": 0.9888888888888889,
-        "fatAccuracy": 1
-      },
-      "success": true,
-      "duration": 1836
+      "actual": null,
+      "success": false,
+      "duration": 162
     },
     {
       "id": 8,
@@ -242,29 +182,9 @@
         "serving": "1 medium (150g)"
       },
       "downloaded": true,
-      "actual": {
-        "name": "avocado",
-        "serving_size": "1 medium (150g)",
-        "calories": 240,
-        "protein_g": 3,
-        "carbs_g": 12,
-        "fat_g": 22,
-        "fiber_g": 10,
-        "confidence_score": 0.95
-      },
-      "metrics": {
-        "nameMatch": true,
-        "calorieError": 0,
-        "proteinError": 0,
-        "carbsError": 1,
-        "fatError": 0,
-        "calorieAccuracy": 1,
-        "proteinAccuracy": 1,
-        "carbsAccuracy": 0.9230769230769231,
-        "fatAccuracy": 1
-      },
-      "success": true,
-      "duration": 1871
+      "actual": null,
+      "success": false,
+      "duration": 160
     },
     {
       "id": 9,
@@ -280,29 +200,9 @@
         "serving": "1 slice (107g)"
       },
       "downloaded": true,
-      "actual": {
-        "name": "cheese pizza",
-        "serving_size": "1 slice",
-        "calories": 285,
-        "protein_g": 12,
-        "carbs_g": 36,
-        "fat_g": 10,
-        "fiber_g": 2,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": true,
-        "calorieError": 0,
-        "proteinError": 0,
-        "carbsError": 0,
-        "fatError": 0,
-        "calorieAccuracy": 1,
-        "proteinAccuracy": 1,
-        "carbsAccuracy": 1,
-        "fatAccuracy": 1
-      },
-      "success": true,
-      "duration": 1495
+      "actual": null,
+      "success": false,
+      "duration": 343
     },
     {
       "id": 10,
@@ -318,29 +218,9 @@
         "serving": "1 burger (110g)"
       },
       "downloaded": true,
-      "actual": {
-        "name": "double cheeseburger with toppings",
-        "serving_size": "1 burger",
-        "calories": 800,
-        "protein_g": 40,
-        "carbs_g": 50,
-        "fat_g": 50,
-        "fiber_g": 3,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": false,
-        "calorieError": 446,
-        "proteinError": 24,
-        "carbsError": 20,
-        "fatError": 31,
-        "calorieAccuracy": 0,
-        "proteinAccuracy": 0,
-        "carbsAccuracy": 0.33333333333333337,
-        "fatAccuracy": 0
-      },
-      "success": true,
-      "duration": 2191
+      "actual": null,
+      "success": false,
+      "duration": 136
     },
     {
       "id": 11,
@@ -356,29 +236,9 @@
         "serving": "1 cup (100g)"
       },
       "downloaded": true,
-      "actual": {
-        "name": "Vegetable Salad Bowl",
-        "serving_size": "1 bowl",
-        "calories": 320,
-        "protein_g": 8,
-        "carbs_g": 40,
-        "fat_g": 14,
-        "fiber_g": 12,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": false,
-        "calorieError": 270,
-        "proteinError": 5,
-        "carbsError": 32,
-        "fatError": 13,
-        "calorieAccuracy": 0,
-        "proteinAccuracy": 0,
-        "carbsAccuracy": 0,
-        "fatAccuracy": 0
-      },
-      "success": true,
-      "duration": 1990
+      "actual": null,
+      "success": false,
+      "duration": 162
     },
     {
       "id": 12,
@@ -394,29 +254,9 @@
         "serving": "1 medium (131g)"
       },
       "downloaded": true,
-      "actual": {
-        "name": "orange slices",
-        "serving_size": "1 medium (131g)",
-        "calories": 62,
-        "protein_g": 1.2,
-        "carbs_g": 15.4,
-        "fat_g": 0.2,
-        "fiber_g": 3.1,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": true,
-        "calorieError": 0,
-        "proteinError": 0,
-        "carbsError": 0.40000000000000036,
-        "fatError": 0,
-        "calorieAccuracy": 1,
-        "proteinAccuracy": 1,
-        "carbsAccuracy": 0.9733333333333333,
-        "fatAccuracy": 1
-      },
-      "success": true,
-      "duration": 1968
+      "actual": null,
+      "success": false,
+      "duration": 104
     },
     {
       "id": 13,
@@ -432,29 +272,9 @@
         "serving": "100g"
       },
       "downloaded": true,
-      "actual": {
-        "name": "steak with fries",
-        "serving_size": "1 plate",
-        "calories": 650,
-        "protein_g": 40,
-        "carbs_g": 45,
-        "fat_g": 30,
-        "fiber_g": 4,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": false,
-        "calorieError": 379,
-        "proteinError": 14,
-        "carbsError": 0,
-        "fatError": 11,
-        "calorieAccuracy": 0,
-        "proteinAccuracy": 0.46153846153846156,
-        "carbsAccuracy": 0,
-        "fatAccuracy": 0.42105263157894735
-      },
-      "success": true,
-      "duration": 2132
+      "actual": null,
+      "success": false,
+      "duration": 115
     },
     {
       "id": 14,
@@ -470,29 +290,9 @@
         "serving": "1 cup cooked (140g)"
       },
       "downloaded": true,
-      "actual": {
-        "name": "Penne Pasta with Meat Sauce",
-        "serving_size": "1 cup",
-        "calories": 310,
-        "protein_g": 12,
-        "carbs_g": 45,
-        "fat_g": 8,
-        "fiber_g": 3,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": true,
-        "calorieError": 89,
-        "proteinError": 4,
-        "carbsError": 2,
-        "fatError": 6.7,
-        "calorieAccuracy": 0.5972850678733032,
-        "proteinAccuracy": 0.5,
-        "carbsAccuracy": 0.9534883720930233,
-        "fatAccuracy": 0
-      },
-      "success": true,
-      "duration": 1837
+      "actual": null,
+      "success": false,
+      "duration": 157
     },
     {
       "id": 15,
@@ -508,41 +308,21 @@
         "serving": "170g container"
       },
       "downloaded": true,
-      "actual": {
-        "name": "panna cotta with strawberries",
-        "serving_size": "1 jar (approximately 100g)",
-        "calories": 200,
-        "protein_g": 3,
-        "carbs_g": 18,
-        "fat_g": 14,
-        "fiber_g": 1,
-        "confidence_score": 0.9
-      },
-      "metrics": {
-        "nameMatch": false,
-        "calorieError": 100,
-        "proteinError": 14,
-        "carbsError": 12,
-        "fatError": 13.3,
-        "calorieAccuracy": 0,
-        "proteinAccuracy": 0.17647058823529416,
-        "carbsAccuracy": 0,
-        "fatAccuracy": 0
-      },
-      "success": true,
-      "duration": 1921
+      "actual": null,
+      "success": false,
+      "duration": 138
     }
   ],
   "stats": {
     "totalTests": 14,
-    "successful": 14,
-    "failed": 0,
-    "avgNameMatch": 0.6428571428571429,
-    "avgCalorieAccuracy": 0.5834321902190954,
-    "avgProteinAccuracy": 0.6581119928232966,
-    "avgCarbsAccuracy": 0.577229411415458,
-    "avgFatAccuracy": 0.538275321170058,
-    "avgConfidence": 0.9000000000000002,
-    "avgDuration": 2165.714285714286
+    "successful": 3,
+    "failed": 11,
+    "avgNameMatch": 0.6666666666666666,
+    "avgCalorieAccuracy": 1,
+    "avgProteinAccuracy": 0.989247311827957,
+    "avgCarbsAccuracy": 0.6666666666666666,
+    "avgFatAccuracy": 0.6759259259259259,
+    "avgConfidence": 0.9766666666666666,
+    "avgDuration": 3592
   }
 }

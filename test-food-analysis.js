@@ -41,12 +41,74 @@ function imageToBase64(filepath) {
 }
 
 /**
- * Analyze food image with OpenAI Vision
+ * Analyze food image with OpenAI Vision (Multi-Stage)
  */
 async function analyzeFoodImage(imagePath) {
   try {
     const base64Image = imageToBase64(imagePath);
 
+    // STAGE 1: Identify all items
+    const itemsResponse = await openai.chat.completions.create({
+      model: 'openai/gpt-4o-2024-11-20',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: `Look at this food image and list ALL distinct DISHES you can see. Use DISH NAMES (as they appear on a menu), NOT ingredient names.
+
+IMPORTANT RULES:
+- Use dish names like "hamburger", "garden salad", "chicken breast" - NOT ingredient names like "bun", "lettuce", "meat"
+- "Salad" is a dish; "lettuce" is an ingredient
+- "Hamburger" is a dish; "bun" and "patty" are ingredients
+- "Pasta" is a dish; "noodles" and "sauce" are ingredients
+- The primary_item should be the MAIN DISH, not the largest ingredient
+
+Return ONLY valid JSON in this format:
+{
+  "items": ["dish1", "dish2"],
+  "primary_item": "the main dish name"
+}
+
+CORRECT Examples:
+- Burger with fries: {"items": ["hamburger", "french fries"], "primary_item": "hamburger"}
+- Salad with toppings: {"items": ["garden salad"], "primary_item": "garden salad"}
+- Plain rice: {"items": ["white rice"], "primary_item": "white rice"}
+- Steak with sides: {"items": ["beef steak", "french fries", "vegetables"], "primary_item": "beef steak"}
+
+WRONG Examples (do NOT do this):
+- {"items": ["bun", "patty", "lettuce"], "primary_item": "bun"} ✗ Use "hamburger"
+- {"items": ["lettuce", "tomato"], "primary_item": "lettuce"} ✗ Use "garden salad"
+- {"items": ["noodles", "sauce"], "primary_item": "noodles"} ✗ Use "pasta"`
+            },
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 200,
+    });
+
+    const itemsContent = itemsResponse.choices[0]?.message?.content;
+    if (!itemsContent) {
+      throw new Error('No response from Stage 1');
+    }
+
+    const itemsMatch = itemsContent.match(/\{[\s\S]*\}/);
+    if (!itemsMatch) {
+      throw new Error('No JSON found in Stage 1 response');
+    }
+
+    const itemsResult = JSON.parse(itemsMatch[0]);
+    const primaryItem = itemsResult.primary_item || itemsResult.items[0];
+    const hasMultipleItems = itemsResult.items.length > 1;
+
+    // STAGE 2: Analyze ONLY the primary item
     const response = await openai.chat.completions.create({
       model: 'openai/gpt-4o-2024-11-20',
       messages: [
@@ -55,19 +117,39 @@ async function analyzeFoodImage(imagePath) {
           content: [
             {
               type: 'text',
-              text: `Analyze this food image and provide nutritional information. Return ONLY valid JSON in this exact format:
+              text: `In this image, you identified these items: ${itemsResult.items.join(', ')}.
+
+Now analyze ONLY the "${primaryItem}" and completely IGNORE all other items.
+
+CRITICAL INSTRUCTIONS:
+- Estimate calories for ONLY the ${primaryItem}
+- Do NOT include any other items in your calorie calculation
+- Assume the ${primaryItem} is PLAIN/UNSEASONED unless obviously prepared
+- Use TYPICAL RESTAURANT PORTIONS unless the image clearly shows otherwise
+- If this is cooked food (like rice, pasta, meat), estimate the COOKED portion size
+
+TYPICAL PORTIONS FOR COMMON FOODS:
+- Garden salad: 2 cups mixed greens (~50-80 cal)
+- Hamburger: 1 beef patty + bun (~300-400 cal)
+- Pizza: 1 large slice (~250-300 cal)
+- Chicken breast: 4-6 oz cooked (~165-250 cal)
+- Steak: 6-8 oz cooked (~250-350 cal)
+- Rice: 1 cup cooked (~200 cal)
+- Pasta: 1 cup cooked (~200 cal)
+- Eggs: 2 large eggs (~140-160 cal)
+- Avocado: 1 whole avocado (~240 cal) or 1/2 avocado (~120 cal)
+
+Return ONLY valid JSON in this exact format:
 {
-  "name": "food name",
-  "serving_size": "serving size (e.g., 1 cup, 100g, 1 medium)",
-  "calories": number,
+  "name": "${primaryItem}",
+  "serving_size": "realistic serving size for just the ${primaryItem} (use typical portions above)",
+  "calories": number (ONLY for the ${primaryItem}, use typical portions guide),
   "protein_g": number,
   "carbs_g": number,
   "fat_g": number,
   "fiber_g": number,
   "confidence_score": number (0.0 to 1.0)
-}
-
-Be as accurate as possible with the nutritional values. If you cannot identify the food clearly, set confidence_score to 0.5 or lower.`
+}`
             },
             {
               type: 'image_url',

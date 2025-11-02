@@ -19,7 +19,7 @@ import { logger } from '../utils/logger';
 import { showAlert } from '../utils/alerts';
 
 /**
- * Food analysis result from edge function
+ * Food analysis result from AI
  */
 interface FoodAnalysisResult {
   name: string;
@@ -30,10 +30,12 @@ interface FoodAnalysisResult {
   fat?: number;
   fiber?: number;
   confidence: number;
+  needsClarification?: boolean;
+  clarificationQuestion?: string;
 }
 
 /**
- * Edge function response format for food-analysis
+ * AI response format for food analysis
  */
 interface FoodAnalysisEdgeResponse {
   success: boolean;
@@ -49,6 +51,8 @@ interface FoodAnalysisEdgeResponse {
     serving_size: string;
     ingredients?: string[];
     confidence_score: number;
+    needs_clarification?: boolean;
+    clarification_question?: string;
     foodLogId?: string;
     similarFoods?: any[];
   };
@@ -182,17 +186,17 @@ export class AIFoodScanService {
   }
 
   /**
-   * Convert edge function response to FoodAnalysisResult
+   * Convert AI response to FoodAnalysisResult
    */
   private static convertEdgeResponseToResult(
     response: FoodAnalysisEdgeResponse
   ): FoodAnalysisResult {
     if (!response.data) {
-      throw new Error('Invalid response format from edge function');
+      throw new Error('Invalid response format from AI');
     }
 
     const { data } = response;
-    
+
     return {
       name: data.name || 'Unknown Food',
       serving: data.serving_size || '1 serving',
@@ -202,6 +206,8 @@ export class AIFoodScanService {
       fat: data.fat_g,
       fiber: data.fiber_g,
       confidence: data.confidence_score || 0.85,
+      needsClarification: data.needs_clarification || false,
+      clarificationQuestion: data.clarification_question,
     };
   }
 
@@ -313,7 +319,73 @@ export class AIFoodScanService {
         },
       });
 
-      // Call OpenAI Vision API via OpenRouter with retry logic
+      // STAGE 1: Identify all items in the image
+      const itemsResult = await this.retryWithBackoff(async () => {
+        const itemsResponse = await openai.chat.completions.create({
+          model: 'openai/gpt-4o-2024-11-20',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `Look at this food image and list ALL distinct DISHES you can see. Use DISH NAMES (as they appear on a menu), NOT ingredient names.
+
+IMPORTANT RULES:
+- Use dish names like "hamburger", "garden salad", "chicken breast" - NOT ingredient names like "bun", "lettuce", "meat"
+- "Salad" is a dish; "lettuce" is an ingredient
+- "Hamburger" is a dish; "bun" and "patty" are ingredients
+- "Pasta" is a dish; "noodles" and "sauce" are ingredients
+- The primary_item should be the MAIN DISH, not the largest ingredient
+
+Return ONLY valid JSON in this format:
+{
+  "items": ["dish1", "dish2"],
+  "primary_item": "the main dish name"
+}
+
+CORRECT Examples:
+- Burger with fries: {"items": ["hamburger", "french fries"], "primary_item": "hamburger"}
+- Salad with toppings: {"items": ["garden salad"], "primary_item": "garden salad"}
+- Plain rice: {"items": ["white rice"], "primary_item": "white rice"}
+- Steak with sides: {"items": ["beef steak", "french fries", "vegetables"], "primary_item": "beef steak"}
+
+WRONG Examples (do NOT do this):
+- {"items": ["bun", "patty", "lettuce"], "primary_item": "bun"} ✗ Use "hamburger"
+- {"items": ["lettuce", "tomato"], "primary_item": "lettuce"} ✗ Use "garden salad"
+- {"items": ["noodles", "sauce"], "primary_item": "noodles"} ✗ Use "pasta"`
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: `data:image/jpeg;base64,${base64Image}`,
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 200,
+        });
+
+        const content = itemsResponse.choices[0]?.message?.content;
+        if (!content) {
+          throw new Error('No response from Stage 1');
+        }
+
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('No JSON found in Stage 1 response');
+        }
+
+        return JSON.parse(jsonMatch[0]);
+      });
+
+      logger.info('Stage 1 complete - Items identified:', itemsResult);
+
+      const primaryItem = itemsResult.primary_item || itemsResult.items[0];
+      const hasMultipleItems = itemsResult.items.length > 1;
+
+      // STAGE 2: Analyze ONLY the primary item, explicitly ignoring others
       const result = await this.retryWithBackoff(async () => {
         const response = await openai.chat.completions.create({
           model: 'openai/gpt-4o-2024-11-20',
@@ -323,19 +395,41 @@ export class AIFoodScanService {
               content: [
                 {
                   type: 'text',
-                  text: `Analyze this food image and provide nutritional information. Return ONLY valid JSON in this exact format:
+                  text: `In this image, you identified these items: ${itemsResult.items.join(', ')}.
+
+Now analyze ONLY the "${primaryItem}" and completely IGNORE all other items.
+
+CRITICAL INSTRUCTIONS:
+- Estimate calories for ONLY the ${primaryItem}
+- Do NOT include any other items in your calorie calculation
+- Assume the ${primaryItem} is PLAIN/UNSEASONED unless obviously prepared
+- Use TYPICAL RESTAURANT PORTIONS unless the image clearly shows otherwise
+- If this is cooked food (like rice, pasta, meat), estimate the COOKED portion size
+
+TYPICAL PORTIONS FOR COMMON FOODS:
+- Garden salad: 2 cups mixed greens (~50-80 cal)
+- Hamburger: 1 beef patty + bun (~300-400 cal)
+- Pizza: 1 large slice (~250-300 cal)
+- Chicken breast: 4-6 oz cooked (~165-250 cal)
+- Steak: 6-8 oz cooked (~250-350 cal)
+- Rice: 1 cup cooked (~200 cal)
+- Pasta: 1 cup cooked (~200 cal)
+- Eggs: 2 large eggs (~140-160 cal)
+- Avocado: 1 whole avocado (~240 cal) or 1/2 avocado (~120 cal)
+
+Return ONLY valid JSON in this exact format:
 {
-  "name": "food name",
-  "serving_size": "serving size (e.g., 1 cup, 100g, 1 medium)",
-  "calories": number,
+  "name": "${primaryItem}",
+  "serving_size": "realistic serving size for just the ${primaryItem} (use typical portions above)",
+  "calories": number (ONLY for the ${primaryItem}, use typical portions guide),
   "protein_g": number,
   "carbs_g": number,
   "fat_g": number,
   "fiber_g": number,
-  "confidence_score": number (0.0 to 1.0)
-}
-
-Be as accurate as possible with the nutritional values. If you cannot identify the food clearly, set confidence_score to 0.5 or lower.`
+  "confidence_score": number (0.0 to 1.0),
+  "needs_clarification": ${hasMultipleItems},
+  "clarification_question": ${hasMultipleItems ? `"I see ${itemsResult.items.join(', ')}. Should I log just the ${primaryItem}, or include other items?"` : "null"}
+}`
                 },
                 {
                   type: 'image_url',
@@ -374,6 +468,8 @@ Be as accurate as possible with the nutritional values. If you cannot identify t
               fat_g: parsed.fat_g,
               fiber_g: parsed.fiber_g,
               confidence_score: parsed.confidence_score || 0.85,
+              needs_clarification: parsed.needs_clarification || false,
+              clarification_question: parsed.clarification_question || undefined,
             },
           } as FoodAnalysisEdgeResponse;
         } catch (parseError) {
