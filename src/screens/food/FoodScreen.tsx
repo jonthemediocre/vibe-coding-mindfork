@@ -5,7 +5,6 @@ import {
   Pressable,
   ActivityIndicator,
   Modal,
-  TextInput as RNTextInput,
 } from "react-native";
 import { Screen, Text, useThemeColors } from "../../ui";
 import { useFoodTracking } from "../../hooks";
@@ -14,7 +13,7 @@ import { useProfile } from "../../contexts/ProfileContext";
 import { useTheme } from "../../app-components/components/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation } from "@react-navigation/native";
+import { AIFoodScanService } from "../../services/AIFoodScanService";
 import type { CreateFoodEntryInput } from "../../types/models";
 
 const MEAL_TIMES = ["Breakfast", "Lunch", "Dinner", "Snacks"];
@@ -24,7 +23,6 @@ export const FoodScreen: React.FC = () => {
   const { isDark } = useTheme();
   const { user } = useAuth();
   const { profile } = useProfile();
-  const navigation = useNavigation();
   const {
     entries,
     dailyStats,
@@ -37,6 +35,7 @@ export const FoodScreen: React.FC = () => {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
 
   // Calculate remaining calories
   const goalCalories = profile?.daily_calories || 2000;
@@ -59,19 +58,33 @@ export const FoodScreen: React.FC = () => {
     setShowAddModal(true);
   };
 
-  const handleScanFood = () => {
+  const handleScanFood = async () => {
     setShowAddModal(false);
-    navigation.navigate("FoodScanner" as never);
+    setIsScanning(true);
+
+    try {
+      const foodData = await AIFoodScanService.scanFoodImage();
+
+      if (foodData) {
+        await addFoodEntry(foodData);
+      }
+    } catch (err) {
+      // Error will be shown via the error state from useFoodTracking
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const handleSearchFood = () => {
     setShowAddModal(false);
-    navigation.navigate("FoodSearch" as never);
+    // TODO: Implement food search - for now just close modal
+    // This would navigate to a search screen or show a search modal
   };
 
   const handleQuickAdd = () => {
     setShowAddModal(false);
-    navigation.navigate("QuickAdd" as never);
+    // TODO: Implement quick add - for now just close modal
+    // This would show a form to manually enter calories
   };
 
   const handleDeleteEntry = async (entryId: string) => {
@@ -493,6 +506,25 @@ export const FoodScreen: React.FC = () => {
                 </Text>
               </Pressable>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Scanning Modal */}
+      <Modal
+        visible={isScanning}
+        animationType="fade"
+        transparent
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className="bg-white dark:bg-gray-900 rounded-3xl p-8 items-center">
+            <ActivityIndicator size="large" color="#8B5CF6" />
+            <Text className="text-lg font-semibold text-gray-900 dark:text-white mt-4">
+              Analyzing food...
+            </Text>
+            <Text className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              This may take a moment
+            </Text>
           </View>
         </View>
       </Modal>
