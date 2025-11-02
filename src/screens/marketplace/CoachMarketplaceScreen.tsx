@@ -93,23 +93,28 @@ export const CoachMarketplaceScreen: React.FC = () => {
         return;
       }
 
-      const success = await purchaseCoach({
-        coach_id: coachId,
-        purchase_type: withTrial ? 'trial' : 'monthly',
-        with_trial: withTrial,
-      });
+      try {
+        const success = await purchaseCoach({
+          coach_id: coachId,
+          purchase_type: withTrial ? 'trial' : 'monthly',
+          with_trial: withTrial,
+        });
 
-      if (success) {
-        Alert.alert(
-          'Success!',
-          withTrial
-            ? 'Your free trial has started. Enjoy your new coach!'
-            : 'Coach purchased successfully!'
-        );
-        setShowPurchaseModal(false);
-      } else if (error) {
-        Alert.alert('Purchase Failed', error);
-        clearError();
+        if (success) {
+          Alert.alert(
+            'Success!',
+            withTrial
+              ? 'Your free trial has started. Enjoy your new coach!'
+              : 'Coach purchased successfully!'
+          );
+          setShowPurchaseModal(false);
+        } else if (error) {
+          Alert.alert('Purchase Failed', error);
+          clearError();
+        }
+      } catch (err) {
+        console.error('[CoachMarketplaceScreen] Failed to purchase coach:', err);
+        Alert.alert('Error', 'Failed to complete purchase. Please try again.');
       }
     },
     [user, purchaseCoach, error, clearError]
@@ -127,12 +132,17 @@ export const CoachMarketplaceScreen: React.FC = () => {
             text: 'Cancel Trial',
             style: 'destructive',
             onPress: async () => {
-              const success = await cancelTrial(coach.id);
-              if (success) {
-                Alert.alert('Trial Cancelled', 'Your trial has been cancelled.');
-              } else if (error) {
-                Alert.alert('Error', error);
-                clearError();
+              try {
+                const success = await cancelTrial(coach.id);
+                if (success) {
+                  Alert.alert('Trial Cancelled', 'Your trial has been cancelled.');
+                } else if (error) {
+                  Alert.alert('Error', error);
+                  clearError();
+                }
+              } catch (err) {
+                console.error('[CoachMarketplaceScreen] Failed to cancel trial:', err);
+                Alert.alert('Error', 'Failed to cancel trial. Please try again.');
               }
             },
           },
@@ -153,13 +163,18 @@ export const CoachMarketplaceScreen: React.FC = () => {
           {
             text: 'Convert',
             onPress: async () => {
-              const success = await purchaseCoach({
-                coach_id: coach.id,
-                purchase_type: 'monthly',
-                with_trial: false,
-              });
-              if (success) {
-                Alert.alert('Success', 'Trial converted to paid subscription!');
+              try {
+                const success = await purchaseCoach({
+                  coach_id: coach.id,
+                  purchase_type: 'monthly',
+                  with_trial: false,
+                });
+                if (success) {
+                  Alert.alert('Success', 'Trial converted to paid subscription!');
+                }
+              } catch (err) {
+                console.error('[CoachMarketplaceScreen] Failed to convert trial:', err);
+                Alert.alert('Error', 'Failed to convert trial. Please try again.');
               }
             },
           },
@@ -179,20 +194,25 @@ export const CoachMarketplaceScreen: React.FC = () => {
     async (rating: number, title?: string, reviewText?: string) => {
       if (!coachToRate) return;
 
-      const success = await rateCoach({
-        coach_id: coachToRate.id,
-        rating,
-        title,
-        review_text: reviewText,
-      });
+      try {
+        const success = await rateCoach({
+          coach_id: coachToRate.id,
+          rating,
+          title,
+          review_text: reviewText,
+        });
 
-      if (success) {
-        Alert.alert('Thank You!', 'Your review has been submitted.');
-        setShowRatingModal(false);
-        setCoachToRate(null);
-      } else if (error) {
-        Alert.alert('Error', error);
-        clearError();
+        if (success) {
+          Alert.alert('Thank You!', 'Your review has been submitted.');
+          setShowRatingModal(false);
+          setCoachToRate(null);
+        } else if (error) {
+          Alert.alert('Error', error);
+          clearError();
+        }
+      } catch (err) {
+        console.error('[CoachMarketplaceScreen] Failed to submit rating:', err);
+        Alert.alert('Error', 'Failed to submit review. Please try again.');
       }
     },
     [coachToRate, rateCoach, error, clearError]

@@ -74,14 +74,23 @@ export const GoalsScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchGoals(), refreshAchievements()]);
-    setRefreshing(false);
+    try {
+      await Promise.all([fetchGoals(), refreshAchievements()]);
+    } catch (err) {
+      console.error('[GoalsScreen] Failed to refresh goals:', err);
+    } finally {
+      setRefreshing(false);
+    }
   }, [fetchGoals, refreshAchievements]);
 
   const handleCreateGoal = async (goalInput: CreateGoalInput) => {
-    const success = await createGoal(goalInput);
-    if (success) {
-      setIsCreateModalVisible(false);
+    try {
+      const success = await createGoal(goalInput);
+      if (success) {
+        setIsCreateModalVisible(false);
+      }
+    } catch (err) {
+      console.error('[GoalsScreen] Failed to create goal:', err);
     }
   };
 

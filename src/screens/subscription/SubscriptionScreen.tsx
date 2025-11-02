@@ -67,16 +67,26 @@ function SubscriptionScreenInner() {
     }
 
     // Upgrade or change plan
-    const result = await upgradePlan(planId, billingCycle);
-    if (result.success) {
-      refreshAll();
+    try {
+      const result = await upgradePlan(planId, billingCycle);
+      if (result.success) {
+        refreshAll();
+      }
+    } catch (err) {
+      console.error('[SubscriptionScreen] Failed to select plan:', err);
+      showAlert.error('Error', 'Failed to update plan. Please try again.');
     }
   };
 
   const handleAddPaymentMethod = async (paymentMethodId: string) => {
-    const result = await addPaymentMethod(paymentMethodId);
-    if (result.success) {
-      refreshAll();
+    try {
+      const result = await addPaymentMethod(paymentMethodId);
+      if (result.success) {
+        refreshAll();
+      }
+    } catch (err) {
+      console.error('[SubscriptionScreen] Failed to add payment method:', err);
+      showAlert.error('Error', 'Failed to add payment method. Please try again.');
     }
   };
 
@@ -85,15 +95,25 @@ function SubscriptionScreenInner() {
       'Remove Payment Method',
       'Are you sure you want to remove this payment method?',
       async () => {
-        await removePaymentMethod(pmId);
-        refreshAll();
+        try {
+          await removePaymentMethod(pmId);
+          refreshAll();
+        } catch (err) {
+          console.error('[SubscriptionScreen] Failed to remove payment method:', err);
+          showAlert.error('Error', 'Failed to remove payment method. Please try again.');
+        }
       }
     );
   };
 
   const handleCancelSubscription = async (reason: string, immediately: boolean) => {
-    await cancelSubscription(reason, immediately);
-    refreshAll();
+    try {
+      await cancelSubscription(reason, immediately);
+      refreshAll();
+    } catch (err) {
+      console.error('[SubscriptionScreen] Failed to cancel subscription:', err);
+      showAlert.error('Error', 'Failed to cancel subscription. Please try again.');
+    }
   };
 
   // =========================================================================
