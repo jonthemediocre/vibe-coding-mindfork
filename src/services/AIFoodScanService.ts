@@ -311,34 +311,40 @@ export class AIFoodScanService {
       const base64Image = await this.imageUriToBase64(imageUri);
 
       // SECURITY: API key must come from environment variable, never hardcoded
-      // Try Vibecode OpenAI key first, then fall back to OpenRouter
-      const vibecodeKey = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY;
+      // Try OpenRouter first (user added credits), then fall back to Vibecode OpenAI
       const openRouterKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+      const vibecodeKey = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY;
 
-      const apiKey = vibecodeKey || openRouterKey;
+      const apiKey = openRouterKey || vibecodeKey;
       if (!apiKey) {
-        throw new Error('OpenAI API key not configured. Please set EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY or EXPO_PUBLIC_OPENROUTER_API_KEY environment variable.');
+        throw new Error('OpenAI API key not configured. Please set EXPO_PUBLIC_OPENROUTER_API_KEY or EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY environment variable.');
       }
 
       // Import OpenAI client
       const OpenAI = (await import('openai')).default;
 
       // Configure client based on which key is available
-      const openai = vibecodeKey
-        ? new OpenAI({ apiKey: vibecodeKey }) // Direct OpenAI
-        : new OpenAI({ // OpenRouter
+      const usingOpenRouter = !!openRouterKey;
+      const openai = usingOpenRouter
+        ? new OpenAI({ // OpenRouter (user has credits)
             apiKey: openRouterKey,
             baseURL: 'https://openrouter.ai/api/v1',
             defaultHeaders: {
               'HTTP-Referer': 'https://mindfork.app',
               'X-Title': 'MindFork',
             },
-          });
+          })
+        : new OpenAI({ apiKey: vibecodeKey }); // Fallback to direct OpenAI
+
+      // Use correct model name based on API
+      const modelName = usingOpenRouter
+        ? 'openai/gpt-4o-2024-11-20' // OpenRouter model name
+        : 'gpt-4o-2024-11-20'; // Direct OpenAI model name
 
       // STAGE 1: Identify all items in the image
       const itemsResult = await this.retryWithBackoff(async () => {
         const itemsResponse = await openai.chat.completions.create({
-          model: 'openai/gpt-4o-2024-11-20',
+          model: modelName,
           messages: [
             {
               role: 'user',
@@ -404,7 +410,7 @@ WRONG Examples (do NOT do this):
       // STAGE 2: Analyze ONLY the primary item, explicitly ignoring others
       const result = await this.retryWithBackoff(async () => {
         const response = await openai.chat.completions.create({
-          model: 'openai/gpt-4o-2024-11-20',
+          model: modelName,
           messages: [
             {
               role: 'user',
