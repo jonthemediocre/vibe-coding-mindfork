@@ -63,16 +63,37 @@ export const FoodScreen: React.FC = () => {
 
   const handleScanFood = async () => {
     setShowAddModal(false);
-    setIsScanning(true);
 
     try {
-      const foodData = await AIFoodScanService.scanFoodImage();
+      // First, take the photo (this will open the camera)
+      const photoUri = await AIFoodScanService.takePhoto();
 
-      if (foodData) {
+      // If user canceled, just return
+      if (!photoUri) {
+        return;
+      }
+
+      // Now show the analyzing modal while we process the image
+      setIsScanning(true);
+
+      // Analyze the photo
+      const analysis = await AIFoodScanService.analyzeFoodImage(photoUri);
+
+      if (analysis) {
+        const foodData = {
+          food_name: analysis.name,
+          serving_size: analysis.serving,
+          calories: analysis.calories,
+          protein_g: analysis.protein,
+          carbs_g: analysis.carbs,
+          fat_g: analysis.fat,
+          fiber_g: analysis.fiber,
+        };
+
         await addFoodEntry(foodData);
       }
     } catch (err) {
-      // Error will be shown via the error state from useFoodTracking
+      console.error('[FoodScreen] Food scan failed:', err);
     } finally {
       setIsScanning(false);
     }
