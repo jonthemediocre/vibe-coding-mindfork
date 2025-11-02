@@ -40,7 +40,7 @@ export async function updateUserProfile(
     const { data: currentProfile, error: fetchError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
 
     if (fetchError || !currentProfile) {
@@ -117,7 +117,7 @@ export async function updateUserProfile(
     const { data: updatedProfile, error: updateError } = await supabase
       .from('profiles')
       .update(updates)
-      .eq('id', userId)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -210,7 +210,7 @@ export async function getCompleteUserProfile(
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
 
     const { data: settings } = await supabase
