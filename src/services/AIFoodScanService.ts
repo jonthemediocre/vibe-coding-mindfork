@@ -310,10 +310,16 @@ export class AIFoodScanService {
       // Convert image to base64
       const base64Image = await this.imageUriToBase64(imageUri);
 
+      // SECURITY: API key must come from environment variable, never hardcoded
+      const apiKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+      if (!apiKey) {
+        throw new Error('OpenRouter API key not configured. Please set EXPO_PUBLIC_OPENROUTER_API_KEY environment variable.');
+      }
+
       // Import OpenAI client configured for OpenRouter
       const OpenAI = (await import('openai')).default;
       const openai = new OpenAI({
-        apiKey: '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',
+        apiKey,
         baseURL: 'https://openrouter.ai/api/v1',
         defaultHeaders: {
           'HTTP-Referer': 'https://mindfork.app',
