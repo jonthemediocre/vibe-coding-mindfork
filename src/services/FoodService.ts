@@ -430,13 +430,13 @@ export class FoodService {
    * Remove food from favorites
    * Deletes the food from favorite_foods table
    */
-  static async removeFromFavorites(userId: string, foodName: string): Promise<ApiResponse<void>> {
+  static async removeFromFavorites(userId: string, favoriteId: string): Promise<ApiResponse<void>> {
     try {
       const { error } = await supabase
         .from('favorite_foods')
         .delete()
         .eq('user_id', userId)
-        .eq('food_name', foodName);
+        .eq('id', favoriteId);
 
       if (error) {
         return { error: error.message };

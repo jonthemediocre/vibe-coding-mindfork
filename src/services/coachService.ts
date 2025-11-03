@@ -81,44 +81,68 @@ export class CoachService {
 
         const modelName = usingOpenRouter ? 'openai/gpt-4o-mini' : 'gpt-4o-mini';
 
-        console.log('[CoachService] Sending to AI:', {
-          usingOpenRouter,
-          modelName,
-          systemPromptLength: systemPrompt.length,
-          userMessage: message
-        });
+        // Retry logic with exponential backoff for rate limiting
+        let retries = 0;
+        const maxRetries = 3;
+        let response;
 
-        const response = await openai.chat.completions.create({
-          model: modelName,
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt || `You are ${coach?.name}, a ${coachPersonality} health and wellness coach. Keep responses brief, supportive, and personalized. Use 2-3 sentences max.`
-            },
-            {
-              role: 'user',
-              content: message
+        while (retries < maxRetries) {
+          try {
+            response = await openai.chat.completions.create({
+              model: modelName,
+              messages: [
+                {
+                  role: 'system',
+                  content: systemPrompt || `You are ${coach?.name}, a ${coachPersonality} health and wellness coach. Keep responses brief, supportive, and personalized. Use 2-3 sentences max.`
+                },
+                {
+                  role: 'user',
+                  content: message
+                }
+              ],
+              max_tokens: 200,
+              temperature: 0.7,
+            });
+            break; // Success - exit retry loop
+          } catch (error: any) {
+            if (error?.status === 429 || error?.message?.includes('rate limit')) {
+              retries++;
+              if (retries >= maxRetries) throw error;
+              // Exponential backoff: wait 2^retries seconds
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
+            } else {
+              throw error; // Not a rate limit error, fail immediately
             }
-          ],
-          max_tokens: 200,
-          temperature: 0.7,
-        });
+          }
+        }
 
         const aiResponse = response.choices[0]?.message?.content || 'I apologize, I could not generate a response.';
 
-        console.log('[CoachService] AI Response:', {
-          responseLength: aiResponse.length,
-          response: aiResponse.substring(0, 100) + '...'
-        });
-
-        return {
-          id: `${Date.now()}`,
+        // Save message to database for persistence
+        const messageData = {
           coach_id: coachId,
           user_id: user.id,
           message: message,
           response: aiResponse,
           created_at: new Date().toISOString()
         };
+
+        const { data: savedMessage, error: saveError } = await supabase
+          .from('messages')
+          .insert(messageData)
+          .select()
+          .single();
+
+        if (saveError) {
+          console.error('[CoachService] Failed to save message:', saveError);
+          // Return message even if save failed (better UX than crashing)
+          return {
+            id: `${Date.now()}`,
+            ...messageData
+          };
+        }
+
+        return savedMessage;
       },
       () => this.getMockResponse(coachId, message, context)
     );
@@ -150,7 +174,7 @@ export class CoachService {
         if (!user) throw new Error('User not authenticated');
 
         const { data, error } = await supabase
-          .from('coach_messages')
+          .from('messages')
           .select('*')
           .eq('coach_id', coachId)
           .eq('user_id', user.id)
@@ -192,9 +216,9 @@ export class CoachService {
 
   // Method to check if we're using real AI or mocks
   static isUsingRealAI(): boolean {
-    // This would check if the AI service is properly configured
-    // For now, return false to indicate we're in development mode
-    return false;
+    const openRouterKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
+    const vibecodeKey = process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY;
+    return !!(openRouterKey || vibecodeKey);
   }
 
   // Get mock response count for debugging

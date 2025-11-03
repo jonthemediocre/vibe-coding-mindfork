@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Feather as Icon } from '@expo/vector-icons';
 import { Text, useThemeColors } from '../../ui';
 
@@ -43,10 +43,9 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
     const textColor = variant !== 'default' ? '#FFF' : colors.text;
 
     return (
-      <TouchableOpacity
+      <Pressable
         style={[styles.action, { backgroundColor: bgColor }]}
         onPress={onPress}
-        activeOpacity={0.7}
       >
         <Icon
           name={icon as any}
@@ -60,7 +59,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
         >
           {label}
         </Text>
-      </TouchableOpacity>
+      </Pressable>
     );
   };
 

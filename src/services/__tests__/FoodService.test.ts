@@ -61,7 +61,7 @@ describe('FoodService', () => {
       expect(supabase.from).toHaveBeenCalledWith('food_entries');
       expect(mockQuery.select).toHaveBeenCalledWith('*');
       expect(mockQuery.eq).toHaveBeenCalledWith('user_id', 'user-123');
-      expect(mockQuery.order).toHaveBeenCalledWith('logged_at', { ascending: false });
+      expect(mockQuery.order).toHaveBeenCalledWith('created_at', { ascending: false });
       expect(result.data).toEqual(mockData);
       expect(result.error).toBeUndefined();
     });

@@ -238,6 +238,27 @@ export class MealPlanningService {
         return { error: planError || 'Failed to get meal plan' };
       }
 
+      // Fetch meal name from recipe or food entry if not provided in notes
+      let mealName = options.notes;
+
+      if (!mealName && options.recipeId) {
+        const { data: recipe } = await supabase
+          .from('recipes')
+          .select('name')
+          .eq('id', options.recipeId)
+          .single();
+        mealName = recipe?.name;
+      }
+
+      if (!mealName && options.foodEntryId) {
+        const { data: foodEntry } = await supabase
+          .from('food_entries')
+          .select('food_name')
+          .eq('id', options.foodEntryId)
+          .single();
+        mealName = foodEntry?.food_name;
+      }
+
       // meal_plan_entries schema: date, meal_type, recipe_id, food_entry_id, servings, notes, meal_plan_id, user_id
       const newMeal = {
         meal_plan_id: mealPlanId,
@@ -247,7 +268,7 @@ export class MealPlanningService {
         recipe_id: options.recipeId || null,
         food_entry_id: options.foodEntryId || null,
         servings: options.servings || 1,
-        notes: options.notes || null,
+        notes: mealName || options.notes || null,
       };
 
       const { data, error } = await supabase
@@ -576,7 +597,7 @@ export class MealPlanningService {
 
   /**
    * Generate shopping list from meal plan
-   * TODO: Reimplement to work with planned_meals schema (no recipe_id)
+   * Uses meal_plan_entries schema with recipe_id and food_entry_id
    */
   static async generateShoppingList(
     userId: string,
@@ -730,17 +751,43 @@ export class MealPlanningService {
       let totalFat = 0;
       let totalFiber = 0;
 
-      // TODO: Reimplement macro aggregation - new schema requires joining with recipes/food_entries
-      // The meal_plan_entries table only has recipe_id and food_entry_id references
-      // Need to:
-      // 1. Fetch all recipes referenced by meal.recipe_id
-      // 2. Fetch all food_entries referenced by meal.food_entry_id
-      // 3. Calculate macros from those joined records
-      // For now, returning zeros to avoid TypeScript errors
+      // Calculate macros by fetching recipe/food_entry nutrition data
       for (const meal of mealPlan) {
-        // const servings = meal.servings || 1;
-        // Will need to join with recipes or food_entries to get nutritional data
-        // totalCalories += (recipe?.calories_per_serving || foodEntry?.calories || 0) * servings;
+        const servings = meal.servings || 1;
+
+        // If meal references a recipe, fetch recipe nutrition
+        if (meal.recipe_id) {
+          const { data: recipe } = await supabase
+            .from('recipes')
+            .select('calories_per_serving, protein_g, carbs_g, fat_g, fiber_g')
+            .eq('id', meal.recipe_id)
+            .single();
+
+          if (recipe) {
+            totalCalories += (recipe.calories_per_serving || 0) * servings;
+            totalProtein += (recipe.protein_g || 0) * servings;
+            totalCarbs += (recipe.carbs_g || 0) * servings;
+            totalFat += (recipe.fat_g || 0) * servings;
+            totalFiber += (recipe.fiber_g || 0) * servings;
+          }
+        }
+
+        // If meal references a food entry, fetch food nutrition
+        if (meal.food_entry_id) {
+          const { data: foodEntry } = await supabase
+            .from('food_entries')
+            .select('calories, protein_g, carbs_g, fat_g, fiber_g')
+            .eq('id', meal.food_entry_id)
+            .single();
+
+          if (foodEntry) {
+            totalCalories += (foodEntry.calories || 0) * servings;
+            totalProtein += (foodEntry.protein_g || 0) * servings;
+            totalCarbs += (foodEntry.carbs_g || 0) * servings;
+            totalFat += (foodEntry.fat_g || 0) * servings;
+            totalFiber += (foodEntry.fiber_g || 0) * servings;
+          }
+        }
       }
 
       const summary: DailyMacroSummary = {

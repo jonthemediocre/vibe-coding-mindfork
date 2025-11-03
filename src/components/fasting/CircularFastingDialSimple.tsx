@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, GestureResponderEvent } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, Pressable, PanResponder, LayoutChangeEvent } from 'react-native';
 import { Text } from 'react-native';
 import Svg, { Circle, Line, Text as SvgText, G, Path } from 'react-native-svg';
 
@@ -49,7 +49,8 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const radius = size * 0.35;
   const handleRadius = 16;
   const [dragging, setDragging] = useState<'start' | 'end' | null>(null);
-  const [layoutPosition, setLayoutPosition] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<View>(null);
+  const layoutRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
   // Calculate angles (0° = 12 o'clock, clockwise)
   const hourToAngle = (hour: number) => {
@@ -78,34 +79,72 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const endPos = getHandlePosition(endAngle);
   const currentPos = getHandlePosition(currentAngle);
 
-  // Convert touch position to hour
-  const touchToHour = (event: GestureResponderEvent): number => {
-    const touch = event.nativeEvent;
-    const localX = touch.locationX;
-    const localY = touch.locationY;
+  // Convert touch position (screen coordinates) to hour
+  const positionToHour = (screenX: number, screenY: number): number => {
+    // Convert screen coordinates to component-relative coordinates
+    const localX = screenX - layoutRef.current.x;
+    const localY = screenY - layoutRef.current.y;
 
+    // Calculate relative to center
     const dx = localX - center;
     const dy = localY - center;
 
     let angle = Math.atan2(dy, dx);
+    // Convert from radians to hours (0-24), adjusted for 12 o'clock = 0
     let hour = ((angle * 180 / Math.PI + 90) / 15) % 24;
     if (hour < 0) hour += 24;
-
     return Math.round(hour);
   };
 
-  // Handle touch move
-  const handleTouchMove = (event: GestureResponderEvent) => {
-    if (!interactive) return;
+  // Create pan responder for start handle
+  const startPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => {
+        return interactive;
+      },
+      onMoveShouldSetPanResponder: () => interactive,
+      onPanResponderGrant: () => {
+        setDragging('start');
+        // Measure to get absolute screen position
+        containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
+          layoutRef.current = { x: pageX, y: pageY, width, height };
+        });
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (!interactive || !onStartChange) return;
+        const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
+        onStartChange(newHour);
+      },
+      onPanResponderRelease: () => {
+        setDragging(null);
+      },
+    })
+  ).current;
 
-    const newHour = touchToHour(event);
-
-    if (dragging === 'start' && onStartChange) {
-      onStartChange(newHour);
-    } else if (dragging === 'end' && onEndChange) {
-      onEndChange(newHour);
-    }
-  };
+  // Create pan responder for end handle
+  const endPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => {
+        return interactive;
+      },
+      onMoveShouldSetPanResponder: () => interactive,
+      onPanResponderGrant: () => {
+        setDragging('end');
+        // Measure to get absolute screen position
+        containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
+          layoutRef.current = { x: pageX, y: pageY, width, height };
+        });
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (!interactive || !onEndChange) return;
+        const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
+        onEndChange(newHour);
+      },
+      onPanResponderRelease: () => {
+        setDragging(null);
+      },
+    })
+  ).current;
 
   // Create arc path for fasting period
   const createArcPath = (start: number, end: number, r: number) => {
@@ -192,14 +231,11 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   };
 
   return (
-    <View style={[styles.container, { width: size, height: size + 60 }]}>
-      <Pressable
-        style={{ width: size, height: size }}
-        onResponderMove={handleTouchMove}
-        onStartShouldSetResponder={() => interactive && dragging !== null}
-        onMoveShouldSetResponder={() => interactive && dragging !== null}
-        onResponderRelease={() => setDragging(null)}
-      >
+    <View
+      ref={containerRef}
+      style={[styles.container, { width: size, height: size + 60 }]}
+    >
+      <View style={{ width: size, height: size }}>
         <Svg width={size} height={size}>
           {/* Outer circle (clock face) */}
           <Circle
@@ -318,38 +354,34 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
             {eatingDuration}h eating
           </SvgText>
         </Svg>
-      </Pressable>
+      </View>
 
-      {/* Interactive handle buttons */}
+      {/* Touchable overlays for handles - positioned absolutely over SVG */}
       {interactive && (
         <>
-          <Pressable
+          {/* Start handle touchable area */}
+          <View
+            {...startPanResponder.panHandlers}
             style={[
-              styles.handleButton,
+              styles.handleTouchArea,
               {
-                left: startPos.x - 24,
-                top: startPos.y - 24,
+                left: startPos.x - 20,
+                top: startPos.y - 20,
               },
             ]}
-            onPressIn={() => setDragging('start')}
-            onPressOut={() => setDragging(null)}
-          >
-            <View style={styles.handleHitbox} />
-          </Pressable>
+          />
 
-          <Pressable
+          {/* End handle touchable area */}
+          <View
+            {...endPanResponder.panHandlers}
             style={[
-              styles.handleButton,
+              styles.handleTouchArea,
               {
-                left: endPos.x - 24,
-                top: endPos.y - 24,
+                left: endPos.x - 20,
+                top: endPos.y - 20,
               },
             ]}
-            onPressIn={() => setDragging('end')}
-            onPressOut={() => setDragging(null)}
-          >
-            <View style={styles.handleHitbox} />
-          </Pressable>
+          />
         </>
       )}
 
@@ -373,24 +405,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  handleButton: {
+  handleTouchArea: {
     position: 'absolute',
-    width: 48,
-    height: 48,
-    zIndex: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  handleHitbox: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    zIndex: 10,
   },
   timeLabels: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginTop: 20,
+    marginTop: 16,
   },
   timeLabel: {
     flexDirection: 'row',

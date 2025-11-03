@@ -344,19 +344,45 @@ export function extractDataFromText(
   // Extract height (feet and inches)
   // Handles formats: "5'9", "5 feet 9 inches", "5ft9in", "5 9" (just two numbers)
   const heightMatch = text.match(/(\d+)\s*(?:feet|ft|')\s*(\d+)?\s*(?:inches|in|")?/i);
-  if (heightMatch) {
+  if (heightMatch && !newData.heightFeet) {
     newData.heightFeet = parseInt(heightMatch[1]);
     newData.heightInches = heightMatch[2] ? parseInt(heightMatch[2]) : 0;
   } else {
     // Try to match just two numbers separated by space (like "5 9")
     const simpleHeightMatch = text.match(/\b(\d)\s+(\d{1,2})\b/);
-    if (simpleHeightMatch) {
+    if (simpleHeightMatch && !newData.heightFeet) {
       const feet = parseInt(simpleHeightMatch[1]);
       const inches = parseInt(simpleHeightMatch[2]);
       // Only accept if it looks like realistic height (4-7 feet, 0-11 inches)
       if (feet >= 4 && feet <= 7 && inches >= 0 && inches <= 11) {
         newData.heightFeet = feet;
         newData.heightInches = inches;
+      }
+    }
+  }
+
+  // Handle metric heights: "175cm", "175 cm", "1.75m", "1.75 m"
+  if (!newData.heightFeet) {
+    // Match centimeters (e.g., "175cm" or "175 cm")
+    const cmMatch = text.match(/(\d{2,3})\s*(?:cm|centimeters?)/i);
+    if (cmMatch) {
+      const cm = parseInt(cmMatch[1]);
+      if (cm >= 120 && cm <= 220) { // Realistic height range in cm
+        const totalInches = cm * 0.393701;
+        newData.heightFeet = Math.floor(totalInches / 12);
+        newData.heightInches = Math.round(totalInches % 12);
+      }
+    } else {
+      // Match meters (e.g., "1.75m" or "1.75 m")
+      const mMatch = text.match(/(\d+\.?\d*)\s*(?:m|meters?)\b/i);
+      if (mMatch) {
+        const meters = parseFloat(mMatch[1]);
+        if (meters >= 1.2 && meters <= 2.2) { // Realistic height range in meters
+          const cm = meters * 100;
+          const totalInches = cm * 0.393701;
+          newData.heightFeet = Math.floor(totalInches / 12);
+          newData.heightInches = Math.round(totalInches % 12);
+        }
       }
     }
   }
@@ -388,14 +414,16 @@ export function extractDataFromText(
 
   // Extract activity level
   if (!newData.activityLevel) {
-    if (lowerText.includes("sedentary") || lowerText.includes("desk job") || lowerText.includes("not active")) {
-      newData.activityLevel = "sedentary";
-    } else if (lowerText.includes("light") || lowerText.includes("1-2 times")) {
-      newData.activityLevel = "light";
+    if (lowerText.includes("extremely active") || lowerText.includes("very active") || lowerText.includes("6-7 times")) {
+      newData.activityLevel = "very_active";
+    } else if (lowerText.includes("active") || lowerText.includes("moderately active")) {
+      newData.activityLevel = "active";
     } else if (lowerText.includes("moderate") || lowerText.includes("3-5 times")) {
       newData.activityLevel = "moderate";
-    } else if (lowerText.includes("active") || lowerText.includes("6-7 times") || lowerText.includes("very active")) {
-      newData.activityLevel = "very_active";
+    } else if (lowerText.includes("light") || lowerText.includes("lightly active") || lowerText.includes("1-2 times")) {
+      newData.activityLevel = "light";
+    } else if (lowerText.includes("sedentary") || lowerText.includes("desk job") || lowerText.includes("not active")) {
+      newData.activityLevel = "sedentary";
     }
   }
 
@@ -423,7 +451,10 @@ export function extractDataFromText(
  * Checks if onboarding data is complete
  */
 export function isOnboardingComplete(data: Partial<OnboardingData>): boolean {
-  const hasHeight = !!(data.heightFeet && (data.heightInches !== undefined && data.heightInches !== null));
+  const hasHeight = !!(
+    data.heightFeet &&
+    (data.heightInches !== undefined && data.heightInches !== null)
+  );
 
   // usesFasting is optional - if not set, we consider onboarding complete without it
   const hasCoreData = !!(

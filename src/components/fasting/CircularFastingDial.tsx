@@ -68,13 +68,15 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const handleRadius = 14;
   const [draggingHandle, setDraggingHandle] = useState<'start' | 'end' | null>(null);
   const containerRef = useRef<View>(null);
-  const layoutRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
+
+  // Store container measurements to avoid repeated measure() calls during dragging
+  const containerMeasurements = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
   // Convert touch position (screen coordinates) to hour
   const positionToHour = (screenX: number, screenY: number): number => {
     // Convert screen coordinates to component-relative coordinates
-    const localX = screenX - layoutRef.current.x;
-    const localY = screenY - layoutRef.current.y;
+    const localX = screenX - containerMeasurements.current.x;
+    const localY = screenY - containerMeasurements.current.y;
 
     // Calculate relative to center
     const dx = localX - center;
@@ -91,27 +93,22 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const startPanResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => {
-        console.log('[FastingDial] Start handle touched, interactive:', interactive);
         return interactive;
       },
       onMoveShouldSetPanResponder: () => interactive,
       onPanResponderGrant: (evt) => {
-        console.log('[FastingDial] Start handle pan granted');
         setDraggingHandle('start');
-        // Measure to get absolute screen position
+        // Measure once at drag start and store for use in onPanResponderMove
         containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
-          console.log('[FastingDial] Container measured:', { pageX, pageY, width, height });
-          layoutRef.current = { x: pageX, y: pageY, width, height };
+          containerMeasurements.current = { x: pageX, y: pageY, width, height };
         });
       },
       onPanResponderMove: (_, gestureState) => {
         if (!interactive || !onStartChange) return;
         const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
-        console.log('[FastingDial] Start handle moved to hour:', newHour);
         onStartChange(newHour);
       },
       onPanResponderRelease: () => {
-        console.log('[FastingDial] Start handle released');
         setDraggingHandle(null);
       },
     })
@@ -121,27 +118,22 @@ export const CircularFastingDial: React.FC<CircularFastingDialProps> = ({
   const endPanResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => {
-        console.log('[FastingDial] End handle touched, interactive:', interactive);
         return interactive;
       },
       onMoveShouldSetPanResponder: () => interactive,
       onPanResponderGrant: (evt) => {
-        console.log('[FastingDial] End handle pan granted');
         setDraggingHandle('end');
-        // Measure to get absolute screen position
+        // Measure once at drag start and store for use in onPanResponderMove
         containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
-          console.log('[FastingDial] Container measured:', { pageX, pageY, width, height });
-          layoutRef.current = { x: pageX, y: pageY, width, height };
+          containerMeasurements.current = { x: pageX, y: pageY, width, height };
         });
       },
       onPanResponderMove: (_, gestureState) => {
         if (!interactive || !onEndChange) return;
         const newHour = positionToHour(gestureState.moveX, gestureState.moveY);
-        console.log('[FastingDial] End handle moved to hour:', newHour);
         onEndChange(newHour);
       },
       onPanResponderRelease: () => {
-        console.log('[FastingDial] End handle released');
         setDraggingHandle(null);
       },
     })

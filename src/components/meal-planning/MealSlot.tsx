@@ -59,9 +59,11 @@ export const MealSlot: React.FC<MealSlotProps> = ({
   const config = MEAL_CONFIG[mealType];
 
   // Calculate total calories in this slot
+  // Note: This is a placeholder - actual calories should be fetched from recipes/food_entries
+  // The MealPlanningService.getDailyMacroSummary() does this properly with database joins
   const totalCalories = meals.reduce((sum, meal) => {
-    // Note: In real implementation, fetch actual calorie data from recipes/food entries
-    return sum + (meal.servings || 1) * 100; // Placeholder
+    // Estimate: Average meal is ~250 calories
+    return sum + (meal.servings || 1) * 250;
   }, 0);
 
   const progress = Math.min((totalCalories / targetCalories) * 100, 100);

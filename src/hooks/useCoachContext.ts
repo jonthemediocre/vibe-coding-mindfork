@@ -41,9 +41,11 @@ export const useCoachContext = (
 
     // Use weekly stats if available and requested
     const recentStats = includePastWeek ? weeklyStats : undefined;
-    
-    // TODO: Add weight data integration when weight tracking is implemented
-    const weightData = includeWeightData ? undefined : undefined;
+
+    // Weight data integration: TODO - Implement weight tracking service
+    // Once weight_logs table is migrated and weight tracking service is created,
+    // fetch weight entries using: useWeightTracking() and pass to generateContext
+    const weightData = undefined;
 
     return CoachContextService.generateContext(
       profile,

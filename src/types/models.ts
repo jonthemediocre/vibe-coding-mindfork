@@ -173,7 +173,6 @@ export interface CreateFoodEntryInput {
   sugar_g?: number | null;
   meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null;
   photo_url?: string | null;
-  consumed_at?: string;
 }
 
 export interface UpdateFoodEntryInput extends Partial<CreateFoodEntryInput> {

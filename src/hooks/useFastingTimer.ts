@@ -65,7 +65,7 @@ export const useFastingTimer = (): UseFastingTimerResult => {
     };
 
     updateElapsed();
-    const interval = setInterval(updateElapsed, 1000 * 60); // Update every minute
+    const interval = setInterval(updateElapsed, 1000); // Update every second for real-time feel
 
     return () => clearInterval(interval);
   }, [activeSession]);
