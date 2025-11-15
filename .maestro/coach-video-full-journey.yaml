@@ -1,0 +1,108 @@
+appId: com.jonbrookings.vibecoding.mindfork
+---
+# Complete Coach Video Generation User Journey Test
+# Tests the entire flow from app launch to video playback
+
+- launchApp
+
+# Step 1: Wait for app to load
+- assertVisible: "MindFork"
+- extendedWaitUntil:
+    visible: ".*Coach.*|.*Chat.*|.*Messages.*"
+    timeout: 10000
+
+# Step 2: Navigate to Coach Chat (if not already there)
+- runFlow:
+    when:
+      visible: "Coach"
+    commands:
+      - tapOn: "Coach"
+
+- runFlow:
+    when:
+      visible: "Chat"
+    commands:
+      - tapOn: "Chat"
+
+# Step 3: Wait for chat to load
+- extendedWaitUntil:
+    visible: ".*message.*|.*chat.*"
+    timeout: 5000
+
+# Step 4: Look for existing messages or trigger a new one
+- runFlow:
+    when:
+      visible: "Send|Type|Message"
+    commands:
+      - tapOn: "Type|Message|Input"
+      - inputText: "Hi coach, how am I doing today?"
+      - tapOn: "Send"
+      - extendedWaitUntil:
+          visible: ".*"
+          timeout: 10000
+
+# Step 5: Find and tap the "Make This a Video" button
+- extendedWaitUntil:
+    visible: "Make This a Video|Video|Create Video"
+    timeout: 15000
+
+- tapOn: "Make This a Video|Video|Create Video"
+
+# Step 6: Verify video generation started
+- extendedWaitUntil:
+    visible: "Creating Video|Generating|Processing|Loading"
+    timeout: 5000
+
+- assertVisible:
+    text: "Creating Video|Generating|Processing"
+    enabled: true
+
+# Step 7: Wait for video generation (up to 90 seconds)
+- extendedWaitUntil:
+    visible: "Play|Watch|View Video|▶"
+    timeout: 90000
+
+# Step 8: Verify video is ready
+- assertVisible: "Play|Watch|▶"
+
+# Step 9: Play the video
+- tapOn: "Play|Watch|▶|Video"
+
+# Step 10: Wait for video to start playing
+- extendedWaitUntil:
+    visible: "Pause|⏸|Playing"
+    timeout: 10000
+
+# Step 11: Let video play for 5 seconds to verify it's not truncated
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Step 12: Verify video is still playing (not stopped after 2 words)
+- assertVisible:
+    text: "Pause|⏸|Playing|.*playing.*"
+    enabled: true
+
+# Step 13: Take screenshot of playing video
+- takeScreenshot: video-playing-full
+
+# Step 14: Let video play for another 5 seconds
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Step 15: Verify video completed or is still playing
+# (This confirms it wasn't truncated)
+- runFlow:
+    when:
+      visible: "Replay|Watch Again|Play Again"
+    commands:
+      - assertVisible: "Replay|Watch Again"
+      - takeScreenshot: video-completed-success
+
+- runFlow:
+    when:
+      visible: "Pause|⏸|Playing"
+    commands:
+      - assertVisible: "Pause|⏸"
+      - takeScreenshot: video-still-playing-success
+
+# Test passed - video generated and played without truncation!

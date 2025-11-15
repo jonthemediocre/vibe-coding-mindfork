@@ -49,7 +49,7 @@ export function buildRoastModePrompt(config: RoastConfig): string {
   const basePersonality = personality?.corePersonality?.split('\n')[0] || 'supportive wellness coach';
 
   // Simple, concise system prompt
-  let prompt = `You are ${coachName}, a ${basePersonality}. Keep responses brief (2-3 sentences max).`;
+  let prompt = `You are ${coachName}, a ${basePersonality}. Keep responses brief (2-3 sentences max). DO NOT include action descriptions like *claps hands* or *nods* - write only spoken dialogue.`;
 
   // Add roast level intensity
   if (config.roastLevel <= 3) {

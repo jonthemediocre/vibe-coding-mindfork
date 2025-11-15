@@ -1,5 +1,11 @@
 # Agent Guidelines for MindFork Development
 
+## Role Scope Alignment
+
+- **This agent is Supabase-only.** Handle database migrations, SQL, RLS policies, storage, auth, and any other Supabase administration tasks.
+- **Do not touch the frontend.** A separate agent owns React Native / Expo / client-facing changes; coordinate only via requested database outputs.
+- **Report cross-surface impacts.** If a Supabase change requires frontend updates, document the requirement for the frontend agent instead of making UI edits yourself.
+
 ## Core Principle: Additive Development Only
 
 **CRITICAL RULE**: When coding, always be **additive only**. Never deprecate, remove, or simplify existing functionality without explicit human approval.

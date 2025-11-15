@@ -53,6 +53,22 @@ ALTER TABLE public.planned_meals
 ADD COLUMN IF NOT EXISTS food_entry_id UUID REFERENCES public.food_entries(id) ON DELETE SET NULL;
 
 -- ============================================================================
+-- ADD missing columns if they don't exist (for backward compatibility)
+-- ============================================================================
+DO $$
+BEGIN
+    -- Add user_id
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'recipes' AND column_name = 'user_id') THEN
+        ALTER TABLE public.recipes ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+
+    -- Add tags
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'recipes' AND column_name = 'tags') THEN
+        ALTER TABLE public.recipes ADD COLUMN tags TEXT[];
+    END IF;
+END $$;
+
+-- ============================================================================
 -- INDEXES FOR PERFORMANCE
 -- ============================================================================
 CREATE INDEX IF NOT EXISTS idx_recipes_user_id ON public.recipes(user_id);
